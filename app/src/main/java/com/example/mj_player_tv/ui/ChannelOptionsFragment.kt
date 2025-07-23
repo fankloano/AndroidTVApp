@@ -238,11 +238,11 @@ class ChannelOptionsFragment : Fragment(R.layout.fragment_channel_options) {
         }
 
         binding.relLayoutAssignEpg.setOnClickListener {
+            helpViewModel.lastSelectedChannelOptionsMenuView = binding.relLayoutAssignEpg.id
             helpViewModel.currentFocusedTvAccount?.epgsources?.reset()
             if (helpViewModel.currentFocusedTvAccount != null && helpViewModel.currentFocusedTvAccount!!.epgsources.isNotEmpty()) {
                 helpViewModel.currentAssignEpgChannel = helpViewModel.currentFocusedChannel
                 helpViewModel.assignChannelToEpgActive = true
-                helpViewModel.lastSelectedChannelOptionsMenuView = binding.relLayoutAssignEpg.id
                 val containerFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (containerFragment is TvChannelsFragment) {
                     containerFragment.setMinimalAlpha()

@@ -722,11 +722,13 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             val oldPos = fullEpgAdapter?.currentList?.indexOf(helpViewModel.currentSelectedEpgForSelectedChannel)
             helpViewModel.currentSelectedEpgForSelectedChannel = epgData
             val newPos = fullEpgAdapter?.currentList?.indexOf(epgData)
-            if (oldPos != null) {
-                fullEpgAdapter?.notifyItemChanged(oldPos)
-            }
-            if (newPos != null) {
-                fullEpgAdapter?.notifyItemChanged(newPos)
+            binding.rvFullepg.post {
+                if (oldPos != null) {
+                    fullEpgAdapter?.notifyItemChanged(oldPos)
+                }
+                if (newPos != null) {
+                    fullEpgAdapter?.notifyItemChanged(newPos)
+                }
             }
             val detailEpgFragment = parentFragmentManager.findFragmentById(R.id.rv_preview_FullEpg)
             if (detailEpgFragment is DetailEpgFragment) {

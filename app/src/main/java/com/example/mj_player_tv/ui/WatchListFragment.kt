@@ -1348,6 +1348,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 }
             } else {
                 // Keine Accounts mehr
+                binding.recyclerItems.visibility = View.INVISIBLE
+                resetMovieDetailsUi()
                 binding.tvNodatafound.visibility = View.VISIBLE
             }
         }
@@ -1385,6 +1387,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 }
             } else {
                 // Keine Accounts mehr
+                resetSeriesDetailsUi()
+                binding.recyclerItems.visibility = View.INVISIBLE
                 binding.tvNodatafound.visibility = View.VISIBLE
             }
         }

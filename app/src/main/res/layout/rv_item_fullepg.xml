@@ -20,8 +20,9 @@
               android:alpha="0.3"
               android:layout_margin="1dp"
               app:shapeAppearanceOverlay="@style/roundedImageViewBottomRight"
-              android:foreground="@drawable/gradient_overlay_fromleft_bgmain"
+              android:foreground="@drawable/selector_epgfull_gradient"
               tools:src="@drawable/skybundesliga"
+              android:duplicateParentState="true"
               android:scaleType="centerCrop"/>
 
           <View
@@ -29,8 +30,9 @@
               android:layout_width="170dp"
               android:layout_height="80dp"
               android:layout_alignParentEnd="true"
-              android:layout_margin="1dp"
+              android:layout_margin="1.5dp"
               android:visibility="gone"
+              android:duplicateParentState="true"
               android:background="@drawable/selector_epgfull_gradient"/>
 
 

@@ -18,6 +18,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.RecyclerView
@@ -907,10 +908,17 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
     }
 
     fun checkNewChannel() {
+        if (isAdded && view != null) {
+            checkThisNewChannel()
+        }
+    }
+    fun checkThisNewChannel() {
+        val safeBinding = _binding ?: return
+        if (viewLifecycleOwner.lifecycle.currentState == Lifecycle.State.DESTROYED) return
         checkEpgCannelJob?.cancel()
         checkEpgCannelJob = viewLifecycleOwner.lifecycleScope.launch {
-        binding.rvEpgList.visibility = View.INVISIBLE
-        binding.assignepgProgressBar.visibility = View.VISIBLE
+            safeBinding.rvEpgList.visibility = View.INVISIBLE
+            safeBinding.assignepgProgressBar.visibility = View.VISIBLE
         val relatedEpgSource =
             if (helpViewModel.currentAssignEpgChannel?.linkedEpgChannel?.target != null) {
                 helpViewModel.currentAssignEpgChannel?.linkedEpgChannel?.target?.epgsource?.target
@@ -920,7 +928,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             }
         if (relatedEpgSource != null) {
             helpViewModel.currentSelectedEpgChannelSource = relatedEpgSource
-            binding.tvEpgsourceName.text = relatedEpgSource.name
+            safeBinding.tvEpgsourceName.text = relatedEpgSource.name
                 val epgChannelList = withContext(Dispatchers.IO) {
                     relatedEpgSource.epgchs
                 }
@@ -933,9 +941,9 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                             epgChannelListAdapter.currentList.find { it.chEpgId == helpViewModel.currentAssignEpgChannel!!.linkedEpgChannel?.target?.chEpgId }
                         val epgChPosition =
                             epgChannelListAdapter.currentList.indexOf(epgChannel)
-                        binding.rvEpgList.setSelectedPosition(epgChPosition)
-                        binding.assignepgProgressBar.visibility = View.INVISIBLE
-                        binding.rvEpgList.visibility = View.VISIBLE
+                        safeBinding.rvEpgList.setSelectedPosition(epgChPosition)
+                        safeBinding.assignepgProgressBar.visibility = View.INVISIBLE
+                        safeBinding.rvEpgList.visibility = View.VISIBLE
                     } else {
                         val matchedEpgChannel = findBestMatchEpgChannel(
                             helpViewModel.currentAssignEpgChannel!!.showingName,
@@ -947,11 +955,11 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                             epgChannelListAdapter.submitList(sortedEpgChannelList)
                             val epgChPosition =
                                 epgChannelListAdapter.currentList.indexOf(matchedEpgChannel)
-                            binding.rvEpgList.post {
+                            safeBinding.rvEpgList.post {
                                 binding.rvEpgList.setSelectedPosition(epgChPosition)
                             }
-                            binding.assignepgProgressBar.visibility = View.INVISIBLE
-                            binding.rvEpgList.visibility = View.VISIBLE
+                            safeBinding.assignepgProgressBar.visibility = View.INVISIBLE
+                            safeBinding.rvEpgList.visibility = View.VISIBLE
                         } else {
                             prepareRecyclerView(helpViewModel.currentAssignEpgChannel!!)
                             epgChannelListAdapter.submitList(sortedEpgChannelList)
@@ -966,17 +974,17 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                                 val position = epgChannelListAdapter.currentList.indexOf(
                                     firstMatchingChannel
                                 )
-                                binding.rvEpgList.post {
+                                safeBinding.rvEpgList.post {
                                     binding.rvEpgList.setSelectedPosition(position)
                                 }
-                                binding.assignepgProgressBar.visibility = View.INVISIBLE
-                                binding.rvEpgList.visibility = View.VISIBLE
+                                safeBinding.assignepgProgressBar.visibility = View.INVISIBLE
+                                safeBinding.rvEpgList.visibility = View.VISIBLE
                             } else {
-                                binding.rvEpgList.post {
-                                    binding.rvEpgList.setSelectedPosition(0)
+                                safeBinding.rvEpgList.post {
+                                    safeBinding.rvEpgList.setSelectedPosition(0)
                                 }
-                                binding.assignepgProgressBar.visibility = View.INVISIBLE
-                                binding.rvEpgList.visibility = View.VISIBLE
+                                safeBinding.assignepgProgressBar.visibility = View.INVISIBLE
+                                safeBinding.rvEpgList.visibility = View.VISIBLE
                             }
                         }
                     }
@@ -1027,13 +1035,13 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             mainFragment.updateLastFocusedAssignChannel()
             mainFragment.resetFocusedAssignEpgChannel()
             mainFragment.makeChannelOptionsContainerVisible()
-            val containerFragment = parentFragmentManager.findFragmentById(R.id.container_ChannelOptions)
-            if (containerFragment is ChannelOptionsFragment) {
-                containerFragment.focusLastSelectedItem()
-            }
             if (helpViewModel.assignEpgChannelListFiltered) {
                 mainFragment.updateChannelList()
                 helpViewModel.assignEpgChannelListFiltered = false
+            }
+            val containerFragment = parentFragmentManager.findFragmentById(R.id.container_ChannelOptions)
+            if (containerFragment is ChannelOptionsFragment) {
+                containerFragment.focusLastSelectedItem()
             }
         }
     }

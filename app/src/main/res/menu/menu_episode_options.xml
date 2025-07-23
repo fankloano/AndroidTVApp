@@ -1,6 +1,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/mark_seen"
-        android:title="Mark episode as watched" />
+        android:title="Mark episode as seen" />
+    <item android:id="@+id/mark_unseen"
+        android:title="Mark episode as unseen" />
     <item android:id="@+id/play_episode"
         android:title="Play episode" />
 </menu>

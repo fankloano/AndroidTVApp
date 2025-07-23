@@ -97,7 +97,7 @@ class SeasonsAdapter(private val recyclerView: RecyclerView, private val onClick
         }
 
         holder.binding.constSeason.setOnLongClickListener {
-            onLongClickListener.onLongClick(holder.binding.constSeason, position)
+            onLongClickListener.onLongClick(season, holder.binding.constSeason)
             true
         }
     }
@@ -119,7 +119,7 @@ class SeasonsAdapter(private val recyclerView: RecyclerView, private val onClick
         fun onClick(season: SeasonsOB) = clickListener(season)
     }
 
-    class OnLongClickListener(val longClickListener: (view: View, position: Int) -> Unit) {
-        fun onLongClick(view: View, position: Int) = longClickListener(view, position)
+    class OnLongClickListener(val longClickListener: (season: SeasonsOB, view: View) -> Unit) {
+        fun onLongClick(season: SeasonsOB, view: View) = longClickListener(season, view)
     }
 }

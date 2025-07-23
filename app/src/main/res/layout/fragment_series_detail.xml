@@ -369,6 +369,8 @@
             android:layout_marginStart="10dp"
             tools:listitem="@layout/rv_item_seasons"
             app:layout_constraintTop_toTopOf="parent"
+            app:dpadRecyclerViewItemSpacing="10dp"
+            app:dpadRecyclerViewItemEdgeSpacing="6dp"
             android:gravity="center"
             android:nextFocusLeft="@id/rv_layout_series_seasons"
             android:nextFocusUp="@id/rv_layout_series_seasons"

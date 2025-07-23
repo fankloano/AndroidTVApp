@@ -385,6 +385,19 @@ Christopher Lee: Saruman"
         app:layout_constraintWidth_percent="0.6"
         android:background="@drawable/gradient_overlay_fromup"/>
 
+    <TextView
+        android:id="@+id/tv_nodatafound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_data_found"
+        android:textColor="?attr/textMainColor"
+        android:textSize="25sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
 
     <View
         android:id="@+id/gradient_view"
@@ -459,19 +472,6 @@ Christopher Lee: Saruman"
         app:layout_constraintEnd_toEndOf="parent"
         android:indeterminate="true"
         android:indeterminateTint="@color/light_blue"/>
-
-    <TextView
-        android:id="@+id/tv_nodatafound"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/no_data_found"
-        android:textColor="?attr/textMainColor"
-        android:textSize="25sp"
-        android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/relLayout_programdescr"

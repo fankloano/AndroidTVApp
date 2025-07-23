@@ -1,4 +1,6 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@+id/mark_seen"
-        android:title="Mark all episodes as watched" />
+        android:title="Mark season as seen" />
+    <item android:id="@+id/mark_unseen"
+        android:title="Mark season as unseen" />
 </menu>

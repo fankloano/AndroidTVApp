@@ -47,6 +47,7 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
                 } else {
                     binding.progressBar.visibility = View.INVISIBLE
                 }
+                Log.d("VON DER SERIE", "STAFFEL ${episode.seasonNumber} EPISODE: ${episode.episodeNumber} gesehen: ${episode.episodePercentagePlayed}")
                 if (episode.episodePercentagePlayed > 0.0) {
                     if (episode.episodePercentagePlayed == 1.0) {
                         binding.tvIsFullyWatched.visibility = View.VISIBLE
@@ -123,7 +124,7 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
         }
 
         holder.binding.cardEpisode.setOnLongClickListener {
-            onLongClickListener.onLongClick(episode, holder.binding.cardEpisode, position)
+            onLongClickListener.onLongClick(episode, holder.binding.cardEpisode)
             true
         }
 
@@ -147,7 +148,7 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
         fun onClick(episode: EpisodesOB) = clickListener(episode)
     }
 
-    class OnLongClickListener(val longClickListener: (episode: EpisodesOB, view: View, position: Int) -> Unit) {
-        fun onLongClick(episode: EpisodesOB, view: View, position: Int) = longClickListener(episode, view, position)
+    class OnLongClickListener(val longClickListener: (episode: EpisodesOB, view: View) -> Unit) {
+        fun onLongClick(episode: EpisodesOB, view: View) = longClickListener(episode, view)
     }
 }
