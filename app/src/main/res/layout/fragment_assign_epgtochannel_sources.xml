@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/transparent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_settings"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:text="@string/select_epg_source"
+        android:padding="10dp"
+        android:textSize="14sp"
+        android:paddingStart="19dp"
+        android:paddingEnd="19dp"
+        android:gravity="center_vertical"
+        android:background="?attr/backgroundDark"
+        android:textColor="?attr/textMainColor"/>
+
+    <RelativeLayout
+        android:id="@+id/relLayout_showallEpgSources"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:background="?attr/backgroundDarkLight"
+        android:layout_below="@id/tv_settings">
+
+    <TextView
+        android:id="@+id/text_all_epg_sources"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:textColor="@drawable/focused_selected_mainmenu"
+        android:textSize="13sp"
+        android:text="@string/show_all_epg_sources"
+        android:singleLine="true"
+        android:gravity="center_vertical"
+        android:ellipsize="marquee"
+        android:paddingStart="19dp"
+        android:paddingEnd="19dp"
+        android:padding="8dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:nextFocusDown="@id/rv_epg_sources"
+        android:nextFocusLeft="@id/text_all_epg_sources"
+        android:nextFocusRight="@id/text_all_epg_sources"
+        android:nextFocusUp="@id/text_all_epg_sources"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:background="@drawable/settings_item_background_darklight"/>
+
+    </RelativeLayout>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_epg_sources"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/relLayout_showallEpgSources"
+        android:orientation="vertical"
+        android:paddingBottom="20dp"
+        tools:listitem="@layout/rv_item_epgtochannel_source"/>
+
+</RelativeLayout>

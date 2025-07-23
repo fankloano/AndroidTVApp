@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:id="@+id/relLayout_itemManage"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/settings_item_background"
+    android:focusableInTouchMode="true"
+    android:focusable="true"
+    android:nextFocusRight="@id/relLayout_itemManage"
+    android:nextFocusLeft="@id/relLayout_itemManage"
+    android:elevation="1dp">
+
+    <RelativeLayout
+        android:id="@+id/rv_linear_TvCategories"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="1dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <CheckBox
+            android:id="@+id/cb_tvcategory"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="10dp"
+            android:gravity="center_vertical"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:buttonTint="?attr/mainPrimaryColor"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <TextView
+            android:id="@+id/tv_tvcategory"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="105dp"
+            android:textColor="?attr/textMainColor"
+            android:textColorHighlight="?attr/mainPrimaryColor"
+            android:textColorLink="?attr/mainPrimaryColor"
+            android:textSize="14sp"
+            tools:text="DE: Sky Cinema"
+            android:singleLine="true"
+            android:gravity="center_vertical"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:layout_toEndOf="@id/cb_tvcategory"/>
+
+
+    </RelativeLayout>
+
+
+</RelativeLayout>

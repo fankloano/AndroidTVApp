@@ -1,0 +1,158 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_channelSortOptions"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:textSize="15sp"
+        android:gravity="center"
+        android:lines="2"
+        android:background="?attr/backgroundDarkDark"
+        android:textColor="?attr/textColorLight"
+        android:text="Channel sorting\nDefault = Sort by playlist."/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_useSortByPlaylist"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/settings_item_background"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:nextFocusLeft="@id/linLayout_usePlaylistLogos"
+        android:nextFocusDown="@id/linLayout_useEpgLogos"
+        android:nextFocusUp="@id/linLayout_useEpgLogos"
+        android:layout_below="@id/tv_channelSortOptions">
+
+        <CheckBox
+            android:id="@+id/cb_useSortByPlaylist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:gravity="center_vertical"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:buttonTint="@color/selector_checkbox_add_channels"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <TextView
+            android:id="@+id/tv_useSortByPlaylist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textColor="?attr/textMainColor"
+            android:textColorHighlight="?attr/mainPrimaryColor"
+            android:textColorLink="?attr/mainPrimaryColor"
+            android:textSize="14sp"
+            android:text="@string/sort_by_playlist"
+            android:singleLine="true"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center_vertical"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linLayout_useSortByName"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/settings_item_background"
+        android:layout_below="@id/linLayout_useSortByPlaylist"
+        android:nextFocusLeft="@id/linLayout_useEpgLogos"
+        android:nextFocusUp="@id/linLayout_usePlaylistLogos"
+        android:nextFocusDown="@id/linLayout_usePlaylistLogos"
+        android:focusableInTouchMode="true"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:focusable="true">
+
+        <CheckBox
+            android:id="@+id/cb_useSortByName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:gravity="center_vertical"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:buttonTint="@color/selector_checkbox_add_channels"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <TextView
+            android:id="@+id/tv_useSortByName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textColor="?attr/textMainColor"
+            android:textColorHighlight="?attr/mainPrimaryColor"
+            android:textColorLink="?attr/mainPrimaryColor"
+            android:textSize="14sp"
+            android:text="@string/sort_alphabetically"
+            android:singleLine="true"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center_vertical"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linLayout_useSortByManually"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:gravity="center_vertical"
+        android:background="@drawable/settings_item_background"
+        android:layout_below="@id/linLayout_useSortByName"
+        android:nextFocusLeft="@id/linLayout_useSortByManually"
+        android:nextFocusUp="@id/linLayout_usePlaylistLogos"
+        android:nextFocusDown="@id/linLayout_usePlaylistLogos"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginTop="5dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true">
+
+        <CheckBox
+            android:id="@+id/cb_useSortByManually"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:gravity="center_vertical"
+            android:scaleX="0.7"
+            android:scaleY="0.7"
+            android:buttonTint="@color/selector_checkbox_add_channels"
+            tools:ignore="TouchTargetSizeCheck" />
+
+        <TextView
+            android:id="@+id/tv_useSortByManually"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:textColor="?attr/textMainColor"
+            android:textColorHighlight="?attr/mainPrimaryColor"
+            android:textColorLink="?attr/mainPrimaryColor"
+            android:textSize="14sp"
+            android:text="@string/sort_manually"
+            android:singleLine="true"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:gravity="center_vertical"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"/>
+
+    </LinearLayout>
+
+</RelativeLayout>

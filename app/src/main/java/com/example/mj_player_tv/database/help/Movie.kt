@@ -1,0 +1,32 @@
+package com.example.mj_player_tv.database.help
+
+data class Movie(
+    val idByAccountData: String,
+    val movieId: String,
+    val movieCategory: String,
+    val accountName: String,
+    val accountId: Long?,
+    val movieName: String? = "",
+    val movieCmd: String? = "",
+    var movieTime: Int? = 0,
+    val movieYear: String? = "",
+    val rate: String? = "",
+    val rating_imdb: String? = "",
+    val screenshot_uri: String? = "",
+    var genres_str: String? ="",
+    var actors: String? ="",
+    val added: String? = "",
+    var age: String? = "",
+    var description: String? = "",
+    var director: String? = "",
+    var country: String? = "",
+    var backdropPath: String? = "",
+    var tmdb_id: String? = "",
+    val o_name: String? = "",
+    var currentPosition: Long? = 0L,
+    var isFavorite: Boolean = false,
+    var isCompletelyWatched: Boolean = false,
+    var isPartlyWatched: Boolean = false,
+    var percentagePlayed: Double = 0.0,
+    var xtreamExtension: String? = ""
+)

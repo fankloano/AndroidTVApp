@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundLight"
+    android:foreground="@drawable/background_border_settings_left">
+
+    <RelativeLayout
+        android:id="@+id/relLayout_modify_channel_names"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="?attr/backgroundDark">
+
+        <TextView
+            android:id="@+id/title_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="If your provider offers tmdb-id's for movies and/or tv-shows \nyou can get additional details for them, when adding your TMDB Api-Key"
+            android:textSize="14sp"
+            android:padding="10dp"
+            android:lines="4"
+            android:gravity="center"
+            android:textColor="?attr/textColorLight"/>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tv_tmdbapikey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter your TMDB Api-Key"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_modify_channel_names"
+        android:textColor="?attr/textMainColor"
+        android:textSize="16sp"
+        android:layout_marginTop="18dp"
+        android:layout_marginStart="20dp"/>
+
+    <EditText
+        android:id="@+id/et_tmdbkey"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="10dp"
+        android:backgroundTint="@color/light_blue"
+        android:ems="10"
+        android:inputType="textUri"
+        android:minHeight="28dp"
+        android:textSize="14sp"
+        android:layout_marginStart="15dp"
+        android:textColor="@color/light_blue"
+        android:textColorHint="#99FFFFFF"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusUp="@id/et_epgsourceName"
+        android:nextFocusDown="@id/btn_saveEpg"
+        android:nextFocusRight="@id/et_epgUrl"
+        android:nextFocusLeft="@id/et_epgUrl"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_tmdbapikey" />
+
+    <Button
+        android:id="@+id/btn_saveEpg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/save"
+        android:textSize="16sp"
+        android:textColor="@drawable/focused_selected_textview"
+        android:background="@drawable/selector_button_background"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusLeft="@id/btn_saveEpg"
+        android:nextFocusRight="@id/btn_saveEpg"
+        android:nextFocusUp="@id/et_epgUrl"
+        android:nextFocusDown="@id/btn_saveEpg"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_tmdbkey" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

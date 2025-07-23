@@ -1,0 +1,132 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Focused state -->
+    <item android:state_activated="true" android:state_selected="true" android:state_focused="true">
+        <layer-list>
+            <!-- Background for focused state -->
+            <item>
+                <inset
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+                        <stroke
+                            android:width="1.5dp"
+                            android:color="?attr/textMainColor" />
+                        <solid android:color="?attr/backgroundMain" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+
+    <item android:state_activated="true" android:state_selected="true">
+        <layer-list>
+            <!-- Background for focused state -->
+            <item>
+                <inset
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+                        <stroke
+                            android:width="1.5dp"
+                            android:color="?attr/textColorMidLight" />
+                        <solid android:color="?attr/backgroundMain" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Focused state -->
+    <item android:state_activated="true">
+        <layer-list>
+            <!-- Background for focused state -->
+            <item>
+                <inset
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+                        <stroke
+                            android:width="1.5dp"
+                            android:color="?attr/backgroundLight" />
+                        <solid android:color="?attr/backgroundMain" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+    <!-- Selected and Focused state -->
+    <item android:state_selected="true" android:state_focused="true">
+        <layer-list>
+            <!-- Gradient border for selected + focused state -->
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="2dp"
+                        android:color="?attr/mainPrimaryColor" />
+                </shape>
+            </item>
+            <!-- Background for focused state -->
+            <item android:left="2dp" android:right="2dp" android:top="2dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/backgroundMain" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Selected state -->
+    <item android:state_selected="true">
+        <layer-list>
+            <!-- Gradient border for selected state -->
+            <item>
+                <shape android:shape="rectangle">
+                    <stroke
+                        android:width="2dp"
+                        android:color="?attr/textColorLight" />
+                </shape>
+            </item>
+            <!-- Background for selected state -->
+            <item android:left="2dp" android:right="2dp" android:top="2dp" android:bottom="2dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/backgroundDark" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Focused state -->
+    <item android:state_focused="true">
+        <layer-list>
+            <!-- Background for focused state -->
+            <item>
+                <inset
+                    android:insetLeft="0dp"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+                        <stroke
+                            android:width="1.5dp"
+                            android:color="?attr/backgroundDarkDark" />
+                        <solid android:color="?attr/backgroundMain" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Default state -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/backgroundDark" />
+        </shape>
+    </item>
+
+</selector>

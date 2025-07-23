@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1020758733718",
+    "project_id": "androidtv-367515",
+    "storage_bucket": "androidtv-367515.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1020758733718:android:a7b1ef5ff7540af1a9a3b7",
+        "android_client_info": {
+          "package_name": "com.example.mj_player_tv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBayXgMf3K58zJIeWBZvV4JK30aBiVtlnw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

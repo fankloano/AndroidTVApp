@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#3BBADA</color>
+    <color name="purple_500">#3BBADA</color>
+    <color name="purple_700">#3BBADA</color>
+    <color name="teal_200">#3BBADA</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="extrem_light_blue">#7BC0D1</color>
+
+    <color name="dark_blue">#083844</color>
+    <color name="black">#FF000000</color>
+    <color name="colorBG">#bb000000</color>
+    <color name="transparent">#00000000</color>
+    <color name="button_pressed_dark">#0C0D0E</color>
+    <color name="button_pressed_light">#B3B3B3</color>
+
+    <color name="background_light">#282828</color>
+    <color name="background">#2c2d31</color>
+    <color name="background_dark">#232526</color>
+    <color name="background_dark_dark">#1D1D1D</color>
+    <color name="blackwhite">#212323</color>
+    <color name="background_lightdark">#424244</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="light_grey">#C5C2C2</color>
+    <color name="light_light_grey">#8F939292</color>
+    <color name="light_mid_grey">#8FDFDFDF</color>
+
+    <color name="background_light_L">#E0E0E0</color>
+    <color name="background_L">#BDBDBD</color>
+    <color name="background_dark_L">#9E9E9E</color>
+    <color name="textDark">#bb000000</color>
+    <color name="light_grey_L">#2C2C2C</color>
+    <color name="light_light_grey_L">#36393F</color>
+
+    <color name="light_blue">#FF00ACC1</color>
+    <color name="light_light_blue">#04CBE2</color>
+    <color name="red">#EF0202</color>
+    <color name="orange">#FF5A0E</color>
+    <color name="yellow">#EAB705</color>
+    <color name="green">#299A00</color>
+
+    <color name="light_blue_darker">#015864</color>
+    <color name="red_darker">#9EEF0202</color>
+    <color name="orange_darker">#ABFF5A0E</color>
+    <color name="yellow_darker">#AEEAB705</color>
+    <color name="green_darker">#A3299A00</color>
+
+</resources>

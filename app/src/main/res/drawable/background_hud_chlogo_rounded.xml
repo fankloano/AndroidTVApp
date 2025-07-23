@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Hintergrundfarbe -->
+    <gradient
+        android:type="linear"
+        android:angle="45"
+        android:startColor="#701D1D1D"
+        android:endColor="#70181818"
+        android:dither="true" /><!-- Ersetze mit deiner Wunschfarbe -->
+
+    <!-- Abgerundete Ecken -->
+    <corners
+        android:radius="8dp" />
+
+</shape>

@@ -1,0 +1,18 @@
+package com.example.mj_player_tv.network.model.stalker.alltvchannels
+
+data class AllTvChannelsCmd(
+    val ch_id: String?,
+    val changed: String?,
+    val enable_balancer_monitoring: String?,
+    val enable_monitoring: String?,
+    val flussonic_tmp_link: String?,
+    val id: String?,
+    val nginx_secure_link: Int?,
+    val priority: String?,
+    val status: String?,
+    val url: String?,
+    val use_http_tmp_link: Int?,
+    val use_load_balancing: String?,
+    val user_agent_filter: String?,
+    val wowza_tmp_link: String?
+)

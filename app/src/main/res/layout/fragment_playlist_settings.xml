@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <LinearLayout
+            android:id="@+id/linLayout_playlist_name"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+                <TextView
+                    android:id="@+id/title_setting"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    tools:text="Playlist Info"
+                    android:textSize="14sp"
+                    android:paddingStart="34dp"
+                    android:paddingEnd="22dp"
+                    android:textColor="?attr/mainPrimaryColor"
+                    android:gravity="center_vertical"
+                    android:background="?attr/backgroundDarkDark"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/title"/>
+
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/scrollView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/linLayout_playlist_name">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:orientation="vertical">
+
+        <RelativeLayout
+            android:id="@+id/relLayout_active"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_info"
+            android:nextFocusUp="@id/relLayout_active"
+            android:nextFocusLeft="@id/relLayout_active"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_setting">
+
+                <TextView
+                    android:id="@+id/tv_active"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/playlist_enabled"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        <CheckBox
+            android:id="@+id/switch_active"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="5dp"
+            android:paddingEnd="5dp"
+            android:buttonTint="?attr/textMainColor"
+            android:layout_centerVertical="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_info"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:nextFocusDown="@id/relLayout_groups"
+            android:nextFocusUp="@id/relLayout_active"
+            android:nextFocusLeft="@id/relLayout_edit"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_name">
+
+                <TextView
+                    android:id="@+id/tv_PlaylistInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Playlist Info"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_groups"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_epg"
+            android:nextFocusUp="@id/relLayout_info"
+            android:nextFocusLeft="@id/relLayout_groups"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_info">
+
+                <TextView
+                    android:id="@+id/tv_manageGroups"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/manage_groups"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="15dp"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_epg"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_logos"
+            android:nextFocusUp="@id/relLayout_groups"
+            android:nextFocusLeft="@id/relLayout_epg"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_groups">
+
+                <TextView
+                    android:id="@+id/tv_manageEpg"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/manage_epg"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <TextView
+                    android:id="@+id/tv_epgSources"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_manageEpg"
+                    tools:text="@string/change_playlist_name"
+                    android:textSize="12sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_logos"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_channelOrder"
+            android:nextFocusUp="@id/relLayout_epg"
+            android:nextFocusLeft="@id/relLayout_logos"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_epg">
+
+                <TextView
+                    android:id="@+id/tv_Logos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/channel_logos"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <TextView
+                    android:id="@+id/tv_isLogoPreference"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_Logos"
+                    tools:text="@string/change_playlist_name"
+                    android:textSize="12sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_channelOrder"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:nextFocusDown="@id/relLayout_showtv"
+                    android:nextFocusUp="@id/relLayout_logos"
+                    android:nextFocusLeft="@id/relLayout_channelOrder"
+                    android:background="@drawable/test_selector_mainmenu_background"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/relLayout_logos">
+
+                        <TextView
+                            android:id="@+id/tv_order"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@drawable/focused_selected_mainmenu"
+                            android:text="@string/channel_sorting"
+                            android:background="@color/transparent"
+                            android:textSize="15sp"
+                            android:gravity="center_vertical"
+                            android:paddingStart="15dp"
+                            android:paddingEnd="15dp"/>
+
+                        <TextView
+                            android:id="@+id/tv_isChannelOrder"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@drawable/focused_selected_textview_info"
+                            android:layout_below="@id/tv_order"
+                            tools:text="@string/change_playlist_name"
+                            android:textSize="12sp"
+                            android:paddingStart="15dp"
+                            android:paddingEnd="15dp"
+                            android:background="@color/transparent"/>
+
+                </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_showtv"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_showvod"
+            android:nextFocusUp="@id/relLayout_channelOrder"
+            android:nextFocusLeft="@id/relLayout_showtv"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_logos">
+
+                <TextView
+                    android:id="@+id/tv_showtv"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/tv_enabled"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <CheckBox
+                    android:id="@+id/switch_showTv"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="5dp"
+                    android:paddingEnd="5dp"
+                    android:buttonTint="?attr/textMainColor"
+                    android:layout_centerVertical="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_showvod"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_auto_update"
+            android:nextFocusUp="@id/relLayout_showtv"
+            android:nextFocusLeft="@id/relLayout_showvod"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_showtv">
+
+                <TextView
+                    android:id="@+id/tv_showvod"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/vod_enabled"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <CheckBox
+                    android:id="@+id/switch_showvod"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginEnd="5dp"
+                    android:paddingEnd="5dp"
+                    android:buttonTint="?attr/textMainColor"
+                    android:layout_centerVertical="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+        </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_auto_update"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:nextFocusDown="@id/relLayout_updateonappstart"
+                    android:nextFocusUp="@id/relLayout_showvod"
+                    android:nextFocusLeft="@id/relLayout_auto_update"
+                    android:background="@drawable/test_selector_mainmenu_background"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/relLayout_showvod">
+
+                        <TextView
+                            android:id="@+id/tv_auto_updatePlaylist"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@drawable/focused_selected_mainmenu"
+                            android:text="@string/set_auto_update"
+                            android:textSize="15sp"
+                            android:paddingStart="15dp"
+                            android:paddingEnd="15dp"
+                            android:background="@color/transparent"/>
+
+                        <TextView
+                            android:id="@+id/tv_isauto_UpdatePlaylist"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:textColor="@drawable/focused_selected_textview_info"
+                            android:layout_below="@id/tv_auto_updatePlaylist"
+                            tools:text="Currently: 12h"
+                            android:textSize="12sp"
+                            android:paddingStart="15dp"
+                            android:paddingEnd="15dp"
+                            android:background="@color/transparent"/>
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_updateonappstart"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal"
+                    android:nextFocusDown="@id/relLayout_update"
+                    android:nextFocusUp="@id/relLayout_auto_update"
+                    android:nextFocusLeft="@id/relLayout_updateonappstart"
+                    android:background="@drawable/test_selector_mainmenu_background"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/relLayout_auto_update">
+
+                        <TextView
+                            android:id="@+id/tv_updateonappstart"
+                            android:layout_width="match_parent"
+                            android:layout_height="45dp"
+                            android:textColor="@drawable/focused_selected_mainmenu"
+                            android:text="@string/update_on_app_start"
+                            android:textSize="15sp"
+                            android:paddingStart="15dp"
+                            android:gravity="center_vertical"
+                            android:paddingEnd="15dp"
+                            android:background="@color/transparent"/>
+
+                        <CheckBox
+                            android:id="@+id/switch_updateonappstart"
+                            android:layout_width="35dp"
+                            android:layout_height="35dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_marginEnd="5dp"
+                            android:paddingEnd="5dp"
+                            android:buttonTint="?attr/textMainColor"
+                            android:layout_centerVertical="true"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+                </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_update"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_delete"
+            android:nextFocusUp="@id/relLayout_updateonappstart"
+            android:nextFocusLeft="@id/relLayout_update"
+            android:background="@drawable/test_selector_mainmenu_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_updateonappstart">
+
+                <TextView
+                    android:id="@+id/tv_updatePlaylist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/update_playlist"
+                    android:textSize="15sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <TextView
+                    android:id="@+id/tv_lastUpdatePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_updatePlaylist"
+                    tools:text="Last updated: 2024-05-13"
+                    android:textSize="12sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <ProgressBar
+                    android:id="@+id/loadingBalken"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="19dp"
+                    android:layout_toEndOf="@id/tv_updatePlaylist"
+                    android:indeterminate="true"
+                    android:layout_marginEnd="25dp"
+                    android:layout_marginStart="25dp"
+                    android:layout_gravity="center_vertical"
+                    android:indeterminateTint="@color/light_blue"/>
+
+        </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_delete"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="7dp"
+                    android:paddingEnd="7dp"
+                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="2dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="horizontal"
+                    android:nextFocusDown="@id/relLayout_delete"
+                    android:nextFocusUp="@id/relLayout_update"
+                    android:nextFocusLeft="@id/relLayout_delete"
+                    android:background="@drawable/test_selector_mainmenu_background"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/relLayout_update">
+
+                <TextView
+                    android:id="@+id/tv_deletePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/delete_playlist"
+                    android:background="@color/transparent"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"/>
+
+        </RelativeLayout>
+
+        <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/container_pl_status"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintHeight_percent="0.3"
+            android:background="@color/background"
+            android:visibility="gone"/>
+
+        </LinearLayout>
+
+        </ScrollView>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

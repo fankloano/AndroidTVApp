@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left" >
+
+    <TextView
+        android:id="@+id/title_setting"
+        android:layout_width="0dp"
+        android:layout_height="50dp"
+        android:background="?attr/backgroundDarkDark"
+        android:text="@string/settings"
+        android:textSize="16sp"
+        android:padding="10dp"
+        android:gravity="center_horizontal"
+        android:textColor="?attr/textMainColor"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:layout_height="0dp"
+       android:orientation="vertical"
+       app:layout_constraintStart_toStartOf="parent"
+       app:layout_constraintEnd_toEndOf="parent"
+       app:layout_constraintBottom_toBottomOf="parent"
+       app:layout_constraintTop_toBottomOf="@id/title_setting">
+
+       <TextView
+           android:id="@+id/btn_playlists"
+           android:layout_width="match_parent"
+           android:layout_height="45dp"
+           android:gravity="center_vertical"
+           android:textSize="15sp"
+           android:layout_marginStart="5dp"
+           android:paddingStart="20dp"
+           android:paddingEnd="10dp"
+           android:layout_marginEnd="5dp"
+           android:layout_marginTop="10dp"
+           android:background="@drawable/test_selector_mainmenu_background"
+           android:focusable="true"
+           android:focusableInTouchMode="true"
+           android:nextFocusDown="@id/btn_Layout"
+           android:nextFocusUp="@id/btn_Epg"
+           android:nextFocusLeft="@id/btn_playlists"
+           android:text="@string/playlists"
+           android:textColor="@drawable/focused_selected_mainmenu" />
+
+       <TextView
+           android:id="@+id/btn_Layout"
+           android:layout_width="match_parent"
+           android:layout_height="45dp"
+           android:textSize="15sp"
+           android:layout_marginStart="5dp"
+           android:paddingStart="20dp"
+           android:paddingEnd="10dp"
+           android:layout_marginEnd="5dp"
+           android:layout_marginTop="10dp"
+           android:background="@drawable/test_selector_mainmenu_background"
+           android:focusable="true"
+           android:focusableInTouchMode="true"
+           android:nextFocusUp="@id/btn_playlists"
+           android:nextFocusDown="@id/btn_Epg"
+           android:nextFocusLeft="@id/btn_Layout"
+           android:gravity="center_vertical"
+           android:layout_below="@id/btn_playlists"
+           android:text="@string/layout_options"
+           android:textColor="@drawable/focused_selected_mainmenu" />
+
+       <TextView
+           android:id="@+id/btn_Epg"
+           android:layout_width="match_parent"
+           android:layout_height="45dp"
+           android:layout_marginStart="5dp"
+           android:paddingStart="20dp"
+           android:paddingEnd="10dp"
+           android:layout_marginEnd="5dp"
+           android:textSize="15sp"
+           android:layout_marginTop="10dp"
+           android:gravity="center_vertical"
+           android:background="@drawable/test_selector_mainmenu_background"
+           android:focusable="true"
+           android:focusableInTouchMode="true"
+           android:layout_below="@id/btn_Layout"
+           android:nextFocusUp="@id/btn_Layout"
+           android:nextFocusDown="@id/btn_playlists"
+           android:nextFocusLeft="@id/btn_Epg"
+           android:text="@string/epg_options"
+           android:textColor="@drawable/focused_selected_mainmenu" />
+
+   </RelativeLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

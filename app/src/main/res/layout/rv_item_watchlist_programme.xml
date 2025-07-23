@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardview_wl_pr"
+    android:layout_width="match_parent"
+    android:layout_height="90dp"
+    android:background="@drawable/background_rounded_leftup_rightdown_gradient"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:elevation="6dp"
+    android:stateListAnimator="@animator/focus_zoom_card"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+               <ImageView
+                   android:id="@+id/iv_tvchannel_logo"
+                   android:layout_width="100dp"
+                   android:layout_height="87dp"
+                   android:scaleType="fitCenter"
+                   android:paddingTop="10dp"
+                   android:paddingBottom="10dp"
+                   android:paddingStart="20dp"
+                   android:paddingEnd="20dp"
+                   android:layout_marginStart="1dp"
+                   android:background="@drawable/background_rounded_leftup_backgroundmain"
+                   app:layout_constraintStart_toStartOf="parent"
+                   app:layout_constraintTop_toTopOf="parent"
+                   app:layout_constraintBottom_toBottomOf="parent"
+                   tools:src="@drawable/skybundesliga" />
+
+               <androidx.constraintlayout.widget.ConstraintLayout
+                   android:id="@+id/inner_constr"
+                   android:layout_width="0dp"
+                   android:layout_height="wrap_content"
+                   app:layout_constraintTop_toTopOf="parent"
+                   app:layout_constraintVertical_bias="0.5"
+                   app:layout_constraintBottom_toBottomOf="parent"
+                   app:layout_constraintStart_toEndOf="@id/iv_tvchannel_logo">
+
+                    <TextView
+                        android:id="@+id/tv_channelName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:maxLines="1"
+                        android:scrollHorizontally="true"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        android:textColor="?attr/textMainColor"
+                        android:textSize="14sp"
+                        tools:text="DE | SKY CINEMA Highlights FHD" />
+
+                    <LinearLayout
+                        android:id="@+id/linLayout_reminder_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="30dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/tv_channelName"
+                        android:orientation="horizontal">
+
+                         <LinearLayout
+                             android:layout_width="wrap_content"
+                             android:layout_height="20dp"
+                             android:gravity="bottom"
+                             android:orientation="horizontal">
+
+                              <TextView
+                                  android:id="@+id/tv_StartTime"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:gravity="bottom"
+                                  android:textColor="#A6A5A5"
+                                  android:textSize="12sp"
+                                  tools:text="08:20" />
+
+                              <TextView
+                                  android:id="@+id/tv_EndTime"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  tools:text=" - 08:20"
+                                  android:gravity="bottom"
+                                  android:textColor="#A6A5A5"
+                                  android:textSize="12sp" />
+
+                         </LinearLayout>
+
+                         <TextView
+                             android:id="@+id/divider_time"
+                             android:layout_width="wrap_content"
+                             android:layout_height="20dp"
+                             android:gravity="bottom"
+                             android:layout_marginStart="10dp"
+                             android:textColor="#A6A5A5"
+                             android:textSize="12sp"
+                             android:text="|" />
+
+                         <TextView
+                             android:id="@+id/tv_date"
+                             android:layout_width="wrap_content"
+                             android:layout_height="20dp"
+                             android:gravity="bottom"
+                             android:layout_marginStart="10dp"
+                             android:textColor="#A6A5A5"
+                             android:textSize="12sp"
+                             tools:text="16 May, 2025" />
+
+
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tv_Program"
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        android:layout_marginStart="30dp"
+                        android:layout_marginEnd="10dp"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:maxLines="1"
+                        android:scrollHorizontally="true"
+                        android:textColor="?attr/textMainColor"
+                        android:textSize="13sp"
+                        android:gravity="bottom"
+                        android:maxWidth="400dp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/linLayout_reminder_time"
+                        tools:text="Es war einmal in Amerikaadadadasdasdasdasdadasdasdasdasdsadsadasdasdaasdasdadasdasdasdasdasdsad" />
+
+                    <TextView
+                        android:id="@+id/tv_SubTitleProgram"
+                        android:layout_width="wrap_content"
+                        android:layout_height="22dp"
+                        tools:text="Es war einmal in Amerika"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="10dp"
+                        android:textColor="?attr/textColorLight"
+                        android:textSize="12sp"
+                        android:maxLines="1"
+                        android:ellipsize="marquee"
+                        android:gravity="bottom"
+                        app:layout_constraintStart_toEndOf="@id/tv_Program"
+                        app:layout_constraintTop_toBottomOf="@id/linLayout_reminder_time"
+                        android:marqueeRepeatLimit="marquee_forever"/>
+
+          </androidx.constraintlayout.widget.ConstraintLayout>
+
+     <View
+         android:id="@+id/overlay_full"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:background="#6A232526"
+         android:visibility="gone"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toTopOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

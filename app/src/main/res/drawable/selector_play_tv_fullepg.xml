@@ -1,0 +1,7 @@
+<!-- res/drawable/icon_play_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Zustand: Fokussiert -->
+    <item android:state_selected="true" android:drawable="@drawable/ic_play_tv_selected" />
+    <!-- Zustand: Standard -->
+    <item android:drawable="@drawable/ic_play_tv" />
+</selector>

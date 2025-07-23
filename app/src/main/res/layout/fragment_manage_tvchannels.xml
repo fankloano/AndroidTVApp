@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/parentview"
+    android:foreground="@drawable/background_border_settings_right"
+    android:background="?attr/backgroundDarkLight">
+
+    <TextView
+        android:id="@+id/title_setting"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/channel_editor"
+        android:textSize="18sp"
+        android:paddingStart="10dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:background="?attr/backgroundLight"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_TvChannels"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:paddingBottom="5dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@id/linLayout_menu"
+        app:layout_constraintTop_toBottomOf="@id/title_setting"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/tv_contentDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Zurücksetzen"
+        android:visibility="gone"
+        android:gravity="center_vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        android:textSize="13sp"/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_menu"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:background="?attr/backgroundLight"
+        android:nextFocusLeft="@id/container"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title_setting">
+
+        <ImageView
+            android:id="@+id/btn_copy"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/selector_item_background"
+            android:src="@drawable/selector_copy"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/btn_move"
+            android:nextFocusUp="@id/btn_copy"
+            android:nextFocusRight="@id/btn_copy"
+            android:nextFocusLeft="@id/rv_layout_TvChannels"
+            android:gravity="center_vertical" />
+
+        <ImageView
+            android:id="@+id/btn_move"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/selector_item_background"
+            android:src="@drawable/selector_move"
+            android:layout_marginTop="16dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/btn_move"
+            android:nextFocusUp="@id/btn_copy"
+            android:nextFocusRight="@id/btn_move"
+            android:nextFocusLeft="@id/rv_layout_TvChannels"
+            android:gravity="center_vertical" />
+
+        <ImageView
+            android:id="@+id/btn_selectAll"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:background="@drawable/selector_item_background"
+            android:src="@drawable/selector_filteroff"
+            android:layout_marginTop="16dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/btn_move"
+            android:nextFocusUp="@id/btn_move"
+            android:nextFocusRight="@id/btn_selectAll"
+            android:nextFocusLeft="@id/rv_layout_TvChannels"
+            android:gravity="center_vertical" />
+
+        <ImageView
+            android:id="@+id/btn_deselectAll"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:visibility="gone"
+            android:background="@drawable/selector_item_background"
+            android:src="@drawable/selector_filteron"
+            android:layout_marginTop="16dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusDown="@id/btn_move"
+            android:nextFocusUp="@id/btn_move"
+            android:nextFocusRight="@id/btn_deselectAll"
+            android:nextFocusLeft="@id/rv_layout_TvChannels"
+            android:gravity="center_vertical" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

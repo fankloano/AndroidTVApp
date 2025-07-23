@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@drawable/background_movieoptions_border"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/btn_PlayProgram"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_item_background_dark"
+        tools:text="Play Program"
+        android:padding="6dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:textSize="13sp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btn_ReplayProgram"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_item_background_dark"
+        tools:text="Replay Program"
+        android:padding="6dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:textSize="13sp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btn_setReminder"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_item_background_dark"
+        android:text="@string/set_reminder"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_marginTop="10dp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btnSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/selector_item_background_dark"
+        android:text="Search for other channels"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_marginTop="10dp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+</LinearLayout>

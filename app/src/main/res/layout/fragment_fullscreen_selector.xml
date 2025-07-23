@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/const_tv_fullscreen"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_changeTvChannels"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:descendantFocusability="afterDescendants"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="1.0"
+        tools:listitem="@layout/rv_item_fullscreen_tvchannels"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_changeTvCategory"
+        android:layout_width="0.dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:descendantFocusability="afterDescendants"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintEnd_toStartOf="@id/rv_layout_changeTvChannels"
+        tools:listitem="@layout/rv_item_fullscreen_tvcategory"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_changeTvAccounts"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:descendantFocusability="afterDescendants"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintEnd_toStartOf="@id/rv_layout_changeTvCategory"
+        tools:listitem="@layout/rv_item_fullscreen_account"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundDarkDark"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+                <TextView
+                    android:id="@+id/title_setting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/epg_sources"
+                    android:textSize="16sp"
+                    android:padding="10dp"
+                    android:paddingStart="15dp"
+                    android:background="?attr/backgroundDarkDark"
+                    android:gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/relLayout_sort_btn"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:gravity="start|center_vertical"
+            android:layout_below="@id/title_setting"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/selector_item_background_dark"
+            android:nextFocusLeft="@id/relLayout_sort_btn"
+            android:nextFocusRight="@id/relLayout_addepg_btn"
+            android:nextFocusUp="@id/relLayout_sort_btn"
+            android:nextFocusDown="@id/relLayout_addepg_btn"
+            android:paddingStart="10dp"
+            android:paddingEnd="20dp"
+            tools:text="Sorted by: Name"
+            android:textColor="@drawable/focused_selected_mainmenu"
+            android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/relLayout_addepg_btn"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:layout_margin="5dp"
+                    android:drawableStart="@drawable/selector_add"
+                    android:drawablePadding="10dp"
+                    android:gravity="start|center_vertical"
+                    android:layout_below="@id/relLayout_sort_btn"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_item_background_dark"
+                    android:nextFocusLeft="@id/relLayout_addepg_btn"
+                    android:nextFocusRight="@id/relLayout_addepg_btn"
+                    android:nextFocusUp="@id/relLayout_sort_btn"
+                    android:nextFocusDown="@id/rv_layout_EpgSources"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="20dp"
+                    android:text="@string/add_epg_source"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:textSize="15sp" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_EpgSources"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:listitem="@layout/rv_item_epgsource"
+            android:layout_below="@id/relLayout_addepg_btn"/>
+
+</RelativeLayout>

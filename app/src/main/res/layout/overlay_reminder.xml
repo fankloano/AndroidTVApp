@@ -1,0 +1,97 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@drawable/background_rounded_reminder"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp">
+
+    <!-- Inhaltsbereich -->
+    <LinearLayout
+        android:id="@+id/linLayout_reminder_descr"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/iv_channelLogo"
+            android:layout_width="75dp"
+            android:layout_height="50dp"
+            tools:src="@drawable/skybundesliga"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_reminderText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:textColor="@android:color/white"
+                android:textSize="15sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="Death in Paradise" />
+
+            <TextView
+                android:id="@+id/tv_reminderTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:textColor="@color/light_grey"
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end"
+                tools:text="startet in 10 Minuten" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Button-Bereich -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:layout_marginTop="10dp">
+
+        <TextView
+            android:id="@+id/iv_closeReminder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:text="Close"
+            android:textColor="@drawable/selector_textview_reminder"
+            android:background="@drawable/selector_moviedetail_button_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:nextFocusRight="@id/iv_playVideo" />
+
+        <TextView
+            android:id="@+id/iv_playVideo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginStart="20dp"
+            android:text="Go to channel"
+            android:textColor="@drawable/selector_textview_reminder"
+            android:background="@drawable/selector_moviedetail_button_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:nextFocusLeft="@id/iv_closeReminder" />
+
+    </LinearLayout>
+
+</LinearLayout>

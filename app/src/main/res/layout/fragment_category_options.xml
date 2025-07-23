@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundDarkDark"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:descendantFocusability="beforeDescendants"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <TextView
+            android:id="@+id/title_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/category_options"
+            android:textSize="16sp"
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:gravity="start"
+            android:textColor="?attr/textMainColor"
+            android:background="?attr/backgroundDarkDark"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tv_categoryName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="DE: SKY CINEMA "
+            android:textSize="13sp"
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:gravity="center_vertical"
+            android:textColor="?attr/mainPrimaryColor"
+            android:background="?attr/backgroundDarkDark"
+            app:layout_constraintTop_toBottomOf="@id/title_setting"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_visibility"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_edit"
+            android:nextFocusUp="@id/relLayout_categoryEditor"
+            android:nextFocusLeft="@id/relLayout_visibility"
+            android:nextFocusRight="@id/relLayout_visibility"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_categoryName">
+
+                <TextView
+                    android:id="@+id/tv_visibility"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/remove_category"
+                    android:textSize="15sp"
+                    android:paddingStart="5dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_edit"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_channelOrder"
+            android:nextFocusUp="@id/relLayout_visibility"
+            android:nextFocusLeft="@id/relLayout_edit"
+            android:nextFocusRight="@id/relLayout_edit"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_visibility">
+
+                <TextView
+                    android:id="@+id/tv_editCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/edit_category_name"
+                    android:textSize="15sp"
+                    android:paddingStart="5dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="5dp"
+                    android:background="@color/transparent"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_channelOrder"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_addChannels"
+            android:nextFocusUp="@id/relLayout_edit"
+            android:nextFocusRight="@id/relLayout_channelOrder"
+            android:nextFocusLeft="@id/relLayout_channelOrder"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_edit">
+
+                <TextView
+                    android:id="@+id/tv_order"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/channel_sorting"
+                    android:background="@color/transparent"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"/>
+
+                <TextView
+                    android:id="@+id/tv_isChannelOrder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_order"
+                    tools:text="@string/change_playlist_name"
+                    android:textSize="12sp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_addChannels"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:gravity="center_vertical"
+            android:clickable="true"
+            android:visibility="gone"
+            android:nextFocusDown="@id/relLayout_epgTimeOffset"
+            android:nextFocusUp="@id/relLayout_channelOrder"
+            android:nextFocusLeft="@id/relLayout_addChannels"
+            android:nextFocusRight="@id/relLayout_addChannels"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_channelOrder">
+
+                <TextView
+                    android:id="@+id/tv_addChannelsToCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/add_channels"
+                    android:textSize="15sp"
+                    android:paddingStart="5dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="5dp"
+                    android:background="@color/transparent"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_epgTimeOffset"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_orderCategories"
+            android:nextFocusUp="@id/relLayout_addChannels"
+            android:nextFocusLeft="@id/relLayout_epgTimeOffset"
+            android:nextFocusRight="@id/relLayout_epgTimeOffset"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_addChannels">
+
+                <TextView
+                    android:id="@+id/tv_timeOffSet"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:text="@string/epg_time_offset"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:textSize="15sp" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_otherOptions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Other options"
+            android:textSize="13sp"
+            android:paddingStart="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:gravity="start"
+            android:textColor="?attr/mainPrimaryColor"
+            android:background="?attr/backgroundDarkDark"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_epgTimeOffset"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_orderCategories"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_categoryEditor"
+            android:nextFocusUp="@id/relLayout_epgTimeOffset"
+            android:nextFocusLeft="@id/relLayout_orderCategories"
+            android:nextFocusRight="@id/relLayout_orderCategories"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_otherOptions">
+
+                <TextView
+                    android:id="@+id/tv_orderCategories"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/rearrange_categories"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="5dp"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_categoryEditor"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_visibility"
+            android:nextFocusUp="@id/relLayout_orderCategories"
+            android:nextFocusLeft="@id/relLayout_categoryEditor"
+            android:nextFocusRight="@id/relLayout_categoryEditor"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_orderCategories">
+
+                <TextView
+                    android:id="@+id/tv_categoryEditor"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Create new category"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="5dp"/>
+
+        </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

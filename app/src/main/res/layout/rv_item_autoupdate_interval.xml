@@ -1,0 +1,14 @@
+<!-- res/layout/tv_spinner_item.xml -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tv_autoUpdateInterval"
+    android:layout_width="match_parent"
+    android:layout_height="35dp"
+    android:padding="4dp"
+    android:gravity="center"
+    tools:text="TEST DAS MAL"
+    android:background="?attr/transparentColor"
+    android:focusableInTouchMode="true"
+    android:focusable="true"
+    android:textColor="@drawable/focused_selected_textview_timeoffset"
+    android:textSize="14sp" />

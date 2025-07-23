@@ -1,0 +1,8 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:color="?attr/textMainColor" android:state_focused="true" />
+    <item android:color="?attr/mainPrimaryColor" android:state_activated="true" />
+    <item android:color="?attr/textMainColor" android:state_selected="true" />
+    <item android:color="?attr/textMainColor" />
+
+</selector>

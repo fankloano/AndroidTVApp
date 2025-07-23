@@ -1,0 +1,21 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <gradient
+        android:type="linear"
+        android:angle="270"
+        android:startColor="?attr/backgroundDarkLight"
+        android:endColor="?attr/backgroundMain"
+        android:dither="true" />
+
+    <!-- Rahmen -->
+    <stroke
+        android:width="1.5dp"
+        android:color="?attr/backgroundDarkDark" />
+
+    <corners
+        android:bottomRightRadius="24dp"
+        android:bottomLeftRadius="0dp"
+        android:topLeftRadius="24dp"
+        android:topRightRadius="0dp" />
+</shape>

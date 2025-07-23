@@ -1,0 +1,64 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Focused state -->
+    <!-- Default state -->
+
+    <item android:state_selected="true" android:state_focused="true">
+        <inset
+            android:insetLeft="-0dp"
+            android:insetTop="-0dp"
+            android:insetBottom="-0dp"
+            android:insetRight="-0dp">
+            <shape android:shape="rectangle">
+                <stroke
+                    android:width="1.5dp"
+                    android:color="?attr/backgroundDarkDark" />
+                <solid android:color="?attr/backgroundMain" />
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_selected="true">
+        <inset
+            android:insetLeft="-0dp"
+            android:insetTop="-0dp"
+            android:insetBottom="-0dp"
+            android:insetRight="-0dp">
+            <shape android:shape="rectangle">
+                <stroke
+                    android:width="1.5dp"
+                    android:color="?attr/backgroundDarkDark" />
+                <solid android:color="?attr/backgroundMain" />
+            </shape>
+        </inset>
+    </item>
+
+    <item android:state_focused="true">
+    <inset
+        android:insetLeft="-0dp"
+        android:insetTop="-0dp"
+        android:insetBottom="-0dp"
+        android:insetRight="-0dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1.5dp"
+                android:color="?attr/backgroundDarkDark" />
+            <solid android:color="?attr/backgroundMain" />
+        </shape>
+    </inset>
+    </item>
+
+    <item>
+        <inset
+            android:insetLeft="-2dp"
+            android:insetTop="-2dp"
+            android:insetBottom="-2dp"
+            android:insetRight="-2dp">
+            <shape android:shape="rectangle">
+                <stroke
+                    android:width="1.5dp"
+                    android:color="?attr/backgroundDarkLight" />
+                <solid android:color="?attr/backgroundDark" />
+            </shape>
+        </inset>
+    </item>
+</selector>

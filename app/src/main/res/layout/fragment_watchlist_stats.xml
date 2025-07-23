@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/layoutRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/backgroundLight">
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardWatchlist"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginEnd="12dp"
+        app:layout_constraintWidth_percent="0.23"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="18dp"
+        android:layout_margin="24dp"
+        app:strokeColor="?attr/mainPrimaryColor"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/cardStats">
+
+        <LinearLayout
+            android:id="@+id/linLayout_cardWatchlist"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusRight="@id/cardStats"
+            android:nextFocusUp="@id/cardWatchlist"
+            android:nextFocusDown="@id/cardWatchlist"
+            android:background="@drawable/selector_card_watchstats"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/iv_card_watchlist"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:src="@drawable/selector_card_watchlist" />
+
+            <TextView
+                android:id="@+id/tv_card_watchlist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Watchlist"
+                android:textSize="38sp"
+                android:paddingTop="30dp"
+                android:textColor="@drawable/selector_textview_player_optionsdetail" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardStats"
+        android:layout_width="0dp"
+        android:layout_height="200dp"
+        android:layout_marginStart="12dp"
+        app:layout_constraintWidth_percent="0.23"
+        app:cardCornerRadius="24dp"
+        app:cardElevation="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/cardWatchlist"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/linLayout_cardStats"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusLeft="@id/cardWatchlist"
+            android:nextFocusDown="@id/cardStats"
+            android:nextFocusUp="@id/cardStats"
+            android:nextFocusRight="@id/cardStats"
+            android:background="@drawable/selector_card_watchstats">
+
+            <ImageView
+                android:id="@+id/iv_card_stats"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:src="@drawable/selector_card_stats" />
+
+            <TextView
+                android:id="@+id/tv_card_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stats"
+                android:textSize="38sp"
+                android:paddingTop="23dp"
+                android:textColor="@drawable/selector_textview_player_optionsdetail" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_watchlist_stats"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+    <View
+        android:id="@+id/overlay_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="#AA000000"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

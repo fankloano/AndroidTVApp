@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left">
+
+    <TextView
+        android:id="@+id/tv_plexCredentials"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter your Plex login details"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:textColor="?attr/mainPrimaryColor"
+        android:textSize="16sp"
+        android:background="?attr/backgroundDark"
+        android:paddingTop="5dp"
+        android:padding="20dp"/>
+
+    <TextView
+        android:id="@+id/tv_plexmail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Email:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_plexCredentials"
+        android:textColor="?attr/textMainColor"
+        android:textSize="15sp"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="20dp"/>
+
+    <EditText
+        android:id="@+id/et_plexmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginEnd="15dp"
+        android:backgroundTint="@color/light_blue"
+        android:ems="10"
+        android:hint="Enter your login-mail"
+        android:inputType="textEmailAddress"
+        android:minHeight="28dp"
+        android:textSize="14sp"
+        android:layout_marginStart="15dp"
+        android:textColor="@color/light_blue"
+        android:textColorHint="#99FFFFFF"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusUp="@id/et_plexmail"
+        android:nextFocusDown="@id/et_password"
+        android:nextFocusLeft="@id/et_plexmail"
+        android:nextFocusRight="@id/et_plexmail"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_plexmail" />
+
+    <TextView
+        android:id="@+id/tv_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Password:"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/et_plexmail"
+        android:textColor="?attr/textMainColor"
+        android:textSize="15sp"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="20dp"/>
+
+    <EditText
+        android:id="@+id/et_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:backgroundTint="@color/light_blue"
+        android:ems="10"
+        android:textSize="14sp"
+        android:hint="Enter Password.."
+        android:inputType="textPersonName"
+        android:minHeight="28dp"
+        android:textColor="@color/light_blue"
+        android:textColorHint="#99FFFFFF"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusUp="@id/et_username"
+        android:nextFocusDown="@id/btn_savePlex"
+        android:nextFocusRight="@id/et_password"
+        android:nextFocusLeft="@id/et_password"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tv_password" />
+
+    <Button
+        android:id="@+id/btn_savePlex"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="15dp"
+        android:text="@string/save"
+        android:background="@drawable/selector_button_background"
+        android:textSize="16sp"
+        android:textColor="@drawable/focused_selected_textview"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusLeft="@id/btn_more_Options"
+        android:nextFocusDown="@id/btn_savePlex"
+        android:nextFocusUp="@id/et_userAgent"
+        android:nextFocusRight="@id/btn_savePlex"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_password" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

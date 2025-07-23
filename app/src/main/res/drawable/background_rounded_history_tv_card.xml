@@ -1,0 +1,19 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <gradient
+        android:type="linear"
+        android:angle="45"
+        android:startColor="?attr/backgroundDarkLight"
+        android:endColor="?attr/backgroundMain"
+        android:dither="true" />
+
+    <!-- Rahmen -->
+    <stroke
+        android:width="1.5dp"
+        android:color="?attr/backgroundDarkDark" />
+
+    <!-- Optional: abgerundete Ecken -->
+    <corners android:radius="24dp" />
+
+</shape>

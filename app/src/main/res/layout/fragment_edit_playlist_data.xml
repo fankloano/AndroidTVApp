@@ -1,0 +1,98 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundDarkDark"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_modify_accountData"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:textSize="16sp"
+        android:gravity="center"
+        android:background="?attr/backgroundDarkDark"
+        android:lines="2"
+        android:textColor="?attr/textColorLight"
+        tools:text="Modify Server Url"/>
+
+    <TextView
+        android:id="@+id/tv_currentAccountData"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Current Server Url:"
+        android:textColor="?attr/textMainColor"
+        android:textSize="14sp"
+        android:layout_marginTop="10dp"
+        android:layout_marginStart="17dp"
+        android:layout_below="@id/tv_modify_accountData"/>
+
+    <TextView
+        android:id="@+id/tv_currentAccountDataName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/textColorMidLight"
+        android:layout_marginTop="4dp"
+        android:textColorHint="?attr/textColorDarkGrey"
+        android:layout_marginStart="17dp"
+        android:layout_marginEnd="14dp"
+        tools:ignore="TextFields"
+        tools:text="http://example.com:8080"
+        android:textSize="13sp"
+        android:backgroundTint="@color/light_blue"
+        android:layout_below="@id/tv_currentAccountData"/>
+
+    <TextView
+        android:id="@+id/tv_changeto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Change to:"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:layout_marginTop="15dp"
+        android:layout_marginStart="17dp"
+        android:layout_below="@id/tv_currentAccountDataName"/>
+
+    <EditText
+        android:id="@+id/et_editedChannelName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/textColorLight"
+        android:textColorHint="?attr/textColorDarkGrey"
+        android:layout_marginStart="14dp"
+        android:layout_marginEnd="15dp"
+        tools:ignore="TextFields"
+        android:textSize="13dp"
+        android:layout_marginTop="6dp"
+        android:nextFocusLeft="@id/et_editedChannelName"
+        android:nextFocusRight="@id/et_editedChannelName"
+        android:nextFocusUp="@id/et_editedChannelName"
+        android:nextFocusDown="@id/relLayout_save"
+        android:backgroundTint="@color/light_blue"
+        android:layout_below="@id/tv_changeto"
+        android:imeOptions="actionDone"
+        android:singleLine="true" />
+
+        <Button
+            android:id="@+id/btn_PlaylistSave"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="8dp"
+            android:text="@string/save"
+            android:textSize="16sp"
+            android:textColor="@drawable/focused_selected_textview"
+            android:background="@drawable/selector_button_background"
+            android:layout_marginStart="15dp"
+            android:layout_marginEnd="15dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusLeft="@id/btn_PlaylistSave"
+            android:nextFocusRight="@id/btn_PlaylistSave"
+            android:nextFocusUp="@id/et_editedChannelName"
+            android:nextFocusDown="@id/btn_PlaylistSave"
+            android:layout_below="@id/et_editedChannelName"/>
+
+</RelativeLayout>

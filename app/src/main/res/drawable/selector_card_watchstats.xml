@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:drawable="@drawable/background_card_watchstats_focused"/>
+    <item android:drawable="@drawable/background_card_watchstats_default"/>
+</selector>

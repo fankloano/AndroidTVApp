@@ -1,0 +1,70 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Fokuszustand -->
+    <item android:state_selected="true" android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/backgroundMain" />
+                </shape>
+            </item>
+            <!-- Rechter Rahmen -->
+            <item>
+                <inset
+                    android:insetLeft="-4dp"
+                    android:insetTop="-4dp"
+                    android:insetBottom="-4dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+
+                        <stroke
+                            android:width="3dp"
+                            android:color="?attr/mainPrimaryColor" />
+                        <solid android:color="?attr/backgroundMain" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+
+    <item android:state_selected="true">
+        <layer-list>
+            <!-- Rechter Rahmen -->
+            <item>
+                <inset
+                    android:insetLeft="-4dp"
+                    android:insetTop="-4dp"
+                    android:insetBottom="-4dp"
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
+                    <shape android:shape="rectangle">
+
+                        <stroke
+                            android:width="3dp"
+                            android:color="?attr/mainPrimaryColor" />
+                        <solid android:color="@color/transparent" />
+                    </shape>
+                </inset>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Fokuszustand -->
+    <item android:state_focused="true">
+        <layer-list>
+            <item>
+                <shape android:shape="rectangle">
+                    <solid android:color="?attr/backgroundMain" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+    <!-- Standardzustand -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/transparent" />
+        </shape>
+    </item>
+
+</selector>
+

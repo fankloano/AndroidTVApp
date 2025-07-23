@@ -1,0 +1,606 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDark">
+
+
+    <LinearLayout
+        android:id="@+id/relLayout_watchlist_select"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:weightSum="1.5"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/rv_watchlist_movies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="1dp"
+            android:padding="3dp"
+            android:layout_weight="0.5"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusLeft="@id/rv_watchlist_movies"
+            android:nextFocusUp="@id/rv_watchlist_movies"
+            android:nextFocusRight="@id/rv_watchlist_series"
+            android:background="@drawable/background_globalsearch_playlist">
+
+            <TextView
+                android:id="@+id/tv_selectmovies"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@drawable/focused_selected_textview_info"
+                android:textSize="18sp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:gravity="center"
+                android:text="@string/movies"
+                android:singleLine="true"
+                android:scrollHorizontally="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rv_watchlist_series"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="1dp"
+            android:padding="3dp"
+            android:layout_weight="0.5"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusLeft="@id/rv_watchlist_movies"
+            android:nextFocusUp="@id/rv_watchlist_series"
+            android:nextFocusRight="@id/rv_watchlist_programme"
+            android:background="@drawable/background_globalsearch_playlist">
+
+            <TextView
+                android:id="@+id/tv_selectseries"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@drawable/focused_selected_textview_info"
+                android:textSize="18sp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="@string/series"
+                android:gravity="center"
+                android:singleLine="true"
+                android:scrollHorizontally="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rv_watchlist_programme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="1dp"
+            android:padding="3dp"
+            android:layout_weight="0.5"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusLeft="@id/rv_watchlist_series"
+            android:nextFocusUp="@id/rv_watchlist_programme"
+            android:nextFocusRight="@id/rv_watchlist_programme"
+            android:background="@drawable/background_globalsearch_playlist">
+
+            <TextView
+                android:id="@+id/tv_selectprogramme"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:textColor="@drawable/focused_selected_textview_info"
+                android:textSize="18sp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:text="Programs"
+                android:gravity="center"
+                android:singleLine="true"
+                android:scrollHorizontally="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:id="@+id/linLayout_movieInfo"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists"
+        app:layout_constraintWidth_percent="0.6"
+        app:layout_constraintHeight_percent="0.45"
+        android:layout_marginTop="2dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_movietitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textMainColor"
+            android:paddingEnd="8dp"
+            android:layout_marginStart="10dp"
+            android:paddingTop="6dp"
+            android:textSize="22sp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="Der Herr der Ringe: Die Rückkehr des Königs"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:padding="1dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_movietitle"
+            android:progressTint="?attr/mainPrimaryColor"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="80dp"/>
+
+        <LinearLayout
+            android:id="@+id/linLayout_moviedetailinfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"
+            tools:layout_editor_absoluteX="10dp">
+
+            <RatingBar
+                android:id="@+id/smallRating"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:progressTint="?attr/mainPrimaryColor"
+                android:rating="3"
+                android:layout_marginStart="10dp"
+                android:visibility="invisible" />
+
+            <TextView
+                android:id="@+id/tv_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:textSize="12sp"
+                android:visibility="invisible"
+                tools:text="7.4" />
+
+            <TextView
+                android:id="@+id/tv_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:background="@drawable/background_vod_info"
+                android:gravity="center"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="1h 39min" />
+
+            <TextView
+                android:id="@+id/tv_releaseyear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/background_vod_info"
+                android:gravity="center"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="2024" />
+
+            <TextView
+                android:id="@+id/tv_age"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/background_vod_info"
+                android:gravity="center"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="16+" />
+
+            <TextView
+                android:id="@+id/tv_totSeasons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/background_vod_info"
+                android:gravity="center"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="13sp"
+                android:visibility="gone"
+                tools:text="13 Seasons" />
+
+            <ImageView
+                android:id="@+id/iv_favorite"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="10dp"
+                android:src="@drawable/ic_favorite_vod"
+                android:tint="@color/yellow"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_remainingTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="1h 35min remaining"
+            android:textSize="12sp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="25dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <LinearLayout
+            android:id="@+id/linLayout_moviedetailinfo_ratings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/linLayout_moviedetailinfo"
+            tools:layout_editor_absoluteX="10dp">
+
+            <TextView
+                android:id="@+id/tv_categories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:maxLines="1"
+                android:textSize="14sp"
+                tools:text="Liebesfilm, Action, Drama" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_director"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/director_s"
+            android:textSize="13sp"
+            android:visibility="invisible"
+            android:layout_marginTop="5dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/linLayout_moviedetailinfo_ratings"
+            android:textColor="?attr/textColorLight"/>
+
+        <TextView
+            android:id="@+id/tv_directors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:maxLines="1"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            tools:text="Peter Jackson"
+            app:layout_constraintTop_toBottomOf="@id/tv_director"
+            android:ellipsize="end"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_actor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/actor_s"
+            android:textSize="13sp"
+            android:layout_marginTop="5dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_directors"
+            android:textColor="?attr/textColorLight"/>
+
+        <TextView
+            android:id="@+id/tv_actors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            tools:text="Elijah Wood: Frodo Beutlin
+Ian McKellen: Gandalf
+Sean Astin: Samweis Gamdschie
+Viggo Mortensen: Aragorn/Streicher
+Liv Tyler: Arwen
+Sean Bean: Boromir
+Orlando Bloom: Legolas
+John Rhys-Davies: Gimli
+Christopher Lee: Saruman"
+            app:layout_constraintTop_toBottomOf="@id/tv_actor"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_moviedescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/tv_actors"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="13sp"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:lineSpacingExtra="1dp"
+            android:letterSpacing="0.005"
+            android:marqueeRepeatLimit="marquee_forever"
+            tools:text="NACHDEM DAS VON GANDALF (IAN MCKELLEN) GERUFENE ...
+... Heer bei der Schlacht von Helms Klamm die Orktruppen Sarumans (Christopher Lee) vernichtend geschlagen hat, fällt den Truppen um Aragorn (Viggo Mortensen) und König Theoden ein Palantir, ein sehender Stein, mit dem Saruman mit Sauron Kontakt aufgenommen hat, in die Hände. Ein baldiger Angriff auf Minas Tirith, die weiße Stadt der Menschen von Gondor, steht zu befürchten und Gandalf begibt sich zu dem dort herrschenden Truchsessen Denethor, um alle Kräfte zu mobilisieren. Während Aragorn, der rechtmäßige Anwärter auf den Thron von Gondor bemüht ist, auf ungewöhnliche Weise Truppen zu sammeln und Theoden die Reiter von Rohan zur Unterstützung zusammensucht, ist die Verteidigung der Stadt jedoch geschwächt, da Denethor dem Wahn verfallen scheint. Und tatsächlich schickt der dunkle Herrscher Sauron ein mächtiges Heer unter der Leitung des obersten Ringgeistes, des Hexenkönigs von Morgul aus. Auf den Pelennorfeldern kommt es zu einer großen Entscheidungsschlacht, in dem Aragorn, ausgestattet mit dem wiedergeschmiedeten Schwert Narsil, sich endlich zu seiner Königswürde bekennen muss. Währenddessen lockt das Geschöpf Gollum den Ringträger Frodo (Elijah Wood) und seinen Diener Sam (Sean Astin) im Pass von Cirith Ungol in einen Hinterhalt der Riesenspinne Kankra, die Frodo vergiftet. Sam, der Frodo für tot hält, nimmt den Ring an sich, muss dann aber erkennen, daß sein Herr nur betäubt war. Also macht er sich zu einer Befreiungsaktion auf, denn die letzte Etappe ihrer Reise zum feurigen Berg Orodruin ist angebrochen, wo sie den Ring im Feuer, in welchem er geschmiedet wurde, vernichten müssen..."
+            android:layout_marginStart="5dp"
+            android:padding="5dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/iv_movieposter"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toEndOf="@id/linLayout_movieInfo"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists"
+        app:layout_constraintHeight_percent="0.7"
+        app:layout_constraintWidth_percent="0.5"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/skybundesliga"
+        android:layout_marginStart="-10dp"
+        android:foreground="@drawable/gradient_overlay_fromleft_down_dark"/>
+
+    <View
+        android:id="@+id/gradient_view_up"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="@id/iv_movieposter"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists"
+        app:layout_constraintHeight_percent="0.8"
+        app:layout_constraintWidth_percent="0.6"
+        android:background="@drawable/gradient_overlay_fromup"/>
+
+
+    <View
+        android:id="@+id/gradient_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="@id/iv_movieposter"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists"
+        app:layout_constraintHeight_percent="0.8"
+        app:layout_constraintWidth_percent="0.6"
+        android:background="@drawable/gradient_overlay_fromleft_down"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/recycler_playlists"
+        android:layout_width="0dp"
+        android:layout_height="44dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        android:orientation="horizontal"
+        app:dpadRecyclerViewItemEdgeSpacing="14dp"
+        app:dpadRecyclerViewItemSpacing="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_watchlist_select"
+        app:layout_constraintWidth_percent="1.0"
+        tools:listitem="@layout/rv_item_watchlist_playlist" />
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/recycler_items"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="5dp"
+        android:orientation="vertical"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_movieInfo"
+        app:layout_constraintHeight_percent="0.4"
+        app:layout_constraintWidth_percent="1.0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:dpadRecyclerViewItemEdgeSpacing="14dp"
+        app:dpadRecyclerViewItemSpacing="6dp"
+        app:spanCount="7"
+        tools:listitem="@layout/rv_item_globalsearchmovies" />
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_watchlist_vod_info"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:visibility="gone"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/recycler_programme"
+        android:layout_width="0dp"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_height="0dp"
+        android:paddingTop="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.65"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:listitem="@layout/rv_item_watchlist_programme"
+        android:focusableInTouchMode="true"
+        android:focusable="true"/>
+
+    <ProgressBar
+        android:id="@+id/loadingprogressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/light_blue"/>
+
+    <TextView
+        android:id="@+id/tv_nodatafound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_data_found"
+        android:textColor="?attr/textMainColor"
+        android:textSize="25sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/relLayout_programdescr"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginBottom="5dp"
+        android:padding="5dp"
+        android:visibility="gone"
+        android:background="@drawable/background_rounded_leftup_rightdown_backgroundmain"
+        app:layout_constraintStart_toEndOf="@id/recycler_programme"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/recycler_playlists">
+
+        <TextView
+            android:id="@+id/tv_currentProgram"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="6dp"
+            tools:text="Es war einmal in Amerika"
+            android:textColor="?attr/textMainColor"
+            android:textSize="15sp"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <RelativeLayout
+            android:id="@+id/relLayout_mainInfo"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_currentProgram">
+
+            <TextView
+                android:id="@+id/tv_currentSubtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="2dp"
+                android:layout_marginEnd="10dp"
+                android:scrollHorizontally="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                tools:text="Folge 5, Staffel 10 - Es war einmal ein Mann"
+                android:textColor="?attr/textColorLight"
+                android:textSize="13sp"
+                android:textStyle="" />
+
+            <TextView
+                android:id="@+id/tv_currentCategory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="2dp"
+                tools:text="Action, Abenteuer"
+                android:textColor="?attr/textColorLight"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:layout_below="@id/tv_currentSubtitle"/>
+
+            <TextView
+                android:id="@+id/tv_currentCountry"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text=" | DE"
+                android:textColor="?attr/textColorLight"
+                android:textSize="13sp"
+                android:layout_marginStart="5dp"
+                android:visibility="gone"
+                android:layout_toEndOf="@id/tv_currentCategory"
+                android:layout_below="@id/tv_currentSubtitle"/>
+
+            <TextView
+                android:id="@+id/tv_currentDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text="| 2017"
+                android:textColor="?attr/textColorLight"
+                android:textSize="13sp"
+                android:layout_marginStart="5dp"
+                android:visibility="gone"
+                android:layout_toEndOf="@id/tv_currentCountry"
+                android:layout_below="@id/tv_currentSubtitle"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="8dp"
+            android:scrollbars="vertical"
+            android:overScrollMode="never"
+            android:fadeScrollbars="false"
+            tools:text="In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt."
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_mainInfo" />
+
+
+        <ImageView
+            android:id="@+id/iv_moretext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="-10dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_arrow_down"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tv_description"
+            app:layout_constraintEnd_toEndOf="@id/tv_description"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

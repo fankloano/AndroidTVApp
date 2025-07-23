@@ -1,0 +1,8 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="?attr/backgroundMain" /> <!-- Hintergrundfarbe -->
+    <corners
+        android:bottomRightRadius="0dp"
+        android:bottomLeftRadius="0dp"
+        android:topLeftRadius="24dp"
+        android:topRightRadius="24dp" />
+</shape>

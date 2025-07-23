@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundDarkDark"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+        <TextView
+            android:id="@+id/tv_channelName"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            tools:text="EPG SOURCE"
+            android:textSize="15sp"
+            android:paddingStart="32dp"
+            android:paddingEnd="22dp"
+            android:background="?attr/backgroundDarkDark"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:ellipsize="marquee"
+            android:textColor="?attr/mainPrimaryColor"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_days"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_auto_update"
+            android:nextFocusUp="@id/relLayout_deleteSource"
+            android:nextFocusRight="@id/relLayout_days"
+            android:nextFocusLeft="@id/relLayout_days"
+            android:background="@drawable/settings_item_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_channelName">
+
+                <TextView
+                    android:id="@+id/tv_days"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/days_to_save_epg_data"
+                    android:textSize="16sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_auto_update"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_updateonappstart"
+            android:nextFocusUp="@id/relLayout_showvod"
+            android:nextFocusLeft="@id/relLayout_auto_update"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_days">
+
+                <TextView
+                    android:id="@+id/tv_auto_updatePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/set_auto_update"
+                    android:textSize="16sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+                <TextView
+                    android:id="@+id/tv_isauto_UpdatePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_auto_updatePlaylist"
+                    tools:text="Currently: 12h"
+                    android:textSize="12sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_edit"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:nextFocusDown="@id/relLayout_timeoffset"
+            android:nextFocusUp="@id/relLayout_auto_update"
+            android:nextFocusLeft="@id/relLayout_edit"
+            android:nextFocusRight="@id/relLayout_edit"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_auto_update">
+
+                <TextView
+                    android:id="@+id/tv_editSource"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/edit_source_name"
+                    android:textSize="16sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_timeoffset"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_updateSource"
+            android:nextFocusUp="@id/relLayout_edit"
+            android:nextFocusLeft="@id/relLayout_timeoffset"
+            android:nextFocusRight="@id/relLayout_timeoffset"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_edit">
+
+                <TextView
+                    android:id="@+id/tv_timeOffset"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/time_offset"
+                    android:textSize="16sp"
+                    android:paddingStart="15dp"
+                    android:gravity="center_vertical"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"/>
+
+        </RelativeLayout>
+
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_updateSource"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_deleteSource"
+            android:nextFocusUp="@id/relLayout_timeoffset"
+            android:nextFocusLeft="@id/relLayout_updateSource"
+            android:nextFocusRight="@id/relLayout_updateSource"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_timeoffset">
+
+                <TextView
+                    android:id="@+id/tv_updateSource"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/update_epg_source"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="15dp"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_deleteSource"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_days"
+            android:nextFocusUp="@id/relLayout_updateSource"
+            android:nextFocusLeft="@id/relLayout_deleteSource"
+            android:nextFocusRight="@id/relLayout_deleteSource"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_updateSource">
+
+                <TextView
+                    android:id="@+id/tv_deleteSource"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="@string/delete_epg_source"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="15dp"/>
+
+        </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

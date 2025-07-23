@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cardView_vod"
+    android:layout_width="220dp"
+    android:layout_height="330dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:background="@drawable/background_rounded_leftup_rightdown_gradient_reverse"
+    android:stateListAnimator="@animator/focus_zoom_card"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/iv_vod_image"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:scaleType="centerCrop"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginStart="1.5dp"
+            android:layout_marginEnd="1.5dp"
+            app:shapeAppearanceOverlay="@style/roundedImageViewTopLeft"
+            android:src="@drawable/vod_card"
+            android:foreground="@drawable/gradient_overlay_fromdown_bgmain"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <View
+            android:id="@+id/overlay_view"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginTop="1.5dp"
+            android:layout_marginStart="1.5dp"
+            android:layout_marginEnd="1.5dp"
+
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <ImageView
+            android:id="@+id/iv_favorite"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_favorite"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"/>
+
+
+        <TextView
+            android:id="@+id/tv_account"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="hd-max.org:8080"
+            android:textColor="?attr/textColorLight"
+            android:singleLine="true"
+            android:layout_centerVertical="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="5dp"
+            app:layout_constraintBottom_toTopOf="@id/tv_title"
+            app:layout_constraintStart_toStartOf="parent"
+            android:marqueeRepeatLimit="marquee_forever"/>
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            tools:text="DE | SKY BUNDESLIGA 1 FHD"
+            app:layout_constraintBottom_toBottomOf="@id/iv_vod_image"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:textSize="14sp"
+            android:textColor="?attr/textMainColor"
+            android:singleLine="true"
+            android:textStyle="bold"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"/>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingTop="5dp"
+            app:layout_constraintEnd_toEndOf="parent" >
+
+            <LinearLayout
+                android:id="@+id/linLayout_moviedetailinfo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:rating="3"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:progressTint="?attr/mainPrimaryColor"
+                    android:id="@+id/smallRating" />
+
+                <TextView
+                    android:id="@+id/tv_rating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="7.4"
+                    android:layout_marginStart="10dp"
+                    android:textSize="11sp"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linLayout_moreInfos"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/linLayout_moviedetailinfo"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:layout_marginTop="5dp"
+                    tools:text="1h 39min"
+                    android:textSize="11sp"
+                    android:textColor="?attr/backgroundMain"
+                    android:gravity="center"
+                    android:background="@drawable/background_vod_info_light"/>
+
+                <TextView
+                    android:id="@+id/tv_releaseyear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:layout_marginTop="5dp"
+                    android:textSize="11sp"
+                    android:gravity="center"
+                    android:textColor="?attr/backgroundMain"
+                    android:background="@drawable/background_vod_info_light"
+                    tools:text="2024"/>
+
+                <TextView
+                    android:id="@+id/tv_age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="16+"
+                    android:textSize="12sp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center"
+                    android:textColor="?attr/backgroundMain"
+                    android:background="@drawable/background_vod_info_light"
+                    android:layout_marginStart="10dp"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_categories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:maxLines="1"
+                android:textSize="12sp"
+                android:layout_marginTop="5dp"
+                android:layout_below="@id/linLayout_moreInfos"
+                tools:text="Liebesfilm, Action, Drama" />
+
+            <TextView
+                android:id="@+id/tv_voddescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                tools:text="NACHDEM DAS VON GANDALF (IAN MCKELLEN) GERUFENE ...
+... Heer bei der Schlacht von Helms Klamm die Orktruppen Sarumans (Christopher Lee) vernichtend geschlagen hat, fällt den Truppen um Aragorn (Viggo Mortensen) und König Theoden ein Palantir, ein sehender Stein, mit dem Saruman mit Sauron Kontakt aufgenommen hat, in die Hände. Ein baldiger Angriff auf Minas Tirith, die weiße Stadt der Menschen von Gondor, steht zu befürchten und Gandalf begibt sich zu dem dort herrschenden Truchsessen Denethor, um alle Kräfte zu mobilisieren. Während Aragorn, der rechtmäßige Anwärter auf den Thron von Gondor bemüht ist, auf ungewöhnliche Weise Truppen zu sammeln und Theoden die Reiter von Rohan zur Unterstützung zusammensucht, ist die Verteidigung der Stadt jedoch geschwächt, da Denethor dem Wahn verfallen scheint. Und tatsächlich schickt der dunkle Herrscher Sauron ein mächtiges Heer unter der Leitung des obersten Ringgeistes, des Hexenkönigs von Morgul aus. Auf den Pelennorfeldern kommt es zu einer großen Entscheidungsschlacht, in dem Aragorn, ausgestattet mit dem wiedergeschmiedeten Schwert Narsil, sich endlich zu seiner Königswürde bekennen muss. Währenddessen lockt das Geschöpf Gollum den Ringträger Frodo (Elijah Wood) und seinen Diener Sam (Sean Astin) im Pass von Cirith Ungol in einen Hinterhalt der Riesenspinne Kankra, die Frodo vergiftet. Sam, der Frodo für tot hält, nimmt den Ring an sich, muss dann aber erkennen, daß sein Herr nur betäubt war. Also macht er sich zu einer Befreiungsaktion auf, denn die letzte Etappe ihrer Reise zum feurigen Berg Orodruin ist angebrochen, wo sie den Ring im Feuer, in welchem er geschmiedet wurde, vernichten müssen..."
+                android:layout_marginEnd="5dp"
+                android:layout_marginTop="2dp"
+                android:layout_gravity="bottom"
+                android:layout_below="@id/tv_categories"
+                android:textSize="12sp"
+                android:textColor="?attr/textColorMidLight"
+                android:maxLines="5"
+                android:ellipsize="end"
+                android:marqueeRepeatLimit="marquee_forever"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_remainingTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            tools:text="1h 35min remaining"
+            android:textSize="12sp"
+            android:textColor="?attr/textMainColor"
+            android:layout_marginBottom="8dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            android:maxLines="2"
+            app:layout_constraintStart_toStartOf="@id/iv_vod_image"
+            app:layout_constraintEnd_toEndOf="@id/iv_vod_image"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:progress="20"
+            android:progressTint="@color/progressbar_tint"
+            android:layout_marginBottom="3dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginStart="1.5dp"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <View
+        android:id="@+id/overlay_full"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#6A232526"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

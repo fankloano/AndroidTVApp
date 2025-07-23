@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left" >
+
+        <TextView
+            android:id="@+id/title_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/info_epg_priority"
+            android:textSize="14sp"
+            android:padding="10dp"
+            android:lines="2"
+            android:gravity="center"
+            android:textColor="?attr/textColorLight"
+            android:background="?attr/backgroundDarkDark"/>
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_PlaylistEpgPriority"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            tools:listitem="@layout/rv_item_prior_playlist_epg"
+            android:layout_below="@id/title_setting" />
+
+</RelativeLayout>

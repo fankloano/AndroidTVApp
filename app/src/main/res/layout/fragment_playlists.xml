@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left">
+
+        <TextView
+            android:id="@+id/title_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/playlists"
+            android:layout_marginStart="5dp"
+            android:textSize="16sp"
+            android:textColor="?attr/textMainColor"
+            android:padding="10dp"
+            android:gravity="center_vertical"
+            android:background="?attr/backgroundDarkDark"/>
+
+        <TextView
+            android:id="@+id/relLayout_sort_btn"
+            android:layout_width="match_parent"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:gravity="start|center_vertical"
+            android:layout_below="@id/title_setting"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/test_selector_mainmenu_background"
+            android:nextFocusLeft="@id/relLayout_sort_btn"
+            android:nextFocusRight="@id/relLayout_sort_btn"
+            android:nextFocusUp="@id/relLayout_sort_btn"
+            android:nextFocusDown="@id/relLayout_addpl_btn"
+            android:paddingStart="10dp"
+            android:paddingEnd="20dp"
+            tools:text="Sorted by: Name"
+            android:textColor="@drawable/focused_selected_mainmenu"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/relLayout_addpl_btn"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_below="@id/relLayout_sort_btn"
+            android:layout_margin="5dp"
+            android:background="@drawable/test_selector_mainmenu_background"
+            android:drawableStart="@drawable/selector_add"
+            android:drawablePadding="10dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="start|center_vertical"
+            android:nextFocusLeft="@id/relLayout_addpl_btn"
+            android:nextFocusUp="@id/relLayout_sort_btn"
+            android:nextFocusDown="@id/rv_layout_Accounts"
+            android:paddingStart="10dp"
+            android:paddingEnd="20dp"
+            android:text="@string/add_playlist"
+            android:textColor="@drawable/focused_selected_mainmenu"
+            android:textSize="15sp" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_Accounts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            tools:listitem="@layout/rv_item_playlist"
+            android:layout_below="@id/relLayout_addpl_btn"/>
+
+</RelativeLayout>

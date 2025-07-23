@@ -1,0 +1,16 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Indikator Layer -->
+    <item android:left="0dp" android:right="10dp">
+        <shape>
+            <solid android:color="@android:color/transparent"/>
+            <size android:width="4dp"/>
+        </shape>
+    </item>
+
+    <!-- Hintergrund Layer -->
+    <item>
+        <shape>
+            <solid android:color="@android:color/transparent"/>
+        </shape>
+    </item>
+</layer-list>

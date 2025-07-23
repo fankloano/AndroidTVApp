@@ -1,0 +1,7 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="@drawable/ic_watchstats" android:state_focused="true" />
+    <item android:drawable="@drawable/ic_watchstats_selected" android:state_activated="true" />
+    <item android:drawable="@drawable/ic_watchstats" />
+
+</selector>

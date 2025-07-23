@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/const_plex"
+    android:background="?attr/backgroundDark"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:id="@+id/linLayout_plexAccounts_menu"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:listitem="@layout/rv_item_movieaccounts"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:orientation="vertical"
+        android:background="?attr/backgroundDark"
+        android:padding="1dp"
+        app:layout_constraintWidth_percent="0.22">
+
+        <TextView
+            android:id="@+id/tv_Accounts"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="PLEX SERVER:"
+            android:gravity="center_vertical"
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp"
+            android:textSize="15sp"
+            android:textColor="?attr/textMainColor" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_plexAccounts_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/backgroundDark"
+            android:orientation="vertical"
+            android:layout_margin="1dp"
+            tools:listitem="@layout/rv_item_activated_accounts"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linLayout_plexCategories_menu"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="1dp"
+        android:background="@drawable/background_border_test_right"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_plexAccounts_menu"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.25"
+        tools:listitem="@layout/rv_item_activated_accounts">
+
+        <TextView
+            android:id="@+id/tv_allAccounts"
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:text="ACCOUNTS"
+            android:gravity="center_vertical"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textSize="15sp"
+            android:textColor="?attr/textMainColor" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_plexCategories_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="1dp"
+            android:orientation="vertical"
+            tools:listitem="@layout/rv_item_activated_accounts" />
+
+    </LinearLayout>
+
+
+    <ProgressBar
+        android:id="@+id/loadItemsProgressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:progressTint="?attr/mainPrimaryColor"
+        app:layout_constraintStart_toEndOf="@id/linLayout_plexCategories_menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.75"/>
+
+
+    <ImageView
+        android:id="@+id/iv_plexposter"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHeight_percent="0.7"
+        android:layout_marginStart="400dp"
+        app:layout_constraintWidth_percent="0.59"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/skybundesliga"
+        android:foreground="@drawable/gradient_overlay_fromleft_down"/>
+
+    <View
+        android:id="@+id/gradient_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintStart_toStartOf="@id/iv_plexposter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHeight_percent="1.0"
+        app:layout_constraintWidth_percent="0.5"
+        android:background="@drawable/gradient_overlay_fromleft_down"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_PlexItems"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_percent="0.45"
+        app:layout_constraintStart_toEndOf="@id/linLayout_plexCategories_menu"
+        app:layout_constraintWidth_percent="1.0"
+        app:spanCount="7"
+        app:dpadRecyclerViewChildAlignmentFraction="0"
+        app:dpadRecyclerViewParentAlignmentFraction="0"
+        app:dpadRecyclerViewParentAlignmentEdge="none"
+        tools:listitem="@layout/rv_item_movies"/>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:id="@+id/linLayout_plexInfo"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_plexCategories_menu"
+        app:layout_constraintWidth_percent="0.5"
+        app:layout_constraintHeight_percent="0.45"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_plextitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textMainColor"
+            android:paddingEnd="8dp"
+            android:layout_marginStart="10dp"
+            android:paddingTop="6dp"
+            android:textSize="22sp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:text="Der Herr der Ringe: Die Rückkehr des Königs"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:padding="1dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_plextitle"
+            android:progressTint="?attr/mainPrimaryColor"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="80dp"/>
+
+        <LinearLayout
+            android:id="@+id/linLayout_plexdetailinfo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal">
+
+            <RatingBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:rating="3"
+                android:visibility="invisible"
+                style="?android:attr/ratingBarStyleSmall"
+                android:progressTint="?attr/mainPrimaryColor"
+                android:id="@+id/smallRating" />
+
+            <TextView
+                android:id="@+id/tv_rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="7.4"
+                android:visibility="invisible"
+                android:layout_marginStart="10dp"
+                android:textSize="12sp"/>
+
+            <TextView
+                android:id="@+id/tv_duration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                tools:text="1h 39min"
+                android:visibility="gone"
+                android:layout_marginStart="20dp"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:background="@drawable/background_vod_info"/>
+
+            <TextView
+                android:id="@+id/tv_releaseyear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:textSize="13sp"
+                android:visibility="gone"
+                android:gravity="center"
+                android:background="@drawable/background_vod_info"
+                tools:text="2024"/>
+
+            <TextView
+                android:id="@+id/tv_age"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="16+"
+                android:textSize="13sp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:background="@drawable/background_vod_info"
+                android:layout_marginStart="10dp"/>
+
+            <TextView
+                android:id="@+id/tv_totSeasons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="13 Seasons"
+                android:textSize="13sp"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:gravity="center"
+                android:visibility="gone"
+                android:background="@drawable/background_vod_info"
+                android:layout_marginStart="10dp"/>
+
+            <ImageView
+                android:id="@+id/iv_favorite"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:src="@drawable/ic_favorite_vod"
+                android:layout_marginStart="10dp"
+                android:tint="@color/yellow"
+                android:layout_gravity="center"
+                android:visibility="gone"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_remainingTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="1h 35min remaining"
+            android:textSize="12sp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="25dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintTop_toBottomOf="@id/progressBar"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <LinearLayout
+            android:id="@+id/linLayout_plexdetailinfo_ratings"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/linLayout_plexdetailinfo"
+            tools:layout_editor_absoluteX="10dp">
+
+            <TextView
+                android:id="@+id/tv_categories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:maxLines="1"
+                android:textSize="14sp"
+                tools:text="Liebesfilm, Action, Drama" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_director"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/director_s"
+            android:textSize="13sp"
+            android:visibility="invisible"
+            android:layout_marginTop="5dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/linLayout_plexdetailinfo_ratings"
+            android:textColor="?attr/textColorLight"/>
+
+        <TextView
+            android:id="@+id/tv_directors"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:maxLines="1"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            tools:text="Peter Jackson"
+            app:layout_constraintTop_toBottomOf="@id/tv_director"
+            android:ellipsize="end"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_actor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/actor_s"
+            android:textSize="13sp"
+            android:layout_marginTop="5dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_directors"
+            android:textColor="?attr/textColorLight"/>
+
+        <TextView
+            android:id="@+id/tv_actors"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="10dp"
+            tools:text="Elijah Wood: Frodo Beutlin
+Ian McKellen: Gandalf
+Sean Astin: Samweis Gamdschie
+Viggo Mortensen: Aragorn/Streicher
+Liv Tyler: Arwen
+Sean Bean: Boromir
+Orlando Bloom: Legolas
+John Rhys-Davies: Gimli
+Christopher Lee: Saruman"
+            app:layout_constraintTop_toBottomOf="@id/tv_actor"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_moviedescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toBottomOf="@id/tv_actors"
+            app:layout_constraintStart_toStartOf="parent"
+            android:textSize="13sp"
+            android:maxLines="4"
+            android:ellipsize="end"
+            android:lineSpacingExtra="1dp"
+            android:letterSpacing="0.005"
+            android:marqueeRepeatLimit="marquee_forever"
+            tools:text="NACHDEM DAS VON GANDALF (IAN MCKELLEN) GERUFENE ...
+... Heer bei der Schlacht von Helms Klamm die Orktruppen Sarumans (Christopher Lee) vernichtend geschlagen hat, fällt den Truppen um Aragorn (Viggo Mortensen) und König Theoden ein Palantir, ein sehender Stein, mit dem Saruman mit Sauron Kontakt aufgenommen hat, in die Hände. Ein baldiger Angriff auf Minas Tirith, die weiße Stadt der Menschen von Gondor, steht zu befürchten und Gandalf begibt sich zu dem dort herrschenden Truchsessen Denethor, um alle Kräfte zu mobilisieren. Während Aragorn, der rechtmäßige Anwärter auf den Thron von Gondor bemüht ist, auf ungewöhnliche Weise Truppen zu sammeln und Theoden die Reiter von Rohan zur Unterstützung zusammensucht, ist die Verteidigung der Stadt jedoch geschwächt, da Denethor dem Wahn verfallen scheint. Und tatsächlich schickt der dunkle Herrscher Sauron ein mächtiges Heer unter der Leitung des obersten Ringgeistes, des Hexenkönigs von Morgul aus. Auf den Pelennorfeldern kommt es zu einer großen Entscheidungsschlacht, in dem Aragorn, ausgestattet mit dem wiedergeschmiedeten Schwert Narsil, sich endlich zu seiner Königswürde bekennen muss. Währenddessen lockt das Geschöpf Gollum den Ringträger Frodo (Elijah Wood) und seinen Diener Sam (Sean Astin) im Pass von Cirith Ungol in einen Hinterhalt der Riesenspinne Kankra, die Frodo vergiftet. Sam, der Frodo für tot hält, nimmt den Ring an sich, muss dann aber erkennen, daß sein Herr nur betäubt war. Also macht er sich zu einer Befreiungsaktion auf, denn die letzte Etappe ihrer Reise zum feurigen Berg Orodruin ist angebrochen, wo sie den Ring im Feuer, in welchem er geschmiedet wurde, vernichten müssen..."
+            android:layout_marginStart="5dp"
+            android:padding="5dp"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tv_item_quantity"
+        android:layout_width="10dp"
+        android:layout_height="12dp"
+        android:layout_marginStart="10dp"
+        android:textColor="?attr/textColorMidLight"
+        android:textSize="12sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_plexCategories_menu"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.50"
+        tools:text="12 " />
+
+    <TextView
+        android:id="@+id/tv_item_total_quantity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="/ 13 "
+        android:textSize="12sp"
+        android:textColor="?attr/textColorMidLight"
+        android:visibility="invisible"
+        app:layout_constraintStart_toEndOf="@id/tv_item_quantity"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.50"/>
+
+    <TextView
+        android:id="@+id/tv_item_category_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="DE: SKY FILME "
+        android:layout_marginStart="20dp"
+        android:textSize="13sp"
+        android:textColor="?attr/textColorMidLight"
+        android:visibility="invisible"
+        app:layout_constraintStart_toEndOf="@id/tv_item_total_quantity"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintVertical_bias="0.50"/>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_plexitem_info"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,13 @@
+<!-- res/drawable/icon_play_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Zustand: Ausgewählt und Fokussiert -->
+    <item android:state_focused="true" android:state_selected="true" android:drawable="@drawable/ic_favorite_movie_details_focused" />
+
+    <!-- Zustand: Ausgewählt -->
+    <item android:state_selected="true" android:drawable="@drawable/ic_favorite_movie_details" />
+
+    <!-- Zustand: Fokussiert -->
+    <item android:state_focused="true" android:drawable="@drawable/ic_notfavorite_moviedetails_focused" />
+    <!-- Zustand: Standard -->
+    <item android:drawable="@drawable/ic_notfavorite_moviedetails" />
+</selector>

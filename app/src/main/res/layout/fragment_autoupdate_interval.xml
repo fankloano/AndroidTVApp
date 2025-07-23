@@ -1,0 +1,30 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="?attr/backgroundDarkDark">
+
+    <TextView
+        android:id="@+id/tv_currentAutoUpdate"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:textSize="18sp"
+        android:gravity="center"
+        android:lines="2"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:background="?attr/backgroundDarkDark"
+        android:textColor="?attr/textColorLight"
+        tools:text="+00:00 \n current"/>
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/autoUpdatetListView"
+        android:layout_width="match_parent"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:layout_below="@id/tv_currentAutoUpdate"
+        android:background="?attr/transparentColor"
+        android:layout_height="match_parent" />
+
+</RelativeLayout>

@@ -1,0 +1,187 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@color/background_light">
+
+    <ImageView
+        android:id="@+id/iv_moviePoster"
+        android:layout_width="120dp"
+        android:layout_height="150dp"
+        android:layout_gravity="end"
+        android:scaleType="centerCrop"
+        android:layout_margin="8dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        tools:src="@drawable/hdr_bg"/>
+
+    <TextView
+        android:id="@+id/tv_dialog_movie_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="DER HERR DER RINGE: DIE RÜCKKEHR DES KÖNIGS (EXTENDED EDITION)"
+        android:layout_marginStart="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:typeface="monospace"
+        android:textSize="18sp"
+        android:textColor="@color/light_blue"
+        android:singleLine="true"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever" />
+
+    <RelativeLayout
+        android:id="@+id/linLayout_seriesInfos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_dialog_movie_title"
+        >
+
+        <TextView
+            android:id="@+id/tv_dialog_series_seasonepisode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Season 12   Episode 10"
+            android:layout_marginStart="10dp"
+            android:typeface="monospace"
+            android:textSize="14sp"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/white"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:layout_centerVertical="true"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_below="@id/linLayout_seriesInfos">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_videodetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:text="Video:"
+                android:textColor="@color/white"
+                android:ellipsize="marquee"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_videodetailsresol"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="3dp"
+                tools:text="Resolution = 1900x1080"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_videodetailsfps"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                tools:text="FPS: 25"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_videodetailscodec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                tools:text="Codec: FullHD"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_audiodetails"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:text="Audio:"
+                android:textColor="@color/white"
+                android:ellipsize="marquee"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_audiodetailslang"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginTop="3dp"
+                tools:text="Language = de"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_audiodetailscodec"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                tools:text="Codec: 25"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_audiodetailformat"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                tools:text="FORMAT: Dolby Digital"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="13sp"/>
+
+            <TextView
+                android:id="@+id/tv_dialog_movie_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="10dp"
+                android:textColor="#A8A8A8"
+                android:ellipsize="marquee"
+                android:textSize="14sp"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textAppearance="?android:textAppearanceMedium"
+                tools:text="Der Roman steht vor dem Hintergrund einer von Tolkien sein Leben lang entwickelten Fantasiewelt (Tolkiens Welt). Er erzählt die Geschichte eines Rings, mit dessen Vernichtung die böse Macht in Gestalt des dunklen Herrschers Sauron untergeht. Die Hauptfiguren sind vier Hobbits, die unfreiwillig in ein heroisches Abenteuer hineingezogen werden. Neben diesen spielen als Vertreter des Guten Elben, Menschen des Westens und des Nordens, Zwerge und Zauberer wichtige Rollen. Ihre Gegenspieler sind die Geschöpfe und Untertanen Saurons, die Orks, Trolle und von ihm verführte Menschen des Ostens und des Südens."/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</RelativeLayout>

@@ -1,0 +1,7 @@
+<!-- res/drawable/button_background_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Zustand: Fokussiert -->
+    <item android:state_focused="true" android:drawable="@drawable/buttons_movie_detail_focused_background" />
+    <!-- Zustand: Standard -->
+    <item android:drawable="@drawable/buttons_movie_detail_background" />
+</selector>

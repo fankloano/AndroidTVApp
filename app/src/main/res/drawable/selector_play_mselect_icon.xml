@@ -1,0 +1,7 @@
+<!-- res/drawable/icon_play_selector.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Zustand: Fokussiert -->
+    <item android:state_focused="true" android:drawable="@drawable/ic_playm_selected_focused" />
+    <!-- Zustand: Standard -->
+    <item android:drawable="@drawable/ic_playm_info" />
+</selector>

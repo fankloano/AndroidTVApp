@@ -1,0 +1,31 @@
+<!-- res/drawable/selector_item_background.xml -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Zustand: Fokus -->
+    <item android:state_selected="true">
+        <layer-list>
+            <!-- Gradient-Hintergrund -->
+            <item>
+                <shape>
+                    <solid android:color="#1D1D1D"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+
+
+    <!-- Standardzustand -->
+    <item>
+        <layer-list>
+            <item>
+                <shape>
+                    <gradient
+                        android:startColor="?attr/backgroundDark"
+                        android:centerColor="?attr/backgroundDark"
+                        android:endColor="?attr/backgroundDark"
+                        android:angle="0"/>
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

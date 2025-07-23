@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="110dp"
+    android:layout_height="40dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:id="@+id/const_season"
+    android:elevation="6dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="@drawable/background_season">
+
+     <TextView
+         android:id="@+id/tv_seasonName"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         app:layout_constraintStart_toStartOf="parent"
+         app:layout_constraintTop_toTopOf="parent"
+         tools:text="Season 555"
+         android:textSize="12sp"
+         android:layout_marginStart="3dp"
+         android:layout_marginEnd="3dp"
+         android:gravity="center"
+         android:textColor="?attr/textMainColor"/>
+
+     <ImageView
+         android:id="@+id/iv_season_fullywatched"
+         android:layout_width="15dp"
+         android:layout_height="15dp"
+         android:src="@drawable/ic_fully_watched"
+         android:visibility="gone"
+         app:layout_constraintTop_toTopOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"/>
+
+     <ImageView
+         android:id="@+id/iv_season_partlywatched"
+         android:layout_width="15dp"
+         android:layout_height="15dp"
+         android:src="@drawable/ic_partly_watched"
+         android:visibility="gone"
+         app:layout_constraintTop_toTopOf="parent"
+         app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

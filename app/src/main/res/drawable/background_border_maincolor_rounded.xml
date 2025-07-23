@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android">
+    <layer-list>
+        <!-- Hintergrundfarbe -->
+        <item>
+            <shape android:shape="rectangle">
+                <solid android:color="@android:color/transparent" />
+            </shape>
+        </item>
+        <!-- Rahmen oben -->
+        <item>
+            <shape android:shape="rectangle">
+                <corners
+                    android:topLeftRadius="24dp"
+                    android:bottomLeftRadius="0dp"
+                    android:topRightRadius="0dp"
+                    android:bottomRightRadius="0dp" />
+                <stroke
+                    android:width="1dp"
+                    android:color="?attr/mainPrimaryColor" />
+                <solid android:color="@android:color/transparent" />
+            </shape>
+        </item>
+    </layer-list>
+</inset>

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relLayout_fullepgitem"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:gravity="center_vertical"
+    android:focusable="true"
+    android:background="@drawable/selector_epgfull_background"
+    android:focusableInTouchMode="true"
+    android:paddingStart="5dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+
+          <com.google.android.material.imageview.ShapeableImageView
+              android:layout_width="170dp"
+              android:layout_height="80dp"
+              android:id="@+id/iv_tvshow_poster"
+              android:layout_alignParentEnd="true"
+              android:alpha="0.3"
+              android:layout_margin="1dp"
+              app:shapeAppearanceOverlay="@style/roundedImageViewBottomRight"
+              android:foreground="@drawable/gradient_overlay_fromleft_bgmain"
+              tools:src="@drawable/skybundesliga"
+              android:scaleType="centerCrop"/>
+
+          <View
+              android:id="@+id/view_fullepg"
+              android:layout_width="170dp"
+              android:layout_height="80dp"
+              android:layout_alignParentEnd="true"
+              android:layout_margin="1dp"
+              android:visibility="gone"
+              android:background="@drawable/selector_epgfull_gradient"/>
+
+
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+               android:gravity="center_vertical"
+              android:layout_marginStart="5dp"
+              android:orientation="vertical">
+
+               <LinearLayout
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+          <TextView
+              android:id="@+id/tv_StartTime"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              tools:text="08:20"
+              android:textColor="#A6A5A5"
+              android:textSize="12sp"
+              app:layout_constraintTop_toTopOf="parent"
+              app:layout_constraintStart_toStartOf="parent"/>
+
+     <TextView
+         android:id="@+id/tv_EndTime"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         tools:text=" - 08:20"
+         android:textColor="#A6A5A5"
+         android:textSize="12sp"
+         android:layout_toEndOf="@id/tv_StartTime"/>
+
+                    </LinearLayout>
+
+     <TextView
+         android:id="@+id/tv_Program"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         tools:text="Es war einmal in Amerika"
+         android:textColor="?attr/textMainColor"
+         android:textSize="14sp"
+         android:scrollHorizontally="true"
+         android:ellipsize="marquee"
+         android:maxLines="1"
+         android:marqueeRepeatLimit="marquee_forever"
+         android:layout_below="@id/tv_StartTime"/>
+
+     <TextView
+         android:id="@+id/tv_SubTitleProgram"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         tools:text="Es war einmal in Amerika"
+         android:visibility="gone"
+         android:textColor="?attr/textColorLight"
+         android:textSize="12sp"
+         android:maxLines="1"
+         android:ellipsize="marquee"
+         android:marqueeRepeatLimit="marquee_forever"
+         android:layout_below="@id/tv_Program"/>
+
+          </LinearLayout>
+
+          <LinearLayout
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_alignParentEnd="true"
+              android:layout_marginEnd="5dp"
+              android:layout_alignParentTop="true">
+
+               <ImageView
+                   android:id="@+id/iv_reminder"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:src="@drawable/ic_alarm"
+                   android:padding="5dp"/>
+
+               <ImageView
+                   android:id="@+id/iv_play_tv"
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:src="@drawable/selector_play_tv_fullepg"
+                   android:padding="5dp"/>
+
+          </LinearLayout>
+
+</RelativeLayout>

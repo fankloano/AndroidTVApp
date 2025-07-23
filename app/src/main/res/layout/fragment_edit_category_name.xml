@@ -1,0 +1,107 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundSettings"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_categoryNameOptions"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:textSize="15sp"
+        android:gravity="center_vertical"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:background="?attr/backgroundLight"
+        android:textColor="?attr/textColorLight"
+        android:text="@string/edit_category_name"/>
+
+    <TextView
+        android:id="@+id/tv_initialName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/original_category_name"
+        android:textColor="?attr/textMainColor"
+        android:textSize="14sp"
+        android:layout_marginTop="10dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:layout_below="@id/tv_categoryNameOptions"/>
+
+    <TextView
+        android:id="@+id/tv_original_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/textColorLight"
+        android:layout_marginTop="4dp"
+        android:textColorHint="?attr/textColorDarkGrey"
+        android:layout_marginEnd="14dp"
+        tools:ignore="TextFields"
+        tools:text="TAFAFFSDFSD"
+        android:textSize="13sp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:backgroundTint="@color/light_blue"
+        android:layout_below="@id/tv_initialName"/>
+
+    <TextView
+        android:id="@+id/tv_currentName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/current_category_name"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:layout_below="@id/tv_original_name"/>
+
+
+    <EditText
+        android:id="@+id/et_editedCategoryName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_currentName"
+        android:layout_marginStart="17dp"
+        android:layout_marginEnd="17dp"
+        android:backgroundTint="@color/light_blue"
+        android:hint="@string/enter_category_name"
+        android:imeOptions="actionDone"
+        android:textSize="13sp"
+        android:singleLine="true"
+        android:text="asdasdada"
+        android:nextFocusDown="@id/btn_resetCategoryName"
+        android:nextFocusUp="@id/et_editedCategoryName"
+        android:nextFocusLeft="@id/et_editedCategoryName"
+        android:nextFocusRight="@id/et_editedCategoryName"
+        android:textColor="?attr/textColorLight"
+        android:textColorHint="?attr/textColorDarkGrey"
+        tools:ignore="TextFields" />
+
+    <TextView
+        android:id="@+id/btn_resetCategoryName"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/reset_to_original_category_name"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:textSize="14sp"
+        android:textColor="@drawable/focused_selected_textview"
+        android:background="@drawable/settings_item_background"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:nextFocusLeft="@id/btn_resetCategoryName"
+        android:nextFocusRight="@id/btn_resetCategoryName"
+        android:nextFocusUp="@id/et_editedChannelName"
+        android:nextFocusDown="@id/btn_resetCategoryName"
+        android:layout_below="@id/et_editedCategoryName"/>
+
+</RelativeLayout>

@@ -1,0 +1,19 @@
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Zustand: Fokussiert und aktuelle Sendung -->
+    <item
+        android:state_focused="true"
+        android:state_selected="true"
+        android:drawable="@drawable/selected_fullepg_border" />
+
+    <!-- Zustand: Fokussiert -->
+    <item android:state_focused="true"
+        android:drawable="@drawable/focused_fullepg_border" />
+
+    <!-- Zustand: Aktuelle Sendung -->
+    <item android:state_selected="true"
+        android:drawable="@drawable/selected_fullepg" />
+
+    <!-- Standardzustand -->
+    <item android:drawable="@drawable/default_fullepg_border" />
+</selector>

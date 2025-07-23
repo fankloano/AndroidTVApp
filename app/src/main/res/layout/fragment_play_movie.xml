@@ -1,0 +1,814 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:background="@color/black">
+
+    <org.videolan.libvlc.util.VLCVideoLayout
+        android:id="@+id/videoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        android:scaleType="centerCrop" />
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/exoplayer_videoview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@color/black"
+            app:resize_mode="fit">
+
+            <TextView
+                android:id="@+id/playingError"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginStart="25dp"
+                android:layout_marginEnd="25dp"
+                android:textColor="?attr/textMainColor"
+                android:textSize="12sp"
+                android:visibility="invisible"
+                tools:text="Error code: 462 - cant play stream" />
+
+        </androidx.media3.ui.PlayerView>
+
+    <TextView
+        android:id="@+id/movie_playing_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:text="CAN'T PLAY CHANNEL!"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        android:visibility="invisible"
+        android:layout_centerInParent="true"/>
+
+    <RelativeLayout
+        android:id="@+id/hud_container"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:orientation="vertical"
+        android:padding="5dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <RelativeLayout
+            android:id="@+id/relLayout_movieName"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:id="@+id/arrow_hideoptions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_arrow_down"
+                android:rotation="180"
+                android:visibility="invisible"
+                android:layout_centerHorizontal="true"/>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/relLayout_options"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="invisible"
+                android:layout_below="@id/linLayout_MovieName"
+                android:layout_alignParentBottom="true">
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_infodetail"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/relLayout_aspectratiodetail"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/tv_info"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:gravity="bottom|center_horizontal"
+                        android:nextFocusLeft="@id/tv_aspectratio"
+                        android:nextFocusRight="@id/iv_replayVideo"
+                        android:padding="2dp"
+                        android:paddingStart="15dp"
+                        android:paddingEnd="15dp"
+                        android:text="INFO"
+                        android:textColor="@drawable/selector_textview_player_aspectratio"
+                        android:textSize="24sp" />
+
+                    <TextView
+                        android:id="@+id/tv_infoinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@id/tv_info"
+                        android:gravity="center"
+                        android:text="Info"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail" />
+
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_aspectratiodetail"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/relLayout_videoTrack"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/relLayout_infodetail"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <TextView
+                        android:id="@+id/tv_aspectratio"
+                        android:layout_width="match_parent"
+                        android:layout_height="50dp"
+                        android:gravity="bottom|center_horizontal"
+                        android:nextFocusLeft="@id/relLayout_infodetail"
+                        android:nextFocusRight="@id/tv_info"
+                        android:padding="2dp"
+                        android:paddingStart="15dp"
+                        android:paddingEnd="15dp"
+                        android:textColor="@drawable/selector_textview_player_aspectratio"
+                        android:textSize="24sp"
+                        tools:text="16:9" />
+
+                    <TextView
+                        android:id="@+id/tv_ratioinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@id/tv_aspectratio"
+                        android:layout_alignParentBottom="true"
+                        android:gravity="center"
+                        android:text="Aspect Ratio"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_videoTrack"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/relLayout_subtitleTrack"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/relLayout_aspectratiodetail"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_videoTrack"
+                        android:layout_width="100dp"
+                        android:layout_height="50dp"
+                        android:layout_centerInParent="true"
+                        android:nextFocusLeft="@id/iv_subtitle"
+                        android:nextFocusRight="@id/iv_videoTrack"
+                        android:src="@drawable/selector_video_change"
+                        tools:layout_editor_absoluteY="11dp" />
+
+                    <TextView
+                        android:id="@+id/tv_videotrackinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@id/iv_videoTrack"
+                        android:text="Video Tracks"
+                        android:gravity="center"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_subtitleTrack"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/relLayout_audioTrack"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/relLayout_videoTrack"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_subtitle"
+                        android:layout_width="100dp"
+                        android:layout_height="50dp"
+                        android:layout_centerInParent="true"
+                        android:nextFocusLeft="@id/iv_audio"
+                        android:nextFocusRight="@id/iv_videoTrack"
+                        android:src="@drawable/selector_subtitle_change" />
+
+                    <TextView
+                        android:id="@+id/tv_subtitleinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@id/iv_subtitle"
+                        android:background="@drawable/background_player_infodetail"
+                        android:text="Subtitles"
+                        android:gravity="center"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_audioTrack"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/relLayout_audioDelay"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/relLayout_subtitleTrack"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_audio"
+                        android:layout_width="100dp"
+                        android:layout_height="50dp"
+                        android:layout_centerInParent="true"
+                        android:nextFocusLeft="@id/iv_audio"
+                        android:nextFocusRight="@id/iv_subtitle"
+                        android:src="@drawable/selector_audio_change" />
+
+                    <TextView
+                        android:id="@+id/tv_audioinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:layout_below="@id/iv_audio"
+                        android:background="@drawable/background_player_infodetail"
+                        android:text="Audio Tracks"
+                        android:gravity="center"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail" />
+
+                </RelativeLayout>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_audioDelay"
+                    android:layout_width="140dp"
+                    android:layout_height="100dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginEnd="15dp"
+                    android:background="@drawable/background_player_aspectratio"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:padding="5dp"
+                    android:gravity="center_vertical"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintHorizontal_bias="0.5"
+                    app:layout_constraintStart_toEndOf="@+id/relLayout_audioTrack"
+                    app:layout_constraintTop_toTopOf="parent">
+
+                    <ImageView
+                        android:id="@+id/iv_audio_delay"
+                        android:layout_width="100dp"
+                        android:layout_height="50dp"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:layout_centerInParent="true"
+                        android:nextFocusLeft="@id/iv_audio"
+                        android:nextFocusRight="@id/iv_subtitle"
+                        android:src="@drawable/selector_audio_delay_change" />
+
+                    <TextView
+                        android:id="@+id/tv_audiodelayinfo"
+                        android:layout_width="140dp"
+                        android:layout_height="30dp"
+                        android:text="Audio Delay"
+                        android:layout_below="@id/iv_audio_delay"
+                        android:gravity="center"
+                        android:textColor="@drawable/selector_textview_player_optionsdetail"/>
+
+                </RelativeLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <RelativeLayout
+                android:id="@+id/linLayout_MovieName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/play_moviename"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    tools:text="DE DAS ERSTE FHD"
+                    android:layout_centerVertical="true"
+                    android:textColor="@color/light_grey"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:layout_marginStart="18dp"
+                    android:layout_marginEnd="130dp"
+                    android:layout_marginTop="5dp"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"/>
+
+                <LinearLayout
+                    android:id="@+id/channel_quality_info_fullscreen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal"
+                    android:layout_marginEnd="15dp"
+                    android:layout_alignParentEnd="true">
+
+                    <TextView
+                        android:id="@+id/fps"
+                        android:layout_width="50dp"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:textColor="?attr/textMainColor"
+                        android:textSize="11sp"
+                        android:background="@drawable/background_channel_info"
+                        android:layout_margin="3dp"
+                        android:visibility="gone"
+                        android:padding="3dp"
+                        tools:text="FPS: 25"/>
+
+                    <TextView
+                        android:id="@+id/resolution"
+                        android:layout_width="60dp"
+                        android:layout_height="match_parent"
+                        android:textColor="?attr/textMainColor"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:background="@drawable/background_channel_info"
+                        android:layout_margin="3dp"
+                        android:visibility="gone"
+                        android:padding="3dp"
+                        tools:text="1280x7210"/>
+
+                    <TextView
+                        android:id="@+id/audio"
+                        android:layout_width="50dp"
+                        android:layout_height="match_parent"
+                        android:textColor="?attr/textMainColor"
+                        android:textSize="11sp"
+                        android:gravity="center"
+                        android:visibility="gone"
+                        android:background="@drawable/background_channel_info"
+                        android:layout_margin="3dp"
+                        android:padding="3dp"
+                        tools:text="Mono"/>
+
+                </LinearLayout>
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/relLayout_playback_controls"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@id/linLayout_MovieName"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="30dp"
+                android:visibility="visible"
+                android:padding="2dp">
+
+                <androidx.media3.ui.DefaultTimeBar
+                    android:id="@+id/seekBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentTop="true"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    app:buffered_color="#736E6E"
+                    app:scrubber_color="@color/light_blue_darker"
+                    app:played_color="@color/light_blue"
+                    app:unplayed_color="@color/light_mid_grey"
+                    app:scrubber_enabled_size="12dp"
+                    app:scrubber_dragged_size="16dp"
+                    app:scrubber_disabled_size="6dp"
+                    app:bar_height="2.5dp" />
+
+                <TextView
+                    android:id="@+id/tv_currentTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="00:00"
+                    android:layout_below="@id/seekBar"
+                    android:textColor="@color/light_grey"
+                    android:layout_marginStart="15dp"/>
+
+                <TextView
+                    android:id="@+id/tv_totalTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="00:00"
+                    android:layout_below="@id/seekBar"
+                    android:textColor="@color/light_grey"
+                    android:layout_marginEnd="15dp"
+                    android:layout_alignParentEnd="true"/>
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_playpause"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_alignParentBottom="true">
+
+                <ImageButton
+                    android:id="@+id/iv_playVideo"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:scaleType="centerInside"
+                    android:focusable="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusRight="@id/iv_forwardVideo"
+                    android:nextFocusLeft="@id/iv_replayVideo"
+                    android:nextFocusUp="@id/seekBar"
+                    android:nextFocusDown="@id/tv_info"
+                    android:src="@drawable/selector_playvideo" />
+
+                <ImageButton
+                    android:id="@+id/iv_pauseVideo"
+                    android:layout_width="45dp"
+                    android:layout_height="45dp"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:src="@drawable/selector_pausevideo"
+                    android:visibility="invisible"
+                    android:scaleType="centerInside"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusRight="@id/iv_forwardVideo"
+                    android:nextFocusLeft="@id/iv_replayVideo"
+                    android:nextFocusUp="@id/seekBar"
+                    android:nextFocusDown="@id/tv_info" />
+
+                </RelativeLayout>
+
+                <ImageButton
+                    android:id="@+id/iv_replayVideo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginEnd="60dp"
+                    android:layout_marginBottom="3dp"
+                    android:layout_toStartOf="@id/relLayout_playpause"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusLeft="@id/tv_info"
+                    android:nextFocusRight="@id/iv_pauseVideo"
+                    android:nextFocusUp="@id/seekBar"
+                    android:nextFocusDown="@id/tv_info"
+                    android:rotation="180"
+                    android:src="@drawable/selector_forwardvideo" />
+
+                <ImageButton
+                    android:id="@+id/iv_forwardVideo"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="60dp"
+                    android:layout_marginBottom="3dp"
+                    android:layout_toEndOf="@id/relLayout_playpause"
+                    android:layout_alignParentBottom="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:nextFocusRight="@id/iv_audio"
+                    android:nextFocusLeft="@id/iv_pauseVideo"
+                    android:nextFocusUp="@id/seekBar"
+                    android:src="@drawable/selector_forwardvideo"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    app:tint="@color/light_grey"/>
+
+            </RelativeLayout>
+
+            <ImageView
+                android:id="@+id/arrow_showoptions"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_arrow_down"
+                android:visibility="visible"
+                android:layout_centerHorizontal="true"
+                android:layout_alignParentBottom="true"/>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+    <ProgressBar
+        android:id="@+id/player_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="invisible" />
+
+    <RelativeLayout
+        android:id="@+id/relLayout_movie_selection"
+        android:layout_width="350dp"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="10dp"
+        android:visibility="invisible"
+        tools:listitem="@layout/rv_item_movie_selection"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="?attr/backgroundDarkDark">
+
+        <LinearLayout
+            android:id="@+id/linLayout_selection"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/backgroundDarkDark"
+            android:orientation="horizontal"
+            android:padding="5dp">
+        
+        <TextView
+            android:id="@+id/tv_movie_selection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Choose audio track:"
+            android:textSize="16sp"
+            android:paddingStart="16dp"/>
+
+            <TextView
+                android:id="@+id/tv_movie_selection_Size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="50"
+                android:textSize="16sp"
+                android:layout_marginStart="8dp"/>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_aspectratio_default"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:text="Reset to default aspect ratio = 3:4"
+            android:textSize="16sp"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="14dp"
+            android:paddingStart="9dp"
+            android:paddingEnd="7dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:background="@drawable/settings_item_background_dark"
+            android:layout_below="@id/linLayout_selection"/>
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_movie_selection"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="5dp"
+            tools:listitem="@layout/rv_item_movie_selection"
+            android:background="?attr/backgroundDarkDark"
+            android:layout_below="@id/tv_aspectratio_default">
+            
+        </com.rubensousa.dpadrecyclerview.DpadRecyclerView>
+
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/movie_detail_info"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:padding="6dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/background_rounded_vod_details"
+        android:visibility="gone"
+        app:layout_constraintWidth_percent="0.40">
+
+        <ImageView
+            android:id="@+id/iv_moviedetailPoster"
+            android:layout_width="120dp"
+            android:layout_height="150dp"
+            android:layout_gravity="end"
+            android:scaleType="centerCrop"
+            android:layout_margin="8dp"
+            android:alpha="0.8"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true"
+            tools:src="@drawable/hdr_bg"/>
+
+        <TextView
+            android:id="@+id/tv_dialog_movie_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:text="Horton hört ein Hu!"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="10dp"
+            android:typeface="monospace"
+            android:textSize="18sp"
+            android:textColor="@color/light_blue"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_toLeftOf="@id/iv_moviedetailPoster"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+        <RelativeLayout
+            android:id="@+id/linLayout_seriesInfos"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_dialog_movie_title">
+
+            <TextView
+                android:id="@+id/tv_dialog_series_seasonepisode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Season 12   Episode 10"
+                android:layout_marginStart="10dp"
+                android:typeface="monospace"
+                android:textSize="14sp"
+                android:layout_marginTop="5dp"
+                android:textColor="@color/white"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:layout_centerVertical="true"
+                android:fontFamily="@font/vag_rounded_thin"
+                android:lineSpacingExtra="1.5dp"
+                android:letterSpacing="0.008"
+                android:marqueeRepeatLimit="marquee_forever" />
+
+        </RelativeLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_below="@id/linLayout_seriesInfos">
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_videodetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="Video:"
+                    android:textColor="@color/white"
+                    android:ellipsize="marquee"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_videodetailsresol"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginTop="3dp"
+                    tools:text="Resolution = 1900x1080"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_videodetailsfps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    tools:text="FPS: 25"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"/>
+
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_videodetailscodec"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    tools:text="Codec: FullHD"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_audiodetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:text="Audio:"
+                    android:textColor="@color/white"
+                    android:ellipsize="marquee"
+                    android:textSize="14sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_audiodetailslang"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginTop="3dp"
+                    tools:text="Language = de"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_audiodetailscodec"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    tools:text="Codec: 25"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="marquee"
+                    android:textSize="13sp"/>
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_audiodetailformat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="3dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    tools:text="FORMAT: AIFF (Audio Interchange File Format)"
+                    android:textColor="#A8A8A8"
+                    android:singleLine="true"
+                    android:scrollHorizontally="true"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:textSize="13sp"/>
+
+                <ScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp">
+
+                <TextView
+                    android:id="@+id/tv_dialog_movie_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:textColor="#A8A8A8"
+                    android:ellipsize="end"
+                    android:textSize="13sp"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:textAppearance="?android:textAppearanceMedium"
+                    tools:text="Der Roman steht vor dem Hintergrund einer von Tolkien sein Leben lang entwickelten Fantasiewelt (Tolkiens Welt). Er erzählt die Geschichte eines Rings, mit dessen Vernichtung die böse Macht in Gestalt des dunklen Herrschers Sauron untergeht. Die Hauptfiguren sind vier Hobbits, die unfreiwillig in ein heroisches Abenteuer hineingezogen werden. Neben diesen spielen als Vertreter des Guten Elben, Menschen des Westens und des Nordens, Zwerge und Zauberer wichtige Rollen. Ihre Gegenspieler sind die Geschöpfe und Untertanen Saurons, die Orks, Trolle und von ihm verführte Menschen des Ostens und des Südens."/>
+
+                </ScrollView>
+
+            </LinearLayout>
+
+    </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

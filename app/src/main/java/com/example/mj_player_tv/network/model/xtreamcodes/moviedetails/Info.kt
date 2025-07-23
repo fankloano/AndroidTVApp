@@ -1,0 +1,25 @@
+package com.example.mj_player_tv.network.model.xtreamcodes.moviedetails
+
+data class Info(
+    val actors: String? = "",
+    val age: String? = "",
+    val backdrop_path: List<String>? = emptyList(),
+    val bitrate: Int? = 0,
+    val cast: String? = "",
+    val country: String? = "",
+    val cover_big: String? = "",
+    val description: String? = "",
+    val director: String? = "",
+    val duration: String? = "",
+    val duration_secs: Int,
+    val episode_run_time: Int,
+    val genre: String? = "",
+    val movie_image: String? = "",
+    val name: String? = "",
+    val o_name: String? = "",
+    val plot: String? = "",
+    val rating: Double? = 0.0,
+    val release_date: String? = "",
+    val releasedate: String? = "",
+    val tmdb_id: Int? = null,
+)

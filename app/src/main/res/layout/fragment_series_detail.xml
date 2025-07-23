@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/backgroundDark">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/const_series"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="?attr/backgroundDark"
+            android:padding="8dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp">
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <ImageView
+            android:id="@+id/iv_seriesposter"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintWidth_percent="0.5"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/hdr_bg"
+            android:foreground="@drawable/gradient_overlay_fromleft_down"/>
+
+    <View
+        android:id="@+id/gradient_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/gradient_overlay_fromrightdown"
+        app:layout_constraintHeight_percent="1.0"
+        app:layout_constraintStart_toStartOf="@id/iv_seriesposter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.50" />
+
+    <View
+        android:id="@+id/gradient_view_2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/gradient_overlay_fromright"
+        app:layout_constraintHeight_percent="1.0"
+        app:layout_constraintStart_toStartOf="@id/iv_seriesposter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.50" />
+
+    <View
+        android:id="@+id/gradient_view_3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/gradient_overlay_fromdown"
+        app:layout_constraintHeight_percent="1.0"
+        app:layout_constraintStart_toStartOf="@id/iv_seriesposter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.50" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:id="@+id/linLayout_seriesInfo"
+            android:layout_marginTop="5dp"
+            android:layout_marginStart="5dp"
+            app:layout_constraintTop_toBottomOf="@id/tv_seriestitle"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintWidth_percent="0.48"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:padding="1dp"
+                android:visibility="invisible"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:progressTint="?attr/mainPrimaryColor"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="280dp"/>
+
+            <LinearLayout
+                android:id="@+id/linLayout_seriesdetailinfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:rating="3"
+                    android:visibility="invisible"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:progressTint="?attr/mainPrimaryColor"
+                    android:id="@+id/smallRating" />
+
+                <TextView
+                    android:id="@+id/tv_rating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="7.4"
+                    android:visibility="invisible"
+                    android:layout_marginStart="10dp"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/tv_releaseyear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:visibility="invisible"
+                    android:background="@drawable/background_vod_info"
+                    tools:text="2024"/>
+
+                <TextView
+                    android:id="@+id/tv_age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="16+"
+                    android:textSize="13sp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:visibility="invisible"
+                    android:gravity="center"
+                    android:background="@drawable/background_vod_info"
+                    android:layout_marginStart="10dp"/>
+
+                <ImageView
+                    android:id="@+id/iv_favorite"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_favorite_vod"
+                    android:layout_marginStart="10dp"
+                    android:tint="@color/yellow"
+                    android:visibility="invisible"
+                    android:layout_gravity="center"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_remainingTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="1h 35min remaining"
+                android:textSize="12sp"
+                android:layout_marginStart="20dp"
+                app:layout_constraintStart_toEndOf="@id/linLayout_seriesdetailinfo"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"/>
+
+            <LinearLayout
+                android:id="@+id/linLayout_seriesdetailinfo_genres"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/linLayout_seriesdetailinfo"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_categories"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:ellipsize="end"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:maxLines="2"
+                    tools:text="Liebesfilm, Action, Drama"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_seasontext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Season 6 "
+                android:textSize="17sp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                app:layout_constraintTop_toBottomOf="@id/linLayout_seriesdetailinfo_genres"
+                android:textColor="?attr/textMainColor"/>
+
+            <TextView
+                android:id="@+id/tv_episodetext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Episode 2"
+                android:textSize="14sp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_seasontext"
+                android:textColor="?attr/textColorMidLight"/>
+
+            <TextView
+                android:id="@+id/tv_episodedescription"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:letterSpacing="0.005"
+                android:lineSpacingExtra="1dp"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:maxLines="3"
+                android:padding="5dp"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_episodetext"
+                tools:text="NACHDEM DAS VON GANDALFsaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaassssssssaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"  />
+
+
+            <RelativeLayout
+                android:id="@+id/relLayout_series_Settings"
+                android:layout_width="wrap_content"
+                android:layout_height="30dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginStart="9dp"
+                android:layout_marginBottom="9dp"
+                android:visibility="invisible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" >
+
+                <TextView
+                    android:id="@+id/btnPlay"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="5dp"
+                    android:paddingEnd="13dp"
+                    android:layout_centerVertical="true"
+                    android:drawableStart="@drawable/selector_play_mselect_icon"
+                    android:nextFocusRight="@id/btnaddFavorite"
+                    android:nextFocusLeft="@id/btnPlay"
+                    android:nextFocusUp="@id/btnPlay"
+                    android:drawablePadding="13dp"
+                    android:text="Play Movie"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"/>
+
+                <TextView
+                    android:id="@+id/btnaddFavorite"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="6dp"
+                    android:paddingEnd="13dp"
+                    android:layout_marginStart="15dp"
+                    android:text="Add to Watchlist"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:layout_centerVertical="true"
+                    android:nextFocusRight="@id/btnaddWatched"
+                    android:nextFocusLeft="@id/btnPlay"
+                    android:nextFocusUp="@id/btnaddFavorite"
+                    android:drawableStart="@drawable/selector_favorite_movie_icon"
+                    android:drawablePadding="13dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnPlay"/>
+
+
+                <TextView
+                    android:id="@+id/btnaddWatched"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="6dp"
+                    android:paddingEnd="13dp"
+                    android:layout_marginStart="15dp"
+                    android:text="Mark as watched"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:layout_gravity="center_vertical"
+                    android:nextFocusRight="@id/btnInfo"
+                    android:nextFocusLeft="@id/btnaddFavorite"
+                    android:nextFocusUp="@id/btnaddWatched"
+                    android:drawableStart="@drawable/selector_watched_movie_icon"
+                    android:drawablePadding="13dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnaddFavorite"/>
+
+                <TextView
+                    android:id="@+id/btnInfo"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:padding="6dp"
+                    android:layout_marginStart="15dp"
+                    android:layout_gravity="center_vertical"
+                    android:nextFocusLeft="@id/btnaddWatched"
+                    android:nextFocusRight="@id/btnInfo"
+                    android:nextFocusUp="@id/btnInfo"
+                    android:text="More Infos"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:drawableStart="@drawable/selector_moreinfo_movie_icon"
+                    android:drawablePadding="13dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnaddWatched"/>
+
+            </RelativeLayout>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/tv_seriestitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textMainColor"
+            android:paddingEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:paddingTop="6dp"
+            android:textSize="23sp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/gradient_view"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.58"
+            tools:text="Der Herr der Ringe: Die Rückkehr des Königs" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_series_episodes"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            app:layout_constraintTop_toBottomOf="@id/rv_layout_series_seasons"
+            app:layout_constraintStart_toEndOf="@id/iv_seriesposter"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:listitem="@layout/rv_item_episode"/>
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_series_seasons"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginStart="10dp"
+            tools:listitem="@layout/rv_item_seasons"
+            app:layout_constraintTop_toTopOf="parent"
+            android:gravity="center"
+            android:nextFocusLeft="@id/rv_layout_series_seasons"
+            android:nextFocusUp="@id/rv_layout_series_seasons"
+            app:layout_constraintStart_toEndOf="@id/iv_seriesposter"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+    <View
+        android:id="@+id/season_visibility_view"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:background="#73212121"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginStart="10dp"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_seriesposter"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fullscreen_serie"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+
+

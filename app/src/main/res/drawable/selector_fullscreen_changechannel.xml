@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/focused_fullscreen_channel" android:state_focused="true" />
+    <!-- default -->
+    <item android:drawable="@drawable/default_fullscreen_channel" />
+</selector>

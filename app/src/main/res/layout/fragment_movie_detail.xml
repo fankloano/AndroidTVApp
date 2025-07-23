@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/const_movies"
+    android:background="?attr/backgroundDark"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" >
+
+        <ImageView
+            android:id="@+id/iv_movieposter"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintHeight_percent="1"
+            app:layout_constraintWidth_percent="0.60"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/hdr_bg"
+            android:foreground="@drawable/gradient_overlay_fromleft_down"/>
+
+        <View
+            android:id="@+id/gradient_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/gradient_overlay_fromleft_down"
+            app:layout_constraintHeight_percent="1.0"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.60" />
+
+        <View
+            android:id="@+id/gradient_view_2"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/gradient_overlay_fromleft"
+            app:layout_constraintHeight_percent="1.0"
+            app:layout_constraintEnd_toEndOf="@id/iv_movieposter"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.60" />
+
+        <View
+            android:id="@+id/gradient_view_3"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/gradient_overlay_fromdown"
+            app:layout_constraintHeight_percent="1.0"
+            app:layout_constraintEnd_toEndOf="@id/iv_movieposter"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.60" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:id="@+id/linLayout_movieInfo"
+            android:layout_marginTop="45dp"
+            android:layout_marginStart="5dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.5"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:padding="1dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:progressTint="?attr/mainPrimaryColor"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="100dp"/>
+
+            <LinearLayout
+                android:id="@+id/linLayout_moviedetailinfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <RatingBar
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:rating="3"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:progressTint="?attr/mainPrimaryColor"
+                    android:id="@+id/smallRating" />
+
+                <TextView
+                    android:id="@+id/tv_rating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="7.4"
+                    android:layout_marginStart="10dp"
+                    android:textSize="12sp"/>
+
+                <TextView
+                    android:id="@+id/tv_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    tools:text="1h 39min"
+                    android:layout_marginStart="20dp"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:background="@drawable/background_vod_info"/>
+
+                <TextView
+                    android:id="@+id/tv_releaseyear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:textSize="13sp"
+                    android:gravity="center"
+                    android:background="@drawable/background_vod_info"
+                    tools:text="2024"/>
+
+                <TextView
+                    android:id="@+id/tv_age"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="16+"
+                    android:textSize="13sp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:gravity="center"
+                    android:background="@drawable/background_vod_info"
+                    android:layout_marginStart="10dp"/>
+
+                <ImageView
+                    android:id="@+id/iv_favorite"
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:src="@drawable/ic_favorite_vod"
+                    android:layout_marginStart="10dp"
+                    android:tint="@color/yellow"
+                    android:visibility="invisible"
+                    android:layout_gravity="center"/>
+
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_remainingTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="1h 35min remaining"
+                android:textSize="12sp"
+                android:layout_marginStart="40dp"
+                app:layout_constraintStart_toEndOf="@id/linLayout_moviedetailinfo"
+                android:layout_marginTop="8dp"
+                app:layout_constraintTop_toBottomOf="@id/progressBar"/>
+
+            <LinearLayout
+                android:id="@+id/linLayout_moviedetailinfo_ratings"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintTop_toBottomOf="@id/linLayout_moviedetailinfo"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_categories"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="15sp"
+                    android:ellipsize="end"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:maxLines="2"
+                    tools:text="Liebesfilm, Action, Drama"/>
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_director"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/director_s"
+                android:textSize="14sp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                app:layout_constraintTop_toBottomOf="@id/linLayout_moviedetailinfo_ratings"
+                android:textColor="?attr/textColorLight"/>
+
+            <TextView
+                android:id="@+id/tv_directors"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:maxLines="2"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                tools:text="Peter Jackson"
+                app:layout_constraintTop_toBottomOf="@id/tv_director"
+                android:ellipsize="end"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textColor="?attr/textColorMidLight"/>
+
+            <TextView
+                android:id="@+id/tv_actor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/actor_s"
+                android:textSize="14sp"
+                android:layout_marginTop="5dp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_directors"
+                android:textColor="?attr/textColorLight"/>
+
+            <TextView
+                android:id="@+id/tv_actors"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginStart="10dp"
+                tools:text="Elijah Wood: Frodo Beutlin
+Ian McKellen: Gandalf
+Sean Astin: Samweis Gamdschie
+Viggo Mortensen: Aragorn/Streicher
+Liv Tyler: Arwen
+Sean Bean: Boromir
+Orlando Bloom: Legolas
+John Rhys-Davies: Gimli
+Christopher Lee: Saruman"
+                app:layout_constraintTop_toBottomOf="@id/tv_actor"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="?attr/textColorMidLight"/>
+
+            <TextView
+                android:id="@+id/tv_moviedescription"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginStart="4dp"
+                android:ellipsize="end"
+                android:letterSpacing="0.005"
+                android:lineSpacingExtra="1dp"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:padding="5dp"
+                android:textSize="14sp"
+                android:focusable="true"
+                android:layout_marginBottom="9dp"
+                android:focusableInTouchMode="true"
+                android:scrollbars="vertical"
+                android:overScrollMode="never"
+                android:fadeScrollbars="false"
+                android:background="@drawable/background_vod_detail_description"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_actors"
+                app:layout_constraintBottom_toTopOf="@id/relLayout_movie_Settings"
+                tools:text="NACHDEM DAS VON GANDALF"  />
+
+            <View
+                android:id="@+id/gradientView"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@drawable/gradient_overlay_description"
+                android:visibility="gone"
+                app:layout_constraintBottom_toTopOf="@id/relLayout_movie_Settings"
+                app:layout_constraintStart_toStartOf="@id/tv_moviedescription"
+                app:layout_constraintEnd_toEndOf="@id/tv_moviedescription"/>
+
+            <ImageView
+                android:id="@+id/iv_moretext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:src="@drawable/ic_arrow_down"
+                app:layout_constraintBottom_toTopOf="@id/relLayout_movie_Settings"
+                app:layout_constraintStart_toStartOf="@id/tv_moviedescription"
+                app:layout_constraintEnd_toEndOf="@id/tv_moviedescription"/>
+
+
+            <RelativeLayout
+                android:id="@+id/relLayout_movie_Settings"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginTop="15dp"
+                android:layout_marginStart="9dp"
+                android:layout_marginBottom="9dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" >
+
+                <TextView
+                    android:id="@+id/btnPlay"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:padding="8.5dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center"
+                    android:drawableStart="@drawable/selector_play_mselect_icon"
+                    android:nextFocusRight="@id/btnaddFavorite"
+                    android:nextFocusLeft="@id/btnPlay"
+                    android:nextFocusUp="@id/btnPlay"
+                    android:drawablePadding="13dp"
+                    android:text="Play Movie"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"/>
+
+                <TextView
+                    android:id="@+id/btnaddFavorite"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:padding="8.5dp"
+                    android:paddingEnd="15dp"
+                    android:layout_marginStart="15dp"
+                    android:text="Add to Watchlist"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:nextFocusRight="@id/btnaddWatched"
+                    android:nextFocusLeft="@id/btnPlay"
+                    android:nextFocusUp="@id/btnaddFavorite"
+                    android:drawableStart="@drawable/selector_favorite_movie_icon"
+                    android:drawablePadding="15dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnPlay"/>
+
+                <TextView
+                    android:id="@+id/btnaddWatched"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:padding="8.5dp"
+                    android:paddingEnd="13dp"
+                    android:layout_marginStart="15dp"
+                    android:text="Mark as watched"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:gravity="center"
+                    android:nextFocusRight="@id/btnInfo"
+                    android:nextFocusLeft="@id/btnaddFavorite"
+                    android:nextFocusUp="@id/btnaddWatched"
+                    android:drawableStart="@drawable/selector_watched_movie_icon"
+                    android:drawablePadding="13dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnaddFavorite"/>
+
+                <TextView
+                    android:id="@+id/btnInfo"
+                    android:layout_width="35dp"
+                    android:layout_height="35dp"
+                    android:padding="8.5dp"
+                    android:layout_marginStart="15dp"
+                    android:gravity="center"
+                    android:nextFocusLeft="@id/btnaddWatched"
+                    android:nextFocusUp="@id/btnInfo"
+                    android:text="More Infos"
+                    android:textSize="13sp"
+                    android:textColor="@drawable/selector_movie_detail_textview"
+                    android:drawableStart="@drawable/selector_moreinfo_movie_icon"
+                    android:drawablePadding="15dp"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:background="@drawable/selector_moviedetail_button_background"
+                    android:layout_toEndOf="@id/btnaddWatched"/>
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:id="@+id/linlayout_selectmovieplayer"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@color/black"
+                android:padding="4dp"
+                app:layout_constraintTop_toTopOf="@id/relLayout_movie_Settings"
+                app:layout_constraintStart_toStartOf="@id/relLayout_movie_Settings"
+                app:layout_constraintEnd_toEndOf="@id/relLayout_movie_Settings"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/linLayout_selectExoPlayer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:nextFocusDown="@id/linLayout_selectVLCPlayer"
+                    android:nextFocusUp="@id/linLayout_selectExoPlayer"
+                    android:nextFocusLeft="@id/linLayout_selectExoPlayer"
+                    android:nextFocusRight="@id/linLayout_selectExoPlayer"
+                    android:background="@drawable/background_movieplayer_select"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:id="@+id/exoPlayerText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/white"
+                        android:text="ExoPlayer"
+                        android:textSize="18sp" />
+
+                    <ImageView
+                        android:id="@+id/exoPlayerIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:visibility="gone"
+                        android:src="@drawable/ic_checked" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/linLayout_selectVLCPlayer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:focusableInTouchMode="true"
+                    android:focusable="true"
+                    android:nextFocusUp="@id/linLayout_selectExoPlayer"
+                    android:nextFocusDown="@id/linLayout_selectVLCPlayer"
+                    android:nextFocusLeft="@id/linLayout_selectVLCPlayer"
+                    android:nextFocusRight="@id/linLayout_selectVLCPlayer"
+                    android:background="@drawable/background_movieplayer_select"
+                    android:orientation="horizontal"
+                    android:padding="8dp">
+
+                    <TextView
+                        android:id="@+id/vlcPlayerText"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="VLC Player"
+                        android:textColor="@color/white"
+                        android:textSize="18sp" />
+
+                    <ImageView
+                        android:id="@+id/vlcPlayerIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:visibility="gone"
+                        android:src="@drawable/ic_checked" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <TextView
+            android:id="@+id/tv_movietitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/textMainColor"
+            android:paddingEnd="8dp"
+            android:layout_marginStart="16dp"
+            android:paddingTop="6dp"
+            android:textSize="23sp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.55"
+            tools:text="Der Herr der Ringe: Die Rückkehr des Königs"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/fullscreen_movie"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

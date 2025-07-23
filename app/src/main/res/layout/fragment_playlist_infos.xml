@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+        <TextView
+            android:id="@+id/title_setting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Playlist Info"
+            android:textSize="16sp"
+            android:padding="10dp"
+            android:textColor="?attr/textMainColor"
+            android:gravity="center_vertical"
+            android:layout_marginStart="24dp"
+            android:background="?attr/backgroundDarkDark"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_name"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_url"
+            android:nextFocusUp="@id/relLayout_save"
+            android:nextFocusLeft="@id/relLayout_name"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/title_setting">
+
+                <TextView
+                    android:id="@+id/tv_changeNamePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Name:"
+                    android:textSize="14sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isNamePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_changeNamePlaylist"
+                    tools:text="http://example.com:8080/c/"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_changeNamePlaylist"/>
+
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_url"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_username"
+            android:nextFocusUp="@id/relLayout_name"
+            android:nextFocusLeft="@id/relLayout_url"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_name">
+
+                <TextView
+                    android:id="@+id/tv_changeUrlPlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Url:"
+                    android:textSize="14sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isUrlPlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_changeUrlPlaylist"
+                    tools:text="http://example.com:8080/c/"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_changeUrlPlaylist"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_username"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_password"
+            android:nextFocusUp="@id/relLayout_url"
+            android:nextFocusLeft="@id/relLayout_username"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_url">
+
+                <TextView
+                    android:id="@+id/tv_changeUsernamePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Username:"
+                    android:textSize="14sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isUsernamePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_changeUsernamePlaylist"
+                    tools:text="http://example.com:8080/c/"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_changeUsernamePlaylist"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_password"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_save"
+            android:nextFocusUp="@id/relLayout_username"
+            android:nextFocusLeft="@id/relLayout_password"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_username">
+
+                <TextView
+                    android:id="@+id/tv_changePasswordPlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    tools:text="Name:"
+                    android:textSize="14sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isPasswordPlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="@drawable/focused_selected_textview_info"
+                    android:layout_below="@id/tv_changePasswordPlaylist"
+                    tools:text="http://example.com:8080/c/"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_changePasswordPlaylist"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_save"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:nextFocusDown="@id/relLayout_name"
+            android:nextFocusUp="@id/relLayout_password"
+            android:nextFocusLeft="@id/relLayout_save"
+            android:background="@drawable/selector_item_background_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_password">
+
+                <TextView
+                    android:id="@+id/tv_savePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="@drawable/focused_selected_textview"
+                    android:text="@string/save_changes"
+                    android:textSize="14sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_lastupdate"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="15dp"
+            android:background="@drawable/selector_item_background_dark"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_save">
+
+                <TextView
+                    android:id="@+id/tv_lastUpdatePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:text="@string/last_updated"
+                    android:textColor="?attr/textColorMidLight"
+                    android:textSize="14sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isLastUpdatePlaylist"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_lastUpdatePlaylist"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:textColor="?attr/textColorMidLight"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_lastUpdatePlaylist"
+                    tools:text="2024-05-13" />
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_tvupdatestatus"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:background="@drawable/selector_item_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_lastupdate">
+
+                <TextView
+                    android:id="@+id/tv_lastUpdateStatusTv"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="?attr/textColorMidLight"
+                    android:text="Update Status TV:"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isLastUpdateStatusTv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/textColorMidLight"
+                    android:layout_below="@id/tv_lastUpdateStatusTv"
+                    tools:text="Ok"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_lastUpdateStatusTv"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_movieupdatestatus"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:background="@drawable/selector_item_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_tvupdatestatus">
+
+                <TextView
+                    android:id="@+id/tv_lastUpdateStatusmovies"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:textColor="?attr/textColorMidLight"
+                    android:text="Update Status Movies:"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isLastUpdateStatusmovie"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textColor="?attr/textColorMidLight"
+                    android:layout_below="@id/tv_lastUpdateStatusmovies"
+                    tools:text="Ok"
+                    android:textSize="13sp"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:gravity="center_vertical"
+                    android:background="@color/transparent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_lastUpdateStatusmovies"/>
+
+        </RelativeLayout>
+
+
+        <RelativeLayout
+            android:id="@+id/relLayout_seriesupdatestatus"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:gravity="center_vertical"
+            android:paddingStart="7dp"
+            android:paddingEnd="7dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:background="@drawable/selector_item_background"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_movieupdatestatus">
+
+                <TextView
+                    android:id="@+id/tv_lastUpdateStatusSeries"
+                    android:layout_width="match_parent"
+                    android:layout_height="22dp"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:text="Update Status Series:"
+                    android:textColor="?attr/textColorMidLight"
+                    android:textSize="16sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_isLastUpdateStatusSeries"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_lastUpdateStatusSeries"
+                    android:background="@color/transparent"
+                    android:gravity="center_vertical"
+                    android:paddingStart="15dp"
+                    android:paddingEnd="15dp"
+                    android:textColor="?attr/textColorMidLight"
+                    android:textSize="13sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_lastUpdateStatusSeries"
+                    tools:text="Ok" />
+
+        </RelativeLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

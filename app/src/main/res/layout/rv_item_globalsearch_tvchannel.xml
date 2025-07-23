@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="120dp"
+    android:layout_height="120dp"
+    android:id="@+id/cardview_movie"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardCornerRadius="5dp"
+    app:cardElevation="5dp"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:foreground="@drawable/selector_vod_card_background">
+
+        <RelativeLayout
+            android:background="?attr/backgroundDark"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/ivtvChannel"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerInside"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="20dp"
+                    tools:src="@drawable/hdr_bg"/>
+
+                <ImageView
+                    android:id="@+id/tv_isFavorite"
+                    android:layout_width="28dp"
+                    android:layout_height="18dp"
+                    android:background="#D02E3035"
+                    android:src="@drawable/ic_favorite_vod"
+                    android:layout_gravity="start"
+                    android:tint="@color/yellow"
+                    android:visibility="invisible"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tvChannel"
+            android:layout_width="match_parent"
+            android:layout_height="20dp"
+            android:layout_below="@id/ivMovies"
+            android:layout_gravity="bottom"
+            android:fontFamily="sans-serif-smallcaps"
+            android:gravity="center"
+            tools:text="DE: Sky Cinema Highlights HD"
+            android:background="?attr/backgroundLight"
+            android:textColor="@color/white"
+            android:textSize="12dp"
+            android:padding="2dp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:typeface="monospace" />
+
+</androidx.cardview.widget.CardView>

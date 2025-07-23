@@ -1,0 +1,25 @@
+<!-- res/drawable/background_fullepg_options.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Hintergrund mit abgerundeten Ecken -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/backgroundDark" />
+        </shape>
+    </item>
+
+    <!-- Rahmen für die oberen, unteren und linken Seiten -->
+    <item>
+        <inset
+            android:insetLeft="0dp"
+            android:insetTop="-1dp"
+            android:insetBottom="0dp"
+            android:insetRight="-1dp"> <!-- Rahmen rechts ausblenden -->
+            <shape android:shape="rectangle">
+                <stroke
+                    android:width="1dp"
+                    android:color="?attr/textColorLight" />
+                <solid android:color="@android:color/transparent" />
+            </shape>
+        </inset>
+    </item>
+</layer-list>

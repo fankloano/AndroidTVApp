@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/fullscreenepgmain"
+    android:background="@color/transparent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+        <RelativeLayout
+            android:id="@+id/relLayout_programinfo"
+            android:padding="10dp"
+            android:visibility="gone"
+            android:background="#7E212121"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <TextView
+            android:id="@+id/tv_currentStartTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="08:20"
+            android:textColor="#CBFFFFFF"
+            android:textSize="14sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tv_currentEndTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text=" - 08:20"
+            android:textColor="#CBFFFFFF"
+            android:textSize="14sp"
+            android:layout_toEndOf="@id/tv_currentStartTime"/>
+
+                <ProgressBar
+                    android:id="@+id/progressBar"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:layout_width="80dp"
+                    android:layout_height="5dp"
+                    android:padding="1dp"
+                    android:progress="20"
+                    android:visibility="invisible"
+                    android:layout_toEndOf="@id/tv_currentEndTime"
+                    android:layout_alignBottom="@id/tv_currentEndTime"
+                    android:layout_alignTop="@id/tv_currentEndTime"
+                    android:layout_marginStart="15dp"
+                    android:progressTint="?attr/mainPrimaryColor"/>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tv_remainingTimeCurrentProgram"
+                    android:layout_alignBottom="@id/tv_currentEndTime"
+                    android:layout_alignTop="@id/tv_currentEndTime"
+                    android:layout_toEndOf="@id/progressBar"
+                    tools:text="1h 25min"
+                    android:visibility="invisible"
+                    android:gravity="center_vertical"
+                    android:layout_marginStart="15dp"
+                    android:textSize="12sp"
+                    android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_currentProgram"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            tools:text="Two and  Half Man"
+            android:textColor="?attr/textMainColor"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:layout_below="@id/tv_currentStartTime"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_mainInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_currentProgram">
+
+        <TextView
+            android:id="@+id/tv_currentSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:visibility="gone"
+            tools:text="Folge 5, Staffel 10 - Es war einmal ein Mann"
+            android:textColor="?attr/textColorLight"
+            android:textSize="15sp"
+            android:textStyle="" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintWidth_percent="0.5"
+            android:layout_marginTop="5dp"
+            tools:text="In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt."
+            android:textColor="?attr/textColorLight"
+            android:ellipsize="end"
+            android:maxLines="10"
+            android:textSize="13sp"
+            android:layout_below="@id/relLayout_mainInfo"/>
+
+        </RelativeLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

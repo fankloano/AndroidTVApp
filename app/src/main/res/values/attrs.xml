@@ -1,0 +1,20 @@
+<resources>
+    <attr name="mainPrimaryColor" format="reference|color" />
+    <attr name="mainPrimaryColorLight" format="reference|color" />
+    <attr name="mainPrimaryColorDark" format="reference|color" />
+    <attr name="backgroundMain" format="reference|color" />
+    <attr name="backgroundDark" format="reference|color" />
+    <attr name="backgroundDarkDark" format="reference|color" />
+    <attr name="backgroundDarkLight" format="reference|color"/>
+    <attr name="backgroundLight" format="reference|color" />
+    <attr name="textMainColor" format="reference|color" />
+    <attr name="textColorDarkGrey" format="reference|color" />
+    <attr name="textColorLight" format="reference|color" />
+    <attr name="textColorFocusSelected" format="reference|color" />
+    <attr name="backgroundFocusSelected" format="reference|color" />
+    <attr name="backgroundFocusSelectedDark" format="reference|color" />
+    <attr name="transparentColor" format="reference|color" />
+    <attr name="blackwhiteColor" format="reference|color" />
+    <attr name="textColorMidLight" format="reference|color" />
+    <attr name="backgroundSettings" format="reference|color" />
+</resources>

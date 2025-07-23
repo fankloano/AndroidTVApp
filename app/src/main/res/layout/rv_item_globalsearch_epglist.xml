@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    app:cardBackgroundColor="?attr/transparentColor"
+    android:descendantFocusability="afterDescendants"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    app:cardElevation="5dp"
+    android:padding="1dp"
+    app:cardCornerRadius="5dp">
+
+
+     <RelativeLayout
+         android:id="@+id/relLayout_fullepgitem"
+         android:layout_width="match_parent"
+         android:layout_height="match_parent"
+         android:gravity="center_vertical"
+         android:orientation="vertical"
+         android:focusable="true"
+         android:background="@drawable/selector_epgfull_background"
+         android:focusableInTouchMode="true"
+         android:paddingStart="5dp">
+
+          <ImageView
+              android:layout_width="150dp"
+              android:layout_height="80dp"
+              android:id="@+id/iv_tvshow_poster"
+              android:layout_alignParentEnd="true"
+              android:alpha="0.3"
+              android:layout_margin="1dp"
+              android:visibility="gone"
+              tools:src="@drawable/skybundesliga"
+              android:foreground="@drawable/selector_epgfull_gradient"
+              android:scaleType="centerCrop"/>
+
+          <View
+              android:id="@+id/view_fullepg"
+              android:layout_width="150dp"
+              android:layout_height="80dp"
+              android:layout_alignParentEnd="true"
+              android:visibility="gone"
+              android:layout_margin="1dp"
+              android:background="@drawable/selector_epgfull_gradient"/>
+
+          <LinearLayout
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+               android:gravity="center_vertical"
+              android:layout_marginStart="5dp"
+              android:orientation="vertical">
+
+               <LinearLayout
+                   android:layout_width="wrap_content"
+                   android:layout_height="wrap_content"
+                   android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tv_StartTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="08:20"
+                        android:textColor="#A6A5A5"
+                        android:textSize="12sp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"/>
+
+                    <TextView
+                        android:id="@+id/tv_EndTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text=" - 08:20"
+                        android:textColor="#A6A5A5"
+                        android:textSize="12sp"/>
+
+                    <TextView
+                        android:id="@+id/tv_Date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="26.03.2025"
+                        android:layout_marginStart="20dp"
+                        android:textColor="#7C7B7B"
+                        android:textSize="12sp"/>
+
+     </LinearLayout>
+
+     <TextView
+         android:id="@+id/tv_Program"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         tools:text="Es war einmal in Amerika"
+         android:textColor="?attr/textMainColor"
+         android:textSize="14sp"
+         android:scrollHorizontally="true"
+         android:ellipsize="marquee"
+         android:maxLines="1"
+         android:marqueeRepeatLimit="marquee_forever"
+         android:layout_below="@id/tv_StartTime"/>
+
+     <TextView
+         android:id="@+id/tv_SubTitleProgram"
+         android:layout_width="wrap_content"
+         android:layout_height="wrap_content"
+         tools:text="Es war einmal in Amerika"
+         android:visibility="gone"
+         android:textColor="?attr/textColorLight"
+         android:textSize="12sp"
+         android:maxLines="1"
+         android:ellipsize="marquee"
+         android:marqueeRepeatLimit="marquee_forever"
+         android:layout_below="@id/tv_Program"/>
+
+          </LinearLayout>
+
+
+          <ImageView
+              android:id="@+id/iv_play_tv"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginTop="8dp"
+              android:layout_marginEnd="12dp"
+              android:layout_alignParentEnd="true"
+              android:layout_alignParentTop="true"
+              android:visibility="gone"
+              android:src="@drawable/selector_play_tv_fullepg"/>
+
+          <ImageView
+              android:id="@+id/iv_catchup"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:src="@drawable/ic_catchup"
+              android:layout_marginTop="8dp"
+              android:layout_marginEnd="12dp"
+              android:tint="@color/white"
+              android:visibility="gone"
+              android:layout_alignParentEnd="true"
+              android:layout_alignParentTop="true"/>
+
+          <ImageView
+              android:id="@+id/iv_later"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:src="@drawable/ic_catchup"
+              android:layout_marginTop="8dp"
+              android:layout_marginEnd="12dp"
+              android:tint="@color/white"
+              android:visibility="gone"
+              android:layout_alignParentEnd="true"
+              android:layout_alignParentTop="true"/>
+
+
+     </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

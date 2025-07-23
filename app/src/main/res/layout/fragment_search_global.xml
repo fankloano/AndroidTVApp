@@ -1,0 +1,413 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDarkDark"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+    <!-- Fixierte Suchleiste -->
+    <RelativeLayout
+        android:id="@+id/relLayout_searchMovie"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:padding="5dp"
+        android:background="?attr/backgroundDarkDark"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.92">
+
+        <EditText
+            android:id="@+id/editText_search"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_centerVertical="true"
+            android:background="?attr/backgroundLight"
+            android:hint="@string/search_for"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:imeOptions="actionDone"
+            android:inputType="text"
+            android:paddingStart="15dp"
+            android:paddingEnd="15dp"
+            android:maxLines="1"
+            android:textColorHint="?attr/textColorDarkGrey"
+            android:padding="2dp"/>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.08"
+        app:layout_constraintTop_toTopOf="parent">
+
+    <ImageView
+        android:id="@+id/iv_settings"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_centerInParent="true"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:background="@drawable/background_player_aspectratio"
+        android:src="@drawable/selector_globalsearch_settings"/>
+
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/iv_showSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:visibility="gone"
+        android:tint="?attr/textColorMidLight"
+        android:src="@drawable/ic_arrow_down"
+        android:rotation="180"/>
+
+    <RelativeLayout
+        android:id="@+id/relLayout_categories"
+        android:layout_width="match_parent"
+        android:layout_height="35dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="5dp"
+        android:layout_marginEnd="5dp"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:textSize="20sp"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_marginStart="20dp"
+            android:text="@string/no_data_found"
+            android:visibility="gone"/>
+
+        <TextView
+            android:id="@+id/tv_cat_tv"
+            android:textSize="20sp"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_marginStart="20dp"
+            android:layout_alignParentStart="true"
+            android:focusableInTouchMode="true"
+            android:focusable="true"
+            android:visibility="gone"
+            android:nextFocusUp="@id/editText_search"
+            android:background="@drawable/background_globalsearch_playlist"
+            android:layout_width="120dp"
+            android:layout_height="match_parent"
+            android:text="@string/tv" />
+
+        <TextView
+            android:id="@+id/tv_cat_movies"
+            android:layout_width="120dp"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_height="match_parent"
+            android:layout_marginStart="25dp"
+            android:focusableInTouchMode="true"
+            android:focusable="true"
+            android:textSize="20sp"
+            android:visibility="gone"
+            android:nextFocusUp="@id/editText_search"
+            android:background="@drawable/background_globalsearch_playlist"
+            android:layout_toEndOf="@id/tv_cat_tv"
+            android:text="@string/movies" />
+
+        <TextView
+            android:id="@+id/tv_cat_series"
+            android:layout_width="120dp"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_marginStart="25dp"
+            android:focusableInTouchMode="true"
+            android:focusable="true"
+            android:textSize="20sp"
+            android:visibility="gone"
+            android:nextFocusUp="@id/editText_search"
+            android:background="@drawable/background_globalsearch_playlist"
+            android:layout_toEndOf="@id/tv_cat_movies"
+            android:text="@string/series" />
+
+        <TextView
+            android:id="@+id/tv_cat_epg"
+            android:layout_width="120dp"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical|center_horizontal"
+            android:layout_marginStart="25dp"
+            android:focusableInTouchMode="true"
+            android:focusable="true"
+            android:visibility="gone"
+            android:nextFocusUp="@id/editText_search"
+            android:background="@drawable/background_globalsearch_playlist"
+            android:textSize="20sp"
+            android:layout_toEndOf="@id/tv_cat_series"
+            android:text="EPG" />
+
+        <!-- Ladeanimation -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:backgroundTint="?attr/mainPrimaryColor"
+            android:layout_marginEnd="20dp"
+            android:visibility="invisible"
+            android:layout_alignParentEnd="true"/>
+
+    </RelativeLayout>
+
+    <!-- Keine Daten gefunden -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:layout_marginTop="20dp"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_categories"
+            android:background="?attr/backgroundDarkDark">
+
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                android:id="@+id/recycler_playlists"
+                android:layout_width="match_parent"
+                android:layout_height="35dp"
+                app:dpadRecyclerViewItemEdgeSpacing="14dp"
+                app:dpadRecyclerViewItemSpacing="16dp"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="5dp"
+                android:visibility="gone"
+                tools:listitem="@layout/rv_item_globalsearch_playlist"
+                android:orientation="horizontal" />
+
+            <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                android:id="@+id/recycler_items"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="12dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:dpadRecyclerViewItemEdgeSpacing="14dp"
+                app:dpadRecyclerViewItemSpacing="6dp"
+                app:spanCount="7"
+                tools:listitem="@layout/rv_item_globalsearchmovies" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/const_epg"
+                android:orientation="horizontal">
+
+                <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                    android:id="@+id/recycler_epg"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintWidth_percent="0.15"
+                    android:gravity="center_horizontal"
+                    android:layout_marginTop="12dp"
+                    app:dpadRecyclerViewItemEdgeSpacing="6dp"
+                    app:dpadRecyclerViewItemSpacing="6dp"
+                    tools:listitem="@layout/rv_item_globalsearch_epg"
+                    android:orientation="vertical" />
+
+                <TextView
+                    android:id="@+id/tv_selectedChannel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    tools:text="ZDF NEO HD"
+                    android:textSize="16sp"
+                    android:gravity="center_vertical"
+                    android:textColor="@color/white"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:padding="6dp"
+                    android:layout_marginTop="12dp"
+                    app:layout_constraintStart_toEndOf="@id/recycler_epg"/>
+
+                <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+                    android:id="@+id/recycler_epglist"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    app:layout_constraintWidth_percent="0.45"
+                    app:layout_constraintTop_toBottomOf="@id/tv_selectedChannel"
+                    app:layout_constraintStart_toEndOf="@id/recycler_epg"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:dpadRecyclerViewItemEdgeSpacing="7dp"
+                    app:dpadRecyclerViewItemSpacing="6dp"
+                    tools:listitem="@layout/rv_item_fullepg"
+                    android:orientation="vertical" />
+
+                <RelativeLayout
+                    android:id="@+id/relLayout_epgDetail"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:padding="12dp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_selectedChannel"
+                    app:layout_constraintStart_toEndOf="@id/recycler_epglist"
+                    app:layout_constraintWidth_percent="0.4">
+
+                    <TextView
+                        android:id="@+id/tv_detailepg_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:textSize="15sp"
+                        android:textColor="?attr/textMainColor"
+                        tools:text="Julia - Wege zum Glück"/>
+
+                    <TextView
+                        android:id="@+id/tv_detailepg_subtitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:maxLines="1"
+                        android:textSize="14sp"
+                        android:layout_marginTop="2dp"
+                        android:layout_below="@id/tv_detailepg_name"
+                        android:textColor="?attr/textColorMidLight"
+                        tools:text="Julia - Wege zum Glück"/>
+
+                    <TextView
+                        android:id="@+id/tv_detailepg_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:layout_below="@id/tv_detailepg_subtitle"
+                        tools:text="Der Film handel über das.."/>
+
+                </RelativeLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/background_darker"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:background="#C0000000" />
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/recycler_searchhistory"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="?attr/backgroundLight"
+        tools:listitem="@layout/rv_item_globalsearch_history"
+        app:spanCount="3"
+        android:orientation="vertical"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
+        android:visibility="invisible"
+        app:dpadRecyclerViewItemEdgeSpacing="5dp"
+        app:dpadRecyclerViewItemSpacing="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/relLayout_searchMovie"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie"/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_searchoptions_menu"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.3"
+        android:padding="15dp"
+        android:visibility="gone"
+        android:background="@drawable/background_globalsearch_optionsmenu"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search Options:"
+            android:textSize="18sp"
+            android:layout_marginStart="10dp"
+            android:textColor="?attr/textMainColor"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_filtersearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/settings_item_background"
+            android:nextFocusUp="@id/relLayout_filtersearch"
+            android:nextFocusRight="@id/relLayout_filtersearch"
+            android:nextFocusLeft="@id/relLayout_filtersearch"
+            android:focusable="true"
+            android:layout_marginTop="10dp"
+            android:focusableInTouchMode="true" >
+
+            <TextView
+                android:id="@+id/tv_filter_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:padding="10dp"
+                android:layout_centerVertical="true"
+                android:text="Search only in enabled categories"/>
+
+            <CheckBox
+                android:id="@+id/cb_filter_search"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/selector_checkbox_add_channels"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"/>
+
+        </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/relLayout_clearhistory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/settings_item_background"
+        android:nextFocusDown="@id/relLayout_clearhistory"
+        android:nextFocusRight="@id/relLayout_clearhistory"
+        android:nextFocusLeft="@id/relLayout_clearhistory"
+        android:focusable="true"
+        android:focusableInTouchMode="true" >
+
+            <TextView
+                android:id="@+id/tv_clear_history"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="10dp"
+                android:layout_marginTop="4dp"
+                android:textSize="16sp"
+                android:layout_centerVertical="true"
+                android:text="Clear search history"/>
+
+
+    </RelativeLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_nodatafound"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No matched data found!"
+        android:textSize="20sp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie"/>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/container_globalsearch_vod_info"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:visibility="gone"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

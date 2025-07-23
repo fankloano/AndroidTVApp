@@ -1,0 +1,33 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- "Stroke"-Layer: etwas größer und verschoben -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/textColorMidLight" />
+            <!-- optional, wenn du gleiche Ecken willst -->
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="0dp"
+                android:bottomRightRadius="24dp"
+                android:bottomLeftRadius="0dp" />
+        </shape>
+    </item>
+
+    <!-- Inhalt: leicht eingerückt -->
+    <item android:left="0dp" android:top="0dp" android:right="1.5dp" android:bottom="1.5dp">
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="linear"
+                android:angle="45"
+                android:startColor="?attr/backgroundDarkLight"
+                android:endColor="?attr/backgroundMain"
+                android:dither="true" />
+            <corners
+                android:topLeftRadius="24dp"
+                android:topRightRadius="0dp"
+                android:bottomRightRadius="24dp"
+                android:bottomLeftRadius="0dp" />
+        </shape>
+    </item>
+
+</layer-list>

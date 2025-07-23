@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:id="@+id/constLayout_Process"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left">
+
+    <TextView
+        android:id="@+id/tv_info"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="http://3m.thingirl.xyz:8080"
+        android:textColor="?attr/textColorLight"
+        android:textSize="16sp"
+        android:paddingTop="20dp"
+        android:paddingStart="50dp"
+        android:paddingBottom="20dp"
+        android:gravity="center"
+        android:paddingEnd="50dp"
+        android:background="?attr/backgroundDarkDark"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <ProgressBar
+        android:id="@+id/loadingBalken"
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:layout_marginTop="15dp"
+        android:indeterminate="true"
+        app:layout_constraintTop_toBottomOf="@id/tv_info"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:indeterminateTint="@color/light_blue"
+        android:visibility="invisible"
+        style="@style/Widget.AppCompat.ProgressBar.Horizontal"/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_playlistinfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="25dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/loadingBalken">
+
+        <ImageView
+            android:id="@+id/iv_playlistinfo_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow"/>
+
+        <TextView
+            android:id="@+id/playlistinfo_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Playlist valid!"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linLayout_tvcat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="15dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_playlistinfo">
+
+        <ImageView
+            android:id="@+id/iv_tvcat_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow"/>
+
+        <TextView
+            android:id="@+id/tvcat_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="TV Categories Loaded!"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linLayout_channels"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="15dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_tvcat">
+
+        <ImageView
+            android:id="@+id/iv_channels_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow"/>
+
+        <TextView
+            android:id="@+id/channels_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Tv Channels Loaded!"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linLayout_movies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:visibility="invisible"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="15dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_channels">
+
+        <ImageView
+            android:id="@+id/iv_movie_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow"/>
+
+        <TextView
+            android:id="@+id/movie_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Movie Categories: 200"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="20dp"
+            android:layout_gravity="center_vertical"/>
+
+        <TextView
+            android:id="@+id/totalmovie_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Movies: 200"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="40dp"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/linLayout_series"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="30dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_movies">
+
+        <ImageView
+            android:id="@+id/iv_series_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow" />
+
+        <TextView
+            android:id="@+id/series_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Series Categories Loaded!"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="20dp"/>
+
+        <TextView
+            android:id="@+id/totalseries_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Movies: 200"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_marginStart="40dp"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linLayout_epg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="30dp"
+        android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_series">
+
+        <ImageView
+            android:id="@+id/iv_epg_check"
+            android:layout_width="50dp"
+            android:layout_height="30dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/selector_playlistprocess_arrow" />
+
+        <TextView
+            android:id="@+id/epg_loaded"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="EPG Loaded!"
+            android:textColor="@drawable/textview_playlistprocess"
+            android:textSize="14sp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="20dp"/>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/playlist_success"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="http://3m.thingirl.xyz:8080"
+        android:textColor="?attr/mainPrimaryColor"
+        android:textSize="16sp"
+        android:visibility="invisible"
+        android:layout_marginTop="30dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginEnd="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/linLayout_epg"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

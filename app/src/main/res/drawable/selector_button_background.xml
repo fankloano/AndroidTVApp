@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Fokussierter Zustand -->
+    <item android:state_focused="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="4dp" />
+            <gradient
+                android:angle="45"
+                android:startColor="?attr/mainPrimaryColorLight"
+                android:endColor="?attr/mainPrimaryColor"
+                android:type="linear" /><!-- Farbe bei Fokus -->
+        </shape>
+    </item>
+    <!-- Standardzustand -->
+    <item>
+        <layer-list>
+            <!-- Schatten -->
+            <item>
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <solid android:color="#80000000" />
+                </shape>
+            </item>
+            <!-- Button-Hintergrund -->
+            <item android:right="1dp" android:bottom="1dp">
+                <shape android:shape="rectangle">
+                    <corners android:radius="4dp" />
+                    <gradient
+                        android:type="linear"
+                        android:angle="45"
+                        android:startColor="?attr/backgroundMain"
+                        android:endColor="?attr/backgroundLight"
+                        android:dither="true" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

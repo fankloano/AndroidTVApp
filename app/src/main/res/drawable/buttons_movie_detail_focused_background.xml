@@ -1,0 +1,5 @@
+<!-- res/drawable/button_background_focused.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/white"/> <!-- Weißer Hintergrund -->
+    <corners android:radius="50dp"/> <!-- Runde Ecken -->
+</shape>

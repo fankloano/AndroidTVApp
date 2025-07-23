@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Wenn isPlayingVlc true ist -->
+    <item android:drawable="@drawable/vlcplayer" android:state_selected="true" />
+
+    <!-- Wenn isPlayingVlc false ist -->
+    <item android:drawable="@drawable/exoplayer" />
+</selector>

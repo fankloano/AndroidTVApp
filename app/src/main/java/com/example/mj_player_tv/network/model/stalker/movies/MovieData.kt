@@ -1,0 +1,32 @@
+package com.example.mj_player_tv.network.model.stalker.movies
+
+data class MovieData(
+    val actors: String? = "",
+    val added: String? = "",
+    val age: String? = "",
+    val category_id: String? = "",
+    val censored: Int? = 0,
+    val cmd: String? = "",
+    val description: String? = "",
+    val director: String? = "",
+    val genres_str: String? = "",
+    val id: String? = "",
+    val is_movie: Int? = 0,
+    val is_series: Int? = 0,
+    val name: String? = "",
+    val o_name: String? = "",
+    val old_name: String? = "",
+    val rate: String? = "",
+    val rating_count_imdb: String? = "",
+    val rating_imdb: String? = "",
+    val rtsp_url: String? = "",
+    val screenshot_uri: String? = "",
+    val screenshots: String? = "",
+    val series: List<Any>? = emptyList(),
+    val time: Int? = 0,
+    val tmdb: String? = "",
+    val tmdb_id: String? = "",
+    val year: String? = "",
+    var isFullyWatched: Boolean = false,
+    var isPartlyWatched: Boolean = false
+)

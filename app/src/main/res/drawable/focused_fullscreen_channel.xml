@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+<!-- Schatteneffekt von links nach rechts -->
+<item>
+    <shape>
+        <gradient
+            android:angle="0"
+            android:startColor="?attr/backgroundLight"
+            android:centerColor="#2700ACC1"
+            android:endColor="#B500ACC1"
+            android:type="linear" />
+        <corners android:radius="4dp"/>
+    </shape>
+</item>
+
+</layer-list>
+

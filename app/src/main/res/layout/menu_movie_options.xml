@@ -1,0 +1,77 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="400dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/background_movieoptions_border"
+    android:padding="8dp">
+
+    <TextView
+        android:id="@+id/btnPlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_dark_border"
+        android:text="Play"
+        android:padding="6dp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:textSize="13sp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btnFavorite"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_dark_border"
+        android:text="@string/add_to_watchlist"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_marginTop="10dp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btnMoreInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_dark_border"
+        android:text="@string/more_info"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_marginTop="10dp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btnWatched"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_dark_border"
+        android:text="@string/mark_watched"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/btnRelatedMovies"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_dark_border"
+        android:text="@string/related_movies"
+        android:padding="6dp"
+        android:textSize="13sp"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
+        android:gravity="start|center_vertical"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+</LinearLayout>

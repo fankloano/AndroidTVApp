@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+
+    <EditText
+        android:id="@+id/editText_search"
+        android:layout_width="0dp"
+        android:layout_height="24dp"
+        android:layout_marginTop="10dp"
+        android:hint="@string/search_for_matching_channel"
+        android:textSize="14sp"
+        android:background="@null"
+        android:visibility="invisible"
+        android:textColor="?attr/textColorLight"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:textColorHint="?attr/textColorDarkGrey"
+        android:nextFocusRight="@id/btn_search"
+        android:nextFocusUp="@id/editText_search"
+        android:nextFocusDown="@id/editText_search"
+        android:nextFocusLeft="@id/editText_search"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/tv_contentDescription"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+            android:id="@+id/tv_sourceName"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:paddingTop="10dp"
+            android:text="@string/epg_source"
+            android:textSize="13sp"
+            android:paddingStart="25dp"
+            android:paddingEnd="5dp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:gravity="center_vertical"
+            android:textColor="?attr/textColorMidLight"
+            android:background="?attr/backgroundDarkDark"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_epgsourceName"
+        android:layout_width="0dp"
+        android:layout_height="40dp"
+        android:paddingTop="10dp"
+        tools:text="@string/channel_options"
+        android:textSize="13sp"
+        android:paddingStart="10dp"
+        android:paddingEnd="35dp"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:gravity="center_vertical"
+        android:textColor="?attr/mainPrimaryColor"
+        android:background="?attr/backgroundDarkDark"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/tv_sourceName"
+        app:layout_constraintEnd_toStartOf="@id/tv_contentDescription"/>
+
+
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_epgList"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingStart="5dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="5dp"
+        android:nextFocusUp="@id/tablayout_epg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/linLayout_menu"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_sourceName"
+        app:layout_constraintVertical_bias="0.0"
+        android:nextFocusRight="@id/btn_epglist"
+        tools:listitem="@layout/rv_item_manage_tvchannels" />
+
+    <ProgressBar
+        android:id="@+id/assignepg_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/linLayout_menu"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_sourceName"
+        android:visibility="invisible" />
+
+    <TextView
+        android:id="@+id/tv_contentDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="Zurücksetzen"
+        android:gravity="center"
+        android:paddingTop="10dp"
+        android:paddingEnd="10dp"
+        android:textSize="13sp"/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_menu"
+        android:layout_width="50dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="4dp"
+        android:background="?attr/backgroundDarkDark"
+        android:nextFocusLeft="@id/container"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_contentDescription"
+        app:layout_constraintVertical_bias="0.0">
+
+        <ImageView
+            android:id="@+id/btn_search"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_search"
+            android:nextFocusUp="@id/btn_cancel_epg"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:src="@drawable/selector_search" />
+
+        <ImageView
+            android:id="@+id/btn_epglist"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_epglist"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:src="@drawable/selector_epglist" />
+
+        <ImageView
+            android:id="@+id/btn_filterChannelList"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_filterChannelList"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:src="@drawable/selector_filteron" />
+
+        <ImageView
+            android:id="@+id/btn_filterOffChannelList"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_filterChannelList"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:visibility="gone"
+            android:src="@drawable/selector_filteroff" />
+
+        <ImageView
+            android:id="@+id/btn_sort_epg"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusUp="@drawable/selector_filteron"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_sort_epg"
+            android:nextFocusDown="@id/btn_cancel_epg"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:src="@drawable/selector_sort" />
+
+        <ImageView
+            android:id="@+id/btn_cancel_epg"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/selector_item_background"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center_vertical"
+            android:nextFocusLeft="@id/rv_epgList"
+            android:nextFocusRight="@id/btn_cancel_epg"
+            android:nextFocusUp="@id/btn_sort_epg"
+            android:nextFocusDown="@id/btn_search"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:src="@drawable/selector_cancel_epg" />
+
+    </LinearLayout>
+
+    <View
+        android:id="@+id/overlay_layout"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#BA000000"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/tv_epgsourceName"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/linLayout_menu"/>
+
+    <RelativeLayout
+        android:id="@+id/menu_AssignEpgOptions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:padding="1dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintWidth_percent="0.40"
+        app:layout_constraintHeight_percent="0.52"
+        app:layout_constraintEnd_toStartOf="@id/linLayout_menu"
+        android:background="@drawable/background_assignepg_sortoptions">
+
+
+        <TextView
+            android:id="@+id/sortby_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:text="Sort by Name"
+            android:padding="14dp"
+            android:textSize="13sp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:nextFocusRight="@id/sortby_name"
+            android:nextFocusLeft="@id/sortby_name"
+            android:nextFocusUp="@id/sortby_name"
+            android:nextFocusDown="@id/sortby_source"
+            android:background="@drawable/selector_assignpg_sortoptions"
+            android:textColor="@drawable/selector_textview_fullepgoptions"
+            />
+
+        <TextView
+            android:id="@+id/sortby_source"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sort by Epg Source"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:padding="14dp"
+            android:textSize="13sp"
+            android:layout_below="@id/sortby_name"
+            android:nextFocusRight="@id/sortby_source"
+            android:nextFocusLeft="@id/sortby_source"
+            android:nextFocusUp="@id/sortby_name"
+            android:nextFocusDown="@id/sortby_source"
+            android:background="@drawable/selector_assignpg_sortoptions"
+            android:textColor="@drawable/selector_textview_fullepgoptions"/>
+
+    </RelativeLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/playlist_epg_sources_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/transparent"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

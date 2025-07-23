@@ -1,0 +1,111 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="?attr/backgroundDarkDark"
+    android:foreground="@drawable/background_border_settings_left"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_categoryOptions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
+        android:textSize="18sp"
+        android:background="?attr/backgroundDarkDark"
+        android:gravity="center_vertical"
+        android:textColor="?attr/textColorLight"
+        android:text="Create new category"/>
+
+    <TextView
+        android:id="@+id/tv_setCategoryName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/set_category_name"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        android:layout_marginTop="13dp"
+        android:layout_marginStart="20dp"
+        android:layout_below="@id/tv_categoryOptions"/>
+
+    <EditText
+        android:id="@+id/et_editedCategoryName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="?attr/textColorLight"
+        android:textColorHint="?attr/textColorDarkGrey"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="15dp"
+        android:hint="@string/enter_category_name"
+        tools:ignore="TextFields"
+        android:textSize="16dp"
+        android:backgroundTint="@color/light_blue"
+        android:layout_below="@id/tv_setCategoryName"
+        android:imeOptions="actionDone"
+        android:singleLine="true" />
+
+    <RelativeLayout
+        android:id="@+id/relLayout_allPlaylists"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:gravity="center_vertical"
+        android:paddingStart="5dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:nextFocusDown="@id/btn_saveCategory"
+        android:nextFocusUp="@id/et_editedCategoryName"
+        android:nextFocusLeft="@id/relLayout_allPlaylists"
+        android:background="@drawable/settings_item_background"
+        android:layout_below="@id/et_editedCategoryName">
+
+        <TextView
+            android:id="@+id/tv_allPlaylists"
+            android:layout_width="wrap_content"
+            android:layout_height="45dp"
+            android:textColor="@drawable/focused_selected_mainmenu"
+            android:text="@string/enable_category_for_all_playlists"
+            android:textSize="15sp"
+            android:gravity="center_vertical"
+            android:background="@color/transparent"/>
+
+        <CheckBox
+            android:id="@+id/switch_allPlaylists"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_alignParentEnd="true"
+            android:gravity="center"
+            android:buttonTint="?attr/mainPrimaryColor"/>
+
+    </RelativeLayout>
+
+
+    <Button
+        android:id="@+id/btn_saveCategory"
+        android:layout_width="150dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/save"
+        android:textSize="16sp"
+        android:textColor="@drawable/focused_selected_textview"
+        android:background="@drawable/selector_button_background"
+        android:paddingStart="25dp"
+        android:paddingEnd="25dp"
+        android:focusable="true"
+        android:layout_centerHorizontal="true"
+        android:focusableInTouchMode="true"
+        android:gravity="center"
+        android:nextFocusLeft="@id/btn_saveCategory"
+        android:nextFocusRight="@id/btn_saveCategory"
+        android:nextFocusUp="@id/relLayout_allPlaylists"
+        android:nextFocusDown="@id/btn_saveCategory"
+        android:layout_below="@id/relLayout_allPlaylists"/>
+
+</RelativeLayout>

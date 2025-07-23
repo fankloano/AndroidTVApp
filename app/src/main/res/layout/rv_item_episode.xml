@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="120dp"
+    app:cardElevation="5dp"
+    android:padding="1dp"
+    app:cardCornerRadius="5dp"
+    app:cardBackgroundColor="?attr/backgroundMain">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/card_episode"
+        android:background="@drawable/background_episode"
+        android:focusable="true"
+        android:focusableInTouchMode="true">
+
+        <RelativeLayout
+            android:id="@+id/relLay_episodeImage"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.9">
+
+            <ImageView
+                android:id="@+id/rv_item_logo_episodes"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="5dp"
+                tools:src="@drawable/hdr_bg"
+                android:foreground="@drawable/gradient_overlay_fromright_light"
+                android:scaleType="centerCrop"/>
+
+        </RelativeLayout>
+
+        <View
+            android:id="@+id/frameLay_episodeImage"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintWidth_percent="0.9"
+            android:background="@drawable/gradient_overlay_fromright_light"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <RelativeLayout
+        android:id="@+id/linLayout_episodeNames"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/rv_item_name_episodes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="10dp"
+            tools:text="Episode 25"
+            android:textColor="@color/white"
+            android:textSize="14sp"/>
+
+        <TextView
+            android:id="@+id/rv_item_duration_episode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            tools:text="55min"
+            android:layout_below="@id/rv_item_name_episodes"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="15dp"
+            android:textColor="@color/light_grey"
+            android:textSize="12sp" />
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/rv_item_orginalname_episodes"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="20dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="100dp"
+        android:padding="3dp"
+        android:paddingStart="5dp"
+        android:paddingEnd="5dp"
+        android:scrollHorizontally="true"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:maxLines="1"
+        tools:text="Der Ritter der Kokusnuss asakjsdkajdlksajdajsdiojfdqifjoiefowi"
+        android:textColor="@color/light_grey"
+        android:textSize="13sp"
+        android:background="@drawable/background_hud_chlogo_rounded"
+        android:textStyle="bold" />
+
+    <View
+        android:id="@+id/alpha_view"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:background="#C8212121"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="20dp"
+        android:layout_marginStart="10dp"
+        android:layout_gravity="bottom">
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_marginEnd="50dp"
+            android:layout_height="2dp"
+            android:padding="1dp"
+            android:progress="20"
+            android:max="100"
+            android:progressTint="?attr/mainPrimaryColor"
+            android:layout_centerVertical="true"/>
+
+        <TextView
+            android:id="@+id/tv_percentagePlayed"
+            android:layout_width="40dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            tools:text="16%"
+            android:textSize="13sp"
+            android:textColor="@color/white"
+            android:layout_alignParentEnd="true"/>
+
+        <ImageView
+            android:id="@+id/tv_isFullyWatched"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:background="#00FFFFFF"
+            android:src="@drawable/ic_checked"
+            android:layout_centerVertical="true"
+            android:layout_centerHorizontal="true"
+            android:tint="?attr/mainPrimaryColor"
+            android:layout_alignParentEnd="true"
+            android:visibility="invisible"/>
+
+    </RelativeLayout>
+
+</androidx.cardview.widget.CardView>

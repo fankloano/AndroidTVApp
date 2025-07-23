@@ -1,0 +1,23 @@
+<!-- white_border.xml -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Hintergrund -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="?attr/backgroundDarkDark" />
+            <corners android:topLeftRadius="8dp" />
+        </shape>
+    </item>
+
+    <!-- Rahmen links -->
+    <item>
+        <inset  android:insetBottom="-2dp"
+                android:insetRight="-2dp">
+        <shape android:shape="rectangle">
+            <stroke
+                android:width="1dp"
+                android:color="?attr/textColorDarkGrey" />
+            <corners android:topLeftRadius="8dp" />
+        </shape>
+        </inset>
+    </item>
+</layer-list>

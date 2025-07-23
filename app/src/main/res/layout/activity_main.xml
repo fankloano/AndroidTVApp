@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/const_main"
+    android:background="?attr/backgroundMain"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/navHostFragment"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_menu"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="1"/>
+
+    <FrameLayout
+        android:id="@+id/settings_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:nextFocusLeft="@id/linLayout_menu"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.40"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <RelativeLayout
+            android:id="@+id/linLayout_menu"
+            android:layout_width="50dp"
+            android:layout_height="0dp"
+            android:paddingTop="10dp"
+            android:orientation="vertical"
+            android:background="?attr/backgroundDarkDark"
+            android:nextFocusLeft="@id/container"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/btn_search"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_search"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusDown="@id/btn_home"
+                android:nextFocusUp="@id/btn_settings"
+                android:gravity="center_vertical"
+                android:text="@string/search"
+                android:textSize="19sp"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="50dp">
+
+            <TextView
+                android:id="@+id/btn_home"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_home"
+                android:drawablePadding="13dp"
+                android:layout_marginTop="30dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusDown="@id/btn_tv"
+                android:nextFocusUp="@id/btn_search"
+                android:gravity="center_vertical"
+                android:text="@string/home"
+                android:textSize="19sp"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+            <TextView
+                android:id="@+id/btn_tv"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_livetv"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_home"
+                android:nextFocusDown="@id/btn_movies"
+                android:gravity="center_vertical"
+                android:text="@string/tv"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_home"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+            <TextView
+                android:id="@+id/btn_movies"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_movie"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_tv"
+                android:nextFocusDown="@id/btn_series"
+                android:gravity="center_vertical"
+                android:text="@string/movies"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_tv"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+
+            <TextView
+                android:id="@+id/btn_series"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_series"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_movies"
+                android:nextFocusDown="@id/btn_plex"
+                android:gravity="center_vertical"
+                android:text="@string/series"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_movies"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+            <TextView
+                android:id="@+id/btn_plex"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_plex"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_series"
+                android:nextFocusDown="@id/btn_watchstats"
+                android:gravity="center_vertical"
+                android:text="@string/plex"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_series"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+            <TextView
+                android:id="@+id/btn_watchstats"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_watchstats"
+                android:contentDescription="Watchlist &amp; Stats"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_plex"
+                android:nextFocusDown="@id/btn_settings"
+                android:gravity="center_vertical"
+                android:text="Watchlist &amp; Stats"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_plex"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+        </RelativeLayout>
+
+            <TextView
+                android:id="@+id/btn_settings"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="30dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_settings"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_watchstats"
+                android:nextFocusDown="@id/btn_search"
+                android:gravity="center_vertical"
+                android:text="@string/settings"
+                android:textSize="19sp"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="10dp"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+        </RelativeLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/addPlaylistFragment"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintWidth_percent="0.45"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_error_add_playlist"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:padding="25dp"
+        tools:text="ERROR 404: Du kannst nichts absspielen"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:background="@drawable/background_tv_error"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:layout_constraintWidth_percent="0.7"/>
+
+    <LinearLayout
+        android:id="@+id/linLayout_updateProcesses"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:weightSum="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="horizontal"
+        app:layout_constraintWidth_percent="0.6">
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_playlistUpdate"
+            android:layout_weight="0.45"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:listitem="@layout/rv_item_playlistupdate"
+            android:gravity="center_vertical"/>
+
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_epgUpdate"
+            android:layout_weight="0.45"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:layout_marginStart="6dp"
+            tools:listitem="@layout/rv_item_playlistupdate"
+            android:gravity="center_vertical"/>
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

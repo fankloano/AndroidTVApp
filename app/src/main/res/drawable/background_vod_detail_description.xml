@@ -1,0 +1,11 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:drawable="@drawable/background_border_grey_rounded" />
+
+    <!-- Default Status -->
+    <item>
+        <shape android:shape="rectangle">
+            <!-- Setzen Sie die Hintergrundfarbe für den Default-Status hier ein -->
+            <solid android:color="?attr/transparentColor" />
+        </shape>
+    </item>
+</selector>

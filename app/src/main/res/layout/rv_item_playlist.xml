@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="52dp"
+    android:focusableInTouchMode="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:id="@+id/cardview_playlist"
+    android:background="@drawable/settings_item_background_dark">
+
+    <TextView
+        android:id="@+id/tv_accountName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:text="m.ipbestuhd.com:80"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:scrollHorizontally="true"
+        android:layout_marginStart="10dp"
+        android:textColor="@drawable/focused_selected_mainmenu"/>
+
+    <TextView
+        android:id="@+id/tv_accountExpiry"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_accountName"
+        android:gravity="end"
+        tools:text="March 26, 2024"
+        android:textSize="12sp"
+        android:layout_marginTop="5dp"
+        android:layout_marginEnd="10dp"
+        android:textColor="@drawable/focused_selected_textview_info"/>
+
+    <TextView
+        android:id="@+id/tv_provider"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tv_accountName"
+        android:gravity="start"
+        tools:text="Stalker Portal"
+        android:textSize="12sp"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="10dp"
+        android:textColor="@drawable/focused_selected_textview_info"/>
+
+</RelativeLayout>

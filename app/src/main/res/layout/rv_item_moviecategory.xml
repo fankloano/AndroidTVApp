@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:id="@+id/rv_item_moviecategory"
+    android:background="?attr/backgroundDark"
+    android:descendantFocusability="afterDescendants"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/iv_new"
+        android:layout_width="40dp"
+        android:layout_height="wrap_content"
+        android:text="NEW!"
+        android:textSize="10sp"
+        android:padding="3dp"
+        android:layout_marginEnd="5dp"
+        android:gravity="center"
+        android:background="?attr/mainPrimaryColor"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+    <LinearLayout
+        android:id="@+id/rv_linear_MovieCategory"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:background="@drawable/background_accounttvcategory">
+
+        <TextView
+            android:id="@+id/tvCategoryName"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:paddingStart="15dp"
+            android:paddingEnd="10dp"
+            android:gravity="center_vertical"
+            android:textColor="@drawable/selector_test_item_textview"
+            tools:text="DE: Sky Cinema Highlights FHD"
+            android:textSize="13sp"
+            android:layout_marginEnd="1dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="1dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true"/>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

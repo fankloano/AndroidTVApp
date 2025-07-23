@@ -1,0 +1,35 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:background="@color/background_light">
+
+    <TextView
+        android:id="@+id/tv_dialog_movie_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="Choose audio track:"
+        android:layout_marginStart="10dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:typeface="monospace"
+        android:textSize="18sp"
+        android:layout_margin="10dp"
+        android:textColor="@color/light_blue"
+        android:singleLine="true"
+        android:ellipsize="marquee"
+        android:fontFamily="@font/vag_rounded_thin"
+        android:lineSpacingExtra="1.5dp"
+        android:letterSpacing="0.008"
+        android:marqueeRepeatLimit="marquee_forever" />
+
+    <ListView
+        android:id="@+id/listView_audiotracks"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="15dp"
+        android:layout_below="@id/tv_dialog_movie_title"/>
+
+</RelativeLayout>

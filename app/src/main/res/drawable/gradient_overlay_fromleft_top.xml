@@ -1,0 +1,39 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Schatteneffekt von unten nach oben -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="270"
+                android:startColor="?attr/backgroundLight"
+                android:centerColor="?attr/transparentColor"
+                android:endColor="?attr/transparentColor"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- Schatteneffekt von links nach rechts -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="0"
+                android:startColor="?attr/backgroundLight"
+                android:centerColor="?attr/transparentColor"
+                android:endColor="?attr/transparentColor"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- Schatteneffekt von oben links nach innen -->
+    <item>
+        <shape>
+            <gradient
+                android:angle="45"
+                android:startColor="?attr/transparentColor"
+                android:centerColor="?attr/transparentColor"
+                android:endColor="?attr/backgroundLight"
+                android:type="linear" />
+        </shape>
+    </item>
+
+</layer-list>

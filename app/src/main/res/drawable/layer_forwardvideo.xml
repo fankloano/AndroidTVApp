@@ -1,0 +1,4 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/background_movieicons_round" />
+    <item android:drawable="@drawable/ic_forwardvideo_small" />
+</layer-list>
