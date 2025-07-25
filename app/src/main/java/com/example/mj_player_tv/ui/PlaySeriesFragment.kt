@@ -89,6 +89,8 @@ import javax.net.ssl.SSLHandshakeException
 import kotlin.math.abs
 import kotlin.math.round
 import androidx.core.view.isVisible
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 
 
 @UnstableApi
@@ -180,6 +182,12 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
             requireActivity().application
         )
     }
@@ -1041,43 +1049,19 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     private fun playPreviousEpisode() {
         val currentEpisodeIndex = helpViewModel.focusedEpisodes?.indexOf(helpViewModel.currentFocusedEpisode)
         val currentSeasonIndex = helpViewModel.focusedSeasons?.indexOf(helpViewModel.currentFocusedSeason)
-        val detailFragment = parentFragmentManager.findFragmentById(R.id.container_series_info)
-        if (detailFragment is SeriesDetailFragment) {
-            if (currentEpisodeIndex != null && currentEpisodeIndex > 0) {
-                player?.stop() ?: mediaPlayer?.stop()
-                val lastSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
-                helpViewModel.currentFocusedEpisode =
-                    helpViewModel.focusedEpisodes?.get(currentEpisodeIndex - 1)
-                if (lastSeasonNumber != helpViewModel.currentFocusedEpisode?.seasonNumber && currentSeasonIndex != null && currentSeasonIndex > 0) {
-                    helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex - 1)
-                    detailFragment.setNewSeasonAndEpisode(currentSeasonIndex)
-                    getData()
-                } else {
-                    detailFragment.setOnlyNewEpisode()
-                    getData()
-                }
+        if (currentEpisodeIndex != null && currentEpisodeIndex > 0) {
+            player?.stop() ?: mediaPlayer?.stop()
+            val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
+            val newEpisode = helpViewModel.focusedEpisodes?.get(currentEpisodeIndex - 1)
+            helpViewModel.currentFocusedEpisode = newEpisode
+            seriesViewModel.changeEpisodeInfoUi = true
+            if (currentSeasonNumber != newEpisode?.seasonNumber && currentSeasonIndex != null) {
+                helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex - 1)
+                seriesViewModel.requestFocusOnNextEpisode()
+                getData()
             } else {
-                return
-            }
-        } else {
-            val newdetailFragment = parentFragmentManager.findFragmentById(R.id.container_globalsearch_vod_info)
-            if (newdetailFragment is SeriesDetailFragment) {
-                if (currentEpisodeIndex != null && currentEpisodeIndex > 0) {
-                    player?.stop() ?: mediaPlayer?.stop()
-                    val lastSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
-                    helpViewModel.currentFocusedEpisode =
-                        helpViewModel.focusedEpisodes?.get(currentEpisodeIndex - 1)
-                    if (lastSeasonNumber != helpViewModel.currentFocusedEpisode?.seasonNumber && currentSeasonIndex != null && currentSeasonIndex > 0) {
-                        helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex - 1)
-                        newdetailFragment.setNewSeasonAndEpisode(currentSeasonIndex)
-                        getData()
-                    } else {
-                        newdetailFragment.setOnlyNewEpisode()
-                        getData()
-                    }
-                } else {
-                    return
-                }
+                seriesViewModel.requestFocusOnNextEpisode()
+                getData()
             }
         }
     }
@@ -1087,48 +1071,20 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         val currentSeasonIndex = helpViewModel.focusedSeasons?.indexOf(helpViewModel.currentFocusedSeason)
         val episodeIndexes = (helpViewModel.focusedEpisodes?.size?.minus(1)) ?: 0
         val seasonIndexes = (helpViewModel.focusedSeasons?.size?.minus(1)) ?: 0
-        val detailFragment = parentFragmentManager.findFragmentById(R.id.container_series_info)
 
-        if (detailFragment is SeriesDetailFragment) {
-            if (currentEpisodeIndex != null && currentEpisodeIndex < episodeIndexes) {
-                player?.stop() ?: mediaPlayer?.stop()
-                val lastSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
-                Log.d("SEASONINFOS", "lassteasonnumber: $lastSeasonNumber, ")
-                helpViewModel.currentFocusedEpisode =
-                    helpViewModel.focusedEpisodes?.get(currentEpisodeIndex + 1)
-                if (lastSeasonNumber != helpViewModel.currentFocusedEpisode?.seasonNumber && currentSeasonIndex != null && currentSeasonIndex < seasonIndexes) {
-                    helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex + 1)
-                    Log.d("PLAYING NUMBERS", "NEXTSEASON: ${helpViewModel.currentFocusedSeason?.seasonNumber} ANNNND: ${helpViewModel.currentFocusedSeason}")
-                    detailFragment.setNewSeasonAndEpisode(currentSeasonIndex)
-                    getData()
-                } else {
-                    detailFragment.setOnlyNewEpisode()
-                    getData()
-                }
+        if (currentEpisodeIndex != null && currentEpisodeIndex < episodeIndexes) {
+            player?.stop() ?: mediaPlayer?.stop()
+            val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
+            val newEpisode = helpViewModel.focusedEpisodes?.get(currentEpisodeIndex + 1)
+            helpViewModel.currentFocusedEpisode = newEpisode
+            seriesViewModel.changeEpisodeInfoUi = true
+            if (currentSeasonNumber != newEpisode?.seasonNumber && currentSeasonIndex != null) {
+                helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex + 1)
+                seriesViewModel.requestFocusOnNextEpisode()
+                getData()
             } else {
-                return
-            }
-        } else {
-            val newdetailFragment = parentFragmentManager.findFragmentById(R.id.container_globalsearch_vod_info)
-            if (newdetailFragment is SeriesDetailFragment) {
-                if (currentEpisodeIndex != null && currentEpisodeIndex < episodeIndexes) {
-                    player?.stop() ?: mediaPlayer?.stop()
-                    val lastSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
-                    Log.d("SEASONINFOS", "lassteasonnumber: $lastSeasonNumber, ")
-                    helpViewModel.currentFocusedEpisode =
-                        helpViewModel.focusedEpisodes?.get(currentEpisodeIndex + 1)
-                    if (lastSeasonNumber != helpViewModel.currentFocusedEpisode?.seasonNumber && currentSeasonIndex != null && currentSeasonIndex < seasonIndexes) {
-                        helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.get(currentSeasonIndex + 1)
-                        Log.d("PLAYING NUMBERS", "NEXTSEASON: ${helpViewModel.currentFocusedSeason?.seasonNumber} ANNNND: ${helpViewModel.currentFocusedSeason}")
-                        newdetailFragment.setNewSeasonAndEpisode(currentSeasonIndex)
-                        getData()
-                    } else {
-                        newdetailFragment.setOnlyNewEpisode()
-                        getData()
-                    }
-                } else {
-                    return
-                }
+                seriesViewModel.requestFocusOnNextEpisode()
+                getData()
             }
         }
     }
@@ -2163,6 +2119,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             val episodedescription = episode?.episodeDescription
             val title = serie.seriesName
             val image = serie.screenshot_uri
+            binding.tvDialogSeriesSeasonepisode.text = "Season ${episode?.seasonNumber}  |  Episode ${episode?.episodeNumber}"
 
         if (playWithVlc) {
             val videoTrack = mediaPlayer?.currentVideoTrack
@@ -2323,134 +2280,130 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
 
     private fun updateSerieSeasonEpisode() {
-        val percentagePlayed = helpViewModel.currentFocusedEpisode?.episodePercentagePlayed
-        if (percentagePlayed != null) {
-            if (percentagePlayed >= 0.05 && percentagePlayed < 0.95) {
-                helpViewModel.currentFocusedSerie?.let { serie ->
-                    if (!serie.isPartlyWatched) {
-                        serie.isPartlyWatched = true
-                    }
-                    serie.seriesPercentagePlayed = calculateSeriesPercentagePlayed()
-                    helpViewModel.currentFocusedSeason?.let { season ->
-                        if (!season.isSeasonPartlyWatched) {
-                            season.isSeasonPartlyWatched = true
-                        }
-                        season.seasonPercentagePlayed = calculateSeasonPercentagePlayed()
-                        serie.lastWatchedSeason = season.seasonNumber.toIntOrNull() ?: 0
-                        helpViewModel.currentFocusedEpisode?.let { episode ->
-                            episode.isEpisodePartlyWatched = true
-                            episode.isEpisodeFullyWatched = false
-                            serie.lastWatchedSeason = season.seasonNumber.toIntOrNull() ?: 1
-                            serie.lastWatchedEpisode = episode.episodeNumber
-                            serie.seriesAccount.target = helpViewModel.currentSeriesAccount
-                            serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
-                            seriesBox.put(serie)
-                            seasonBox.put(season)
-                            episodeBox.put(episode)
-                        }
-                    }
-                    updateSeriesInRV(serie)
-                }
-            } else if (percentagePlayed >= 0.95) {
-                helpViewModel.currentFocusedSerie?.let { serie ->
-                    helpViewModel.currentFocusedSeason?.let { season ->
-                        helpViewModel.currentFocusedEpisode?.let { episode ->
-                            if ((season.seasonNumber.toIntOrNull()
-                                    ?: 0) >= (helpViewModel.focusedSeasons?.size ?: 0)
-                            ) {
-                                serie.isPartlyWatched = false
-                                serie.isCompletelyWatched = true
-                                serie.currentPosition = 0
-                                serie.seriesPercentagePlayed = 1.0
-                                serie.lastWatchedSeason = 1
-                                serie.lastWatchedEpisode = 1
-                                helpViewModel.focusedSeasons?.let { updatedSeasons ->
-                                    updatedSeasons.forEach { season ->
-                                        season.isSeasonPartlyWatched = false
-                                        season.isSeasonFullyWatched = true
-                                        season.seasonPercentagePlayed = 1.0
-                                    }
-                                    seasonBox.put(updatedSeasons)
-                                }
-                                helpViewModel.focusedEpisodes?.let { updatedEpisodes ->
-                                    updatedEpisodes.forEach { newepisode ->
-                                        newepisode.isEpisodePartlyWatched = false
-                                        newepisode.isEpisodeFullyWatched = true
-                                        newepisode.episodePercentagePlayed = 1.0
-                                        newepisode.currentPosition = 0
-                                    }
-                                    episodeBox.put(updatedEpisodes)
-                                }
-                                serie.seriesAccount.target = helpViewModel.currentSeriesAccount
-                                serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
-                                seriesBox.put(serie)
-                            } else {
-                                if (episode.episodeNumber >= season.episodesCount.size) {
-                                    serie.lastWatchedSeason += 1
-                                    serie.lastWatchedEpisode = 1
-                                    serie.isPartlyWatched = true
-                                    serie.isCompletelyWatched = false
-                                    serie.seriesPercentagePlayed = calculateSeriesPercentagePlayed()
-                                    season.isSeasonPartlyWatched = false
-                                    season.isSeasonFullyWatched = true
-                                    season.seasonPercentagePlayed = 1.0
-                                    helpViewModel.focusedEpisodes?.filter {
-                                        (it.seasonNumber?.toIntOrNull()
-                                            ?: 0) >= (season.seasonNumber.toIntOrNull() ?: 0)
-                                    }?.forEach { updatedEpisodes ->
-                                        updatedEpisodes.isEpisodePartlyWatched = false
-                                        updatedEpisodes.isEpisodeFullyWatched = true
-                                        updatedEpisodes.episodePercentagePlayed = 1.0
-                                        updatedEpisodes.currentPosition = 0
-                                    }
-                                    helpViewModel.focusedEpisodes?.let { changedEpisode ->
-                                        episodeBox.put(changedEpisode.filter { (it.seasonNumber?.toIntOrNull() ?: 0) == (season.seasonNumber.toIntOrNull() ?: 0) })
-                                    }
-                                    serie.seriesAccount.target = helpViewModel.currentSeriesAccount
-                                    serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
-                                    seriesBox.put(serie)
-                                    seasonBox.put(season)
-                                } else {
-                                    serie.lastWatchedEpisode += 1
-                                    serie.isPartlyWatched = true
-                                    serie.isCompletelyWatched = false
-                                    serie.seriesPercentagePlayed = calculateSeriesPercentagePlayed()
-                                    season.isSeasonPartlyWatched = true
-                                    season.isSeasonFullyWatched = false
-                                    season.seasonPercentagePlayed = calculateSeasonPercentagePlayed()
-                                    episode.isEpisodePartlyWatched = false
-                                    episode.isEpisodeFullyWatched = true
-                                    episode.episodePercentagePlayed = 1.0
-                                    episode.currentPosition = 0
-                                    serie.seriesAccount.target = helpViewModel.currentSeriesAccount
-                                    serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
-                                    seriesBox.put(serie)
-                                    seasonBox.put(season)
-                                    episodeBox.put(episode)
-                                }
-                            }
-                        }
-                    }
-                    updateSeriesInRV(serie)
-                }
+        val episode = helpViewModel.currentFocusedEpisode ?: return
+        val season = helpViewModel.currentFocusedSeason ?: return
+        val serie = helpViewModel.currentFocusedSerie ?: return
+        val percentage = episode.episodePercentagePlayed
+
+        if (percentage in 0.05..0.94) {
+            markEpisodePartlyWatched(serie, season, episode)
+        } else if (percentage >= 0.95) {
+            markEpisodeFullyWatched(serie, season, episode)
+        } else {
+            episode.currentPosition = 0
+            episode.episodePercentagePlayed = 0.0
+        }
+
+        updateCache()
+
+        updateSeriesInRV(serie)
+    }
+
+
+    private fun markEpisodePartlyWatched(serie: SeriesOB, season: SeasonsOB, episode: EpisodesOB) {
+        if (!serie.isPartlyWatched) serie.isPartlyWatched = true
+        if (!season.isSeasonPartlyWatched) season.isSeasonPartlyWatched = true
+
+        serie.seriesPercentagePlayed = calculateSeriesPercentagePlayed()
+        season.seasonPercentagePlayed = calculateSeasonPercentagePlayed()
+
+        serie.lastWatchedSeason = season.seasonNumber.toIntOrNull() ?: 1
+        serie.lastWatchedEpisode = episode.episodeNumber
+
+        episode.isEpisodePartlyWatched = true
+        episode.isEpisodeFullyWatched = false
+
+        persistAll(serie, season, episode)
+    }
+
+    private fun markEpisodeFullyWatched(serie: SeriesOB, season: SeasonsOB, episode: EpisodesOB) {
+        episode.isEpisodePartlyWatched = false
+        episode.isEpisodeFullyWatched = true
+        episode.episodePercentagePlayed = 1.0
+        episode.currentPosition = 0L
+        val episodesOfSeason = helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }
+        if (episodesOfSeason?.all { it.isEpisodeFullyWatched} == true) {
+            season.isSeasonFullyWatched = true
+            season.isSeasonPartlyWatched = false
+            season.seasonPercentagePlayed = 1.0
+            if (helpViewModel.focusedSeasons?.all { it.isSeasonFullyWatched } == true) {
+                serie.seriesPercentagePlayed = 1.0
+                serie.isCompletelyWatched = true
+                serie.isPartlyWatched = false
+                serie.currentPosition = 0L
+                helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.firstOrNull()
+                helpViewModel.currentFocusedEpisode = helpViewModel.focusedEpisodes?.firstOrNull()
+                serie.lastWatchedEpisode = helpViewModel.focusedEpisodes?.first()?.episodeNumber ?: 0
+                serie.lastWatchedSeason = helpViewModel.focusedSeasons?.first()?.seasonNumber?.toIntOrNull() ?: 0
             } else {
-                helpViewModel.currentFocusedEpisode?.let {
-                    it.currentPosition = 0
-                    it.episodePercentagePlayed = 0.0
+                val nextSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber > season.seasonNumber }
+                if (nextSeason != null) {
+                    helpViewModel.currentFocusedSeason = nextSeason
+                    serie.lastWatchedSeason = nextSeason.seasonNumber.toIntOrNull() ?: 0
+                    val firstEpisodeToWatch =
+                        helpViewModel.focusedEpisodes?.firstOrNull { it.seasonNumber == nextSeason.seasonNumber }
+                    helpViewModel.currentFocusedEpisode = firstEpisodeToWatch
+                    serie.lastWatchedEpisode = firstEpisodeToWatch?.episodeNumber ?: 0
+                } else {
+                    val firstUnseenEpisode = helpViewModel.focusedEpisodes?.firstOrNull { !it.isEpisodeFullyWatched || it.isEpisodePartlyWatched }
+                    serie.lastWatchedSeason = firstUnseenEpisode?.seasonNumber?.toIntOrNull() ?: 0
+                    serie.lastWatchedEpisode = firstUnseenEpisode?.episodeNumber ?: 0
+                    helpViewModel.currentFocusedEpisode = firstUnseenEpisode
+                    helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber == firstUnseenEpisode?.seasonNumber }
                 }
             }
-            if (helpViewModel.currentSeriesAccount!!.isStalker) {
-                helpViewModel.currentFocusedSerie?.let { serie ->
-                    stalkerViewModel.seriesCache[serie.idByAccountData] = Pair(helpViewModel.focusedSeasons ?: mutableListOf(), helpViewModel.focusedEpisodes ?: mutableListOf())
+        } else {
+            season.isSeasonPartlyWatched = true
+            season.isSeasonFullyWatched = false
+            season.seasonPercentagePlayed = calculateSeasonPercentagePlayed()
+            serie.seriesPercentagePlayed = calculateSeriesPercentagePlayed()
+            val lastEpisodeOfSeason = episodesOfSeason?.none { it.episodeNumber > episode.episodeNumber }
+            if (lastEpisodeOfSeason != null && !lastEpisodeOfSeason) {
+                val nextEpisode = episodesOfSeason.firstOrNull { it.episodeNumber > episode.episodeNumber }
+                if (nextEpisode != null) {
+                    serie.lastWatchedEpisode = nextEpisode.episodeNumber
+                    serie.lastWatchedSeason = nextEpisode.seasonNumber?.toIntOrNull() ?: 0
+                    helpViewModel.currentFocusedEpisode = nextEpisode
                 }
             } else {
-                helpViewModel.currentFocusedSerie?.let { serie ->
-                    xtreamViewModel.seriesCache[serie.idByAccountData] = Pair(helpViewModel.focusedSeasons ?: mutableListOf(), helpViewModel.focusedEpisodes
-                        ?: mutableListOf()
-                    )
+                val nextSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber > season.seasonNumber }
+                if (nextSeason != null) {
+                    helpViewModel.currentFocusedSeason = nextSeason
+                    serie.lastWatchedSeason = nextSeason.seasonNumber.toIntOrNull() ?: 0
+                    val firstEpisodeToWatch = helpViewModel.focusedEpisodes?.firstOrNull { it.seasonNumber == nextSeason.seasonNumber }
+                    serie.lastWatchedEpisode = firstEpisodeToWatch?.episodeNumber ?: 0
+                    helpViewModel.currentFocusedEpisode = firstEpisodeToWatch
+                } else {
+                    val firstUnseenEpisode = helpViewModel.focusedEpisodes?.firstOrNull { !it.isEpisodeFullyWatched || it.isEpisodePartlyWatched }
+                    serie.lastWatchedSeason = firstUnseenEpisode?.seasonNumber?.toIntOrNull() ?: 0
+                    serie.lastWatchedEpisode = firstUnseenEpisode?.episodeNumber ?: 0
+                    helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber == firstUnseenEpisode?.seasonNumber }
+                    helpViewModel.currentFocusedEpisode = firstUnseenEpisode
                 }
             }
         }
+        persistAll(serie, season, episode)
+    }
+
+    private fun updateCache() {
+        val serie = helpViewModel.currentFocusedSerie ?: return
+        val seasons = helpViewModel.focusedSeasons ?: mutableListOf()
+        val episodes = helpViewModel.focusedEpisodes ?: mutableListOf()
+
+        if (helpViewModel.currentSeriesAccount?.isStalker == true) {
+            stalkerViewModel.seriesCache[serie.idByAccountData] = seasons to episodes
+        } else {
+            xtreamViewModel.seriesCache[serie.idByAccountData] = seasons to episodes
+        }
+    }
+
+    private fun persistAll(serie: SeriesOB, season: SeasonsOB?, episode: EpisodesOB?) {
+        serie.seriesAccount.target = helpViewModel.currentSeriesAccount
+        serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
+
+        seriesBox.put(serie)
+        season?.let { seasonBox.put(it) }
+        episode?.let { episodeBox.put(it) }
     }
 
     fun setFocusToResetAspectRatio() {
@@ -2469,16 +2422,8 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         currentSeriesUrl = ""
         updateSerieSeasonEpisode()
         helpViewModel.playMovieSelectionModified = null
-        val thisFragment =
-            parentFragmentManager.findFragmentById(R.id.container_series_info)
-        if (thisFragment is SeriesDetailFragment) {
-            thisFragment.closeFullScreenSerie()
-        } else {
-            val newthisFragment = parentFragmentManager.findFragmentById(R.id.container_globalsearch_vod_info)
-            if (newthisFragment is SeriesDetailFragment) {
-                newthisFragment.closeFullScreenSerie()
-            }
-        }
+        helpViewModel.serieFullScreenOpened = false
+        seriesViewModel.requestFocusOnNextEpisode()
         parentFragmentManager.popBackStack()
     }
 

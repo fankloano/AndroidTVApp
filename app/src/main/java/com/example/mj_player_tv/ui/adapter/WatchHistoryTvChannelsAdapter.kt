@@ -22,7 +22,11 @@ import com.example.mj_player_tv.ui.WatchHistoryFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 
 @UnstableApi
-class WatchHistoryTvChannelsAdapter(private val onClickListener: WatchHistoryTvChannelsAdapter.OnClickListener, private val fragment: WatchHistoryFragment, private val helpViewModel: HelpViewModel) : ListAdapter<TvChannelOB, WatchHistoryTvChannelsAdapter.ViewHolder>(
+class WatchHistoryTvChannelsAdapter(
+    private val onClickListener: WatchHistoryTvChannelsAdapter.OnClickListener,
+    private val onLongClickListener: WatchHistoryTvChannelsAdapter.OnLongClickListener,
+    private val fragment: WatchHistoryFragment,
+    private val helpViewModel: HelpViewModel) : ListAdapter<TvChannelOB, WatchHistoryTvChannelsAdapter.ViewHolder>(
     MANAGE_TVCHANNELS_COMPERATOR) {
 
     var currentAccount: Accounts? = null
@@ -131,6 +135,11 @@ class WatchHistoryTvChannelsAdapter(private val onClickListener: WatchHistoryTvC
             onClickListener.onClick(channelPos)
         }
 
+        holder.binding.cardViewTv.setOnLongClickListener {
+            onLongClickListener.onLongClick(channelPos, holder.binding.cardViewTv)
+            true
+        }
+
     }
 
     companion object {
@@ -147,6 +156,10 @@ class WatchHistoryTvChannelsAdapter(private val onClickListener: WatchHistoryTvC
 
     class OnClickListener(val clickListener: (tvchannel: TvChannelOB) -> Unit) {
         fun onClick(tvchannel: TvChannelOB) = clickListener(tvchannel)
+    }
+
+    class OnLongClickListener(val onlongclickListener: (tvchannel: TvChannelOB, view: View) -> Unit) {
+        fun onLongClick(tvchannel: TvChannelOB, view: View) = onlongclickListener(tvchannel, view)
     }
 
 }

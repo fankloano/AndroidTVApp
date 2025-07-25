@@ -437,10 +437,10 @@ class TvChannelsAdapter(
             } else {
                 startedPosition = bindingAdapterPosition
                 if (helpViewModel.isNowChangingChannelOrder) {
-                    val refreshPosition = bindingAdapterPosition
                     fragment.changeChOrderInformation()
                     helpViewModel.isNowChangingChannelOrder = false
-                    fragment.refreshChannelPositions(refreshPosition, tvchannel)
+                    refreshItem(tvchannel)
+                    fragment.saveCurrentList(tvchannel)
                 } else {
                     startedPosition = bindingAdapterPosition
                     helpViewModel.isNowChangingChannelOrder = true
@@ -665,7 +665,6 @@ class TvChannelsAdapter(
                 holder.binding.borderAssignepgtoChannel.visibility = View.INVISIBLE
             }
         }
-
     }
 
     companion object {
@@ -728,17 +727,28 @@ class TvChannelsAdapter(
         progressUpdater?.let { handler.removeCallbacks(it) }
     }
 
-    fun moveItemUp(selectedItemPosition: Int) {
-        if (selectedItemPosition > 0) {
-            notifyItemMoved(selectedItemPosition, selectedItemPosition - 1)
-        }
+    fun moveItemUp(position: Int) {
+        if (position <= 0) return
+
+        val mutableList = currentList.toMutableList()
+        val temp = mutableList[position]
+        mutableList[position] = mutableList[position - 1]
+        mutableList[position - 1] = temp
+
+        submitList(mutableList)
     }
 
-    fun moveItemDown(selectedItemPosition: Int) {
-        if (selectedItemPosition < itemCount - 1) {
-            notifyItemMoved(selectedItemPosition, selectedItemPosition + 1)
-        }
+    fun moveItemDown(position: Int) {
+        if (position >= currentList.size - 1) return
+
+        val mutableList = currentList.toMutableList()
+        val temp = mutableList[position]
+        mutableList[position] = mutableList[position + 1]
+        mutableList[position + 1] = temp
+
+        submitList(mutableList)
     }
+
 
     fun setCurrentChanneldId(tvchannelPos: ChannelPositions) {
         currentSelectedChannelId = tvchannelPos.catAndChannelAccount

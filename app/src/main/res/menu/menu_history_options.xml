@@ -1,0 +1,6 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/remove_this"
+        android:title="Remove from list" />
+    <item android:id="@+id/remove_all"
+        android:title="Clear full channel list" />
+</menu>

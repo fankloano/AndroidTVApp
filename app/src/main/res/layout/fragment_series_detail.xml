@@ -6,6 +6,13 @@
     android:layout_height="match_parent"
     android:background="?attr/backgroundDark">
 
+    <View
+        android:id="@+id/focusBlocker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
+
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/const_series"
             android:layout_width="match_parent"
@@ -389,6 +396,19 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_seriesposter"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ProgressBar
+        android:id="@+id/loadseriesDetail_progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="invisible"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/light_blue"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
 
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/fullscreen_serie"

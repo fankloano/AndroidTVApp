@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -54,6 +55,7 @@ import java.security.Key
 import androidx.core.view.isGone
 import kotlinx.coroutines.delay
 import androidx.core.view.isVisible
+import com.example.mj_player_tv.database.entity.EpisodesOB
 
 @UnstableApi
 class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
@@ -315,7 +317,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private fun prepareTvChannelsRecyclerView() {
-        tvchannelsAdapter = WatchHistoryTvChannelsAdapter(onTvChannelClickListener, this, helpViewModel)
+        tvchannelsAdapter = WatchHistoryTvChannelsAdapter(onTvChannelClickListener, onTvChannelLongClickListener, this, helpViewModel)
         binding.recyclerItems.apply {
             adapter = tvchannelsAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
@@ -335,7 +337,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private fun prepareSeriesRecyclerView() {
-        seriesAdapter = WatchHistorySeriesAdapter(onSeriesClickListener, this, helpViewModel)
+        seriesAdapter = WatchHistorySeriesAdapter(onSeriesClickListener, onSeriesLongClickListener, this, helpViewModel)
         binding.recyclerItems.apply {
             adapter = seriesAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
@@ -346,6 +348,10 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
     private val onTvChannelClickListener = WatchHistoryTvChannelsAdapter.OnClickListener { tvchannel ->
         helpViewModel.currentSelectedWatchHistory = "TV"
+    }
+
+    private val onTvChannelLongClickListener = WatchHistoryTvChannelsAdapter.OnLongClickListener { tvchannel, view ->
+        showTvChannelPopUp(tvchannel, view)
     }
 
     private val onMovieClickListener = WatchHistoryMoviesAdapter.OnClickListener { movie ->
@@ -408,6 +414,62 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 }
             } else {
 
+            }
+        }
+    }
+
+    private val onSeriesLongClickListener = WatchHistorySeriesAdapter.OnLongClickListener { serie ->
+
+    }
+
+    private fun showTvChannelPopUp(tvchannel: TvChannelOB, view: View) {
+        val popup = PopupMenu(view.context, view)
+        popup.menuInflater.inflate(R.menu.menu_history_options, popup.menu)
+
+        val singleItem = popup.menu.findItem(R.id.remove_this)
+        singleItem.setTitle("Remove ${tvchannel.showingName} from list")
+        val allItem = popup.menu.findItem(R.id.remove_all)
+        if (tvChannelsList != null && tvChannelsList!!.size > 1) {
+            allItem.setVisible(true)
+        } else {
+            allItem.setVisible(false)
+        }
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.remove_this -> {
+                    removeChannelFromList(tvchannel)
+                    true
+                }
+                R.id.remove_all -> {
+                    removeAllChannelsFromList()
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun removeChannelFromList(tvchannel: TvChannelOB) {
+        tvChannelsList = tvChannelsList?.filter { it.id != tvchannel.id }?.toMutableList()
+        tvchannelsAdapter?.submitList(tvChannelsList?.sortedByDescending { it.timeWatched } )
+        binding.recyclerItems.requestFocus()
+        tvchannel.timeWatched = 0L
+        tvchBox.put(tvchannel)
+    }
+
+    private fun removeAllChannelsFromList() {
+        val channelList = tvChannelsList
+        tvChannelsList = mutableListOf()
+        tvchannelsAdapter?.submitList(tvChannelsList)
+        binding.rvHistoryTvchannels.requestFocus()
+        helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+            val updatedChannels = channelList?.map {
+                it.timeWatched = 0L
+                it
+            }
+            if (updatedChannels != null) {
+                tvchBox.put(updatedChannels)
             }
         }
     }

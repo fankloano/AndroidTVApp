@@ -241,6 +241,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var currentSelectedEpgForSelectedChannel: EpgDataOB? = null
 
+    var currentSelectedFullEpgData: EpgDataOB? = null
+
     var playlistEpgChanged: Boolean = false
 
     var modifiedChannelList: Boolean = false

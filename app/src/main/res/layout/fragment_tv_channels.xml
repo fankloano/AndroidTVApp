@@ -238,17 +238,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         android:visibility="invisible"/>
 
-    <androidx.fragment.app.FragmentContainerView
-        android:id="@+id/rv_layout_FullEpg"
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintWidth_percent="0.52"
-        tools:listitem="@layout/rv_item_tvchannels"/>
-
     <RelativeLayout
         android:id="@+id/relLayout_channel_info"
         android:layout_width="0dp"
@@ -616,6 +605,16 @@
         app:layout_constraintHeight_percent="0.52"
         android:layout_marginTop="5dp"
         app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/rv_layout_FullEpg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/rv_item_tvchannels"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/relLayout_chOrder_info"

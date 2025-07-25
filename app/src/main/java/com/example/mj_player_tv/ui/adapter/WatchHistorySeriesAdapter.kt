@@ -27,7 +27,11 @@ import com.example.mj_player_tv.ui.WatchListFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 
 @UnstableApi
-class WatchHistorySeriesAdapter(private val onClickListener: WatchHistorySeriesAdapter.OnClickListener, private val fragment: WatchHistoryFragment, private val helpViewModel: HelpViewModel) : ListAdapter<SeriesOB, WatchHistorySeriesAdapter.ViewHolder>(
+class WatchHistorySeriesAdapter(
+    private val onClickListener: WatchHistorySeriesAdapter.OnClickListener,
+    private val onLongClickListener: WatchHistorySeriesAdapter.OnLongClickListener,
+    private val fragment: WatchHistoryFragment,
+    private val helpViewModel: HelpViewModel) : ListAdapter<SeriesOB, WatchHistorySeriesAdapter.ViewHolder>(
     MANAGE_SERIESCATEGORY_COMPERATOR) {
 
     var currentAccount: Accounts? = null
@@ -196,6 +200,11 @@ class WatchHistorySeriesAdapter(private val onClickListener: WatchHistorySeriesA
         holder.binding.cardViewVod.setOnClickListener {
             onClickListener.onClick(serie)
         }
+
+        holder.binding.cardViewVod.setOnLongClickListener {
+            onLongClickListener.onLongClick(serie)
+            true
+        }
     }
 
     companion object {
@@ -212,6 +221,10 @@ class WatchHistorySeriesAdapter(private val onClickListener: WatchHistorySeriesA
 
     class OnClickListener(val clickListener: (serie: SeriesOB) -> Unit) {
         fun onClick(serie: SeriesOB) = clickListener(serie)
+    }
+
+    class OnLongClickListener(val onlongclickListener: (serie: SeriesOB) -> Unit) {
+        fun onLongClick(serie: SeriesOB) = onlongclickListener(serie)
     }
 
 }

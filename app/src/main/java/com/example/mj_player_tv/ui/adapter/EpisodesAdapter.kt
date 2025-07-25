@@ -136,7 +136,7 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
                 oldItem == newItem
 
             override fun areContentsTheSame(oldItem: EpisodesOB, newItem: EpisodesOB) =
-                oldItem.seriesSeasonEpisodeIdByAccountData == newItem.seriesSeasonEpisodeIdByAccountData &&
+                        oldItem.seriesSeasonEpisodeIdByAccountData == newItem.seriesSeasonEpisodeIdByAccountData &&
                         oldItem.isEpisodeFullyWatched == newItem.isEpisodeFullyWatched &&
                         oldItem.isEpisodePartlyWatched == newItem.isEpisodePartlyWatched &&
                         oldItem.currentPosition == newItem.currentPosition &&

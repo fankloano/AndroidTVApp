@@ -52,6 +52,7 @@ import org.apache.commons.lang3.mutable.Mutable
 import java.security.Key
 import androidx.core.view.isVisible
 import androidx.core.view.isGone
+import androidx.core.view.isNotEmpty
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
@@ -77,7 +78,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     private val seriesBox = ObjectBox.store.boxFor(SeriesOB::class.java)
     private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
 
-    private var isFirstOpen = true
+    private var wasItemClicked = false
 
     private var moviesList: MutableList<MovieOB>? = null
 
@@ -189,8 +190,10 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         binding.rvWatchlistMovies.setOnFocusChangeListener { _, hasFocus ->
             binding.tvSelectmovies.isSelected = hasFocus
             if (hasFocus ) {
+                Log.d("SERIEDETAILWATCHLIST", "FOKUS FILME")
                 helpViewModel.currentWatchListSeriesAccount = null
                 helpViewModel.currentFocusedSerie = null
+                resetSeriesDetailsUi()
                 if (binding.relLayoutProgramdescr.isVisible) {
                     binding.relLayoutProgramdescr.visibility = View.GONE
                 }
@@ -218,12 +221,17 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         }
                     }
                 }
+                helpViewModel.currentSelectedWatchlist = "MOVIE"
             }
         }
 
         binding.rvWatchlistMovies.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerPlaylists.requestFocus()
+                if (binding.recyclerPlaylists.isVisible) {
+                    binding.recyclerPlaylists.requestFocus()
+                } else {
+                    binding.rvWatchlistMovies.requestFocus()
+                }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
@@ -240,9 +248,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         binding.rvWatchlistSeries.setOnFocusChangeListener { _, hasFocus ->
             binding.tvSelectseries.isSelected = hasFocus
             if (hasFocus) {
+                Log.d("SERIEDETAILWATCHLIST", "FOKUS SERIEN")
                 helpViewModel.currentWatchListMovieAccount = null
                 helpViewModel.currentFocusedMovie = null
                 helpViewModel.currentWatchListProgrammeAccount = null
+                resetMovieDetailsUi()
+                resetProgramDetails()
                 if (binding.relLayoutProgramdescr.isVisible) {
                     binding.relLayoutProgramdescr.visibility = View.GONE
                 }
@@ -268,12 +279,17 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         }
                     }
                 }
+                helpViewModel.currentSelectedWatchlist = "SERIE"
             }
         }
 
         binding.rvWatchlistSeries.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerPlaylists.requestFocus()
+                if (binding.recyclerPlaylists.isVisible) {
+                    binding.recyclerPlaylists.requestFocus()
+                } else {
+                    binding.rvWatchlistSeries.requestFocus()
+                }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
@@ -290,6 +306,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         binding.rvWatchlistProgramme.setOnFocusChangeListener { _, hasFocus ->
             binding.tvSelectprogramme.isSelected = hasFocus
             if (hasFocus) {
+                Log.d("SERIEDETAILWATCHLIST", "FOKUS PROGRAMME")
+
                 seriesDetailJob?.cancel()
                 resetSeriesDetailsUi()
                 helpViewModel.currentWatchListSeriesAccount = null
@@ -315,12 +333,17 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         }
                     }
                 }
+                helpViewModel.currentSelectedWatchlist = "PROGRAMME"
             }
         }
 
         binding.rvWatchlistProgramme.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerPlaylists.requestFocus()
+                if (binding.recyclerPlaylists.isVisible) {
+                    binding.recyclerPlaylists.requestFocus()
+                } else {
+                    binding.rvWatchlistProgramme.requestFocus()
+                }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
@@ -422,6 +445,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     }
 
     fun showFocusedPlaylistSeries(accounts: Accounts) {
+        Log.d("SERIENWATCHLISTVERGLEICH", "VM: ${helpViewModel.currentWatchListSeriesAccount?.id} ACC: ${accounts.id}")
         if (helpViewModel.currentWatchListSeriesAccount?.id != accounts.id) {
             val oldPosition = playlistAdapter?.currentList?.indexOf(helpViewModel.currentWatchListSeriesAccount)
             val newPosition = playlistAdapter?.currentList?.indexOf(accounts)
@@ -486,6 +510,30 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             binding.rvWatchlistSeries.requestFocus()
         } else if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
             binding.rvWatchlistProgramme.requestFocus()
+        } else {
+            return
+        }
+    }
+
+    fun focusToMovieOrSerieFromDetail() {
+        if (helpViewModel.currentSelectedWatchlist == "MOVIE") {
+            if (binding.recyclerItems.isVisible && !moviesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvWatchlistMovies.requestFocus()
+            }
+        } else if (helpViewModel.currentSelectedWatchlist == "SERIE") {
+            if (binding.recyclerItems.isVisible && !seriesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvWatchlistSeries.requestFocus()
+            }
+        } else if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
+            if (binding.recyclerProgramme.isVisible && !programmesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvWatchlistProgramme.requestFocus()
+            }
         } else {
             return
         }
@@ -612,7 +660,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     fun openMovieDetailFragment() {
         helpViewModel.isWatchlistContainerOpened = true
         val transaction = parentFragmentManager.beginTransaction()
-        transaction.add(R.id.container_watchlist_vod_info, MovieDetailFragment())
+        transaction.replace(R.id.container_watchlist_vod_info, MovieDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
         binding.containerWatchlistVodInfo.visibility = View.VISIBLE
@@ -621,7 +669,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     fun openSeriesDetailFragment() {
         helpViewModel.isWatchlistContainerOpened = true
         val transaction = parentFragmentManager.beginTransaction()
-        transaction.add(R.id.container_watchlist_vod_info, SeriesDetailFragment())
+        transaction.replace(R.id.container_watchlist_vod_info, SeriesDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
         binding.containerWatchlistVodInfo.visibility = View.VISIBLE
@@ -1319,7 +1367,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     fun updateMovie(movie: MovieOB) {
         // Entferne Film
         moviesList = moviesList?.filter { it.id != movie.id }?.toMutableList()
-
+        val oldMoviePosition = moviesList?.indexOf(movie)
         // Neue Account-Liste berechnen
         val uniqueAccounts = moviesList.orEmpty()
             .mapNotNull { it.movieAccount.target }
@@ -1338,6 +1386,13 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     binding.recyclerPlaylists.setSelectedPosition(position)
                     val filteredMovies = moviesList?.filter { it.movieAccount.target.id == helpViewModel.currentWatchListMovieAccount!!.id }
                     moviesAdapter?.submitList(filteredMovies)
+                    if (!filteredMovies.isNullOrEmpty()) {
+                        if (oldMoviePosition != null && oldMoviePosition > 0) {
+                            setMovieDetailsUi(filteredMovies[oldMoviePosition - 1])
+                        } else {
+                            setMovieDetailsUi(filteredMovies.first())
+                        }
+                    }
                 } else {
                     binding.recyclerPlaylists.setSelectedPosition(0)
                     val filteredMovies = moviesList?.filter { it.movieAccount.target.id == uniqueAccounts.first().id }?.sortedBy { it.movieName }
@@ -1357,8 +1412,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
     fun updateSerie(serie: SeriesOB) {
         // Entferne Film
+        val oldSeriesPosition = seriesList?.indexOf(serie)
         seriesList = seriesList?.filter { it.id != serie.id }?.toMutableList()
-
         // Neue Account-Liste berechnen
         val uniqueAccounts = seriesList.orEmpty()
             .mapNotNull { it.seriesAccount.target }
@@ -1377,6 +1432,13 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     binding.recyclerPlaylists.setSelectedPosition(position)
                     val filteredSeries = seriesList?.filter { it.seriesAccount.target.id == helpViewModel.currentWatchListSeriesAccount!!.id }
                     seriesAdapter?.submitList(filteredSeries)
+                    if (!filteredSeries.isNullOrEmpty()) {
+                        if (oldSeriesPosition != null && oldSeriesPosition > 0) {
+                            setSeriesDetailsUi(filteredSeries[oldSeriesPosition - 1])
+                        } else {
+                            setSeriesDetailsUi(filteredSeries.first())
+                        }
+                    }
                 } else {
                     binding.recyclerPlaylists.setSelectedPosition(0)
                     val filteredSeries = seriesList?.filter { it.seriesAccount.target.id == uniqueAccounts.first().id }?.sortedBy { it.seriesName }
@@ -1388,7 +1450,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             } else {
                 // Keine Accounts mehr
                 resetSeriesDetailsUi()
-                binding.recyclerItems.visibility = View.INVISIBLE
+                seriesAdapter?.submitList(emptyList())
                 binding.tvNodatafound.visibility = View.VISIBLE
             }
         }

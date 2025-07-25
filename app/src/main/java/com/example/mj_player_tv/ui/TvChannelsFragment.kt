@@ -119,9 +119,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     private val tvChBox: Box<TvChannelOB> = ObjectBox.store.boxFor(TvChannelOB::class.java)
 
-    private val tvChPosBox: Box<ChannelPositions> =
-        ObjectBox.store.boxFor(ChannelPositions::class.java)
-
     private val tvCatBox: Box<TvCategoryOB> = ObjectBox.store.boxFor(TvCategoryOB::class.java)
 
     private val epgDataBox: Box<EpgDataOB> = ObjectBox.store.boxFor(EpgDataOB::class.java)
@@ -654,7 +651,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             if (helpViewModel.currentFocusedChannPosition != null) {
                 helpViewModel.currentSelectedEpgForSelectedChannel = null
                 showFullEpgContainer()
-                showDetailEpgContainer()
             }
         }
 
@@ -997,48 +993,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
     }
 
+    fun saveCurrentList(tvChannelPos: ChannelPositions) {
+        val current = tvChannelsAdapter?.currentList
 
-    fun refreshChannelPositions(newPosition: Int, tvChannelPos: ChannelPositions) {
-        tvChannelPos.tvcategory.target.tvChannelLink.reset()
-        val allChannelPositionsForThisCategory = tvChannelPos.tvcategory.target.tvChannelLink
-        if (tvChannelPos.position < newPosition) {
-            allChannelPositionsForThisCategory.filter {
-                it.position <= newPosition && it.position > tvChannelPos.position
-            }.forEach { channPos ->
-                val oldPosition = channPos.position
-                channPos.position = oldPosition - 1
-            }
-        } else {
-            if (tvChannelPos.position > newPosition) {
-                allChannelPositionsForThisCategory.filter {
-                    it.position >= newPosition && it.position < tvChannelPos.position
-                }.forEach { channPos ->
-                    val oldPosition = channPos.position
-                    channPos.position = oldPosition + 1
-                }
-            }
-        }
+        manualPositionsBox.put(current) // oder viewModel.persistList()
         val tvCategory = tvChannelPos.tvcategory.target
         if (tvCategory.orderBy != 2) {
             tvCategory.orderBy = 2
             tvCatBox.put(tvCategory)
         }
-        helpViewModel.currentFocusedTvCategory = tvCategory
-        manualPositionsBox.put(allChannelPositionsForThisCategory)
-        tvChannelPos.position = newPosition
-        manualPositionsBox.put(tvChannelPos)
-        tvCategory.tvChannelLink.reset()
-        // Map die IDs in `positions` auf `channels`, um die korrekte Reihenfolge zu erhalten
-        val newChannels = tvCategory.tvChannelLink.filter { it.isSelected }.sortedBy { it.position }
-
-        tvChannelsAdapter?.submitList(null)
-        tvChannelsAdapter?.submitList(newChannels)
-        tvChannelsAdapter?.submitListToUse(newChannels)
-        binding.rvLayoutTvChannels.post {
-            binding.rvLayoutTvChannels.setSelectedPosition(newPosition)
-        }
-
     }
+
 
     fun updateTvChannels() {
         if (!tvChannelsAdapter?.currentList.isNullOrEmpty()) {
@@ -2001,6 +1966,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.videoView.isFocusable = true
         binding.videoView.isFocusableInTouchMode = true
         binding.videoView.requestFocus()
+        if (isFirstPlayingChannel) {
+            showHudContainer()
+            isFirstPlayingChannel = false
+        }
     }
 
     fun setVideoViewNotFullScreen() {
@@ -2089,6 +2058,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
         if (channel.idByAccountData == helpViewModel.currentPlayingChannel?.idByAccountData) {
             getFirstAndLastEpgForChannel()
+            isFirstPlayingChannel = true
             setVideoViewFullScreen()
         } else {
             changingPlayingChannel(channelPosition)
@@ -2800,7 +2770,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             Log.d("CATCHUP STALKER", "CATCHUPURL SWITCH: $url")
         }
         lastFpsToShow = 0
-        isFirstPlayingChannel = true
         helpViewModel.currentlyPlayingUrl = url
         binding.videoView.visibility = View.VISIBLE
         // MediaSource für den neuen Sender erstellen
@@ -3032,7 +3001,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     showProgressBar()
                 }
                 Player.STATE_IDLE -> {
-                    Log.d("THIS", "this")
                 }
                 Player.STATE_ENDED -> {
                     helpViewModel.isCurrentlyPlayingTv = false
@@ -3083,7 +3051,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             watchTimeJob?.cancel()
             watchTimeJob = null
             helpViewModel.currentPlayingChannelPosition?.let {
-                tvChPosBox.put(it) // In Room/Firebase/Repo
+                manualPositionsBox.put(it) // In Room/Firebase/Repo
                 it.tvchannel.target?.let { ch ->
                     tvChBox.put(ch)
                 }
@@ -3223,7 +3191,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             helpViewModel.isFullEpgContainerOpened = true
             binding.relLayoutEpg.visibility = View.INVISIBLE
             binding.rvLayoutFullEpg.visibility = View.VISIBLE
-            binding.rvPreviewFullEpg.visibility = View.VISIBLE
             binding.rvLayoutFullEpg.requestFocus()
         }
     }
@@ -3479,7 +3446,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     fun showFullScreenFullEpg() {
         closeFullScreenChannelSelectorEpg()
         showFullEpgContainer()
-        showDetailEpgContainer()
     }
 
     fun hideFullEpgAndDetailEpgContainer() {
@@ -3488,7 +3454,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun visibleFullEpgAndDetailEpgContainer() {
-        binding.rvPreviewFullEpg.visibility = View.VISIBLE
         binding.rvLayoutFullEpg.visibility = View.VISIBLE
         val fullepgFragment = parentFragmentManager.findFragmentById(R.id.rv_layout_FullEpg)
         if (fullepgFragment is FullEpgFragment) {
