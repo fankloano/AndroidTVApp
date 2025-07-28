@@ -121,7 +121,10 @@ class GlobalSearchEpgListAdapter(private val onClickListener: GlobalSearchEpgLis
             holder.binding.tvProgram.isSelected = hasFocus
             holder.binding.tvSubTitleProgram.isSelected = hasFocus
             if (hasFocus) {
+                holder.binding.overlayFull.visibility = View.GONE
                 fragment.showDetailEpg(epgData)
+            } else {
+                holder.binding.overlayFull.visibility = View.VISIBLE
             }
         }
 

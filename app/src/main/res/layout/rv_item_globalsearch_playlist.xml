@@ -6,7 +6,7 @@
     android:id="@+id/const_gs_pl"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:background="@drawable/background_globalsearch_playlist"
+    android:background="@drawable/selector_watchlist_playlist"
     xmlns:tools="http://schemas.android.com/tools">
 
     <TextView
@@ -15,6 +15,8 @@
         android:layout_height="wrap_content"
         android:maxLines="1"
         tools:text="hd-max.org:8080"
+        android:textColor="@drawable/selector_textview_watchlist_accounts"
+        android:duplicateParentState="true"
         android:layout_centerInParent="true"/>
 
 </RelativeLayout>

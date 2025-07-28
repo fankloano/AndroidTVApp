@@ -10,11 +10,10 @@
             <stroke
                 android:width="1.5dp"
                 android:color="?attr/textColorDarkGrey" />
-
             <corners
-                android:bottomRightRadius="24dp"
+                android:bottomRightRadius="12dp"
                 android:bottomLeftRadius="0dp"
-                android:topLeftRadius="24dp"
+                android:topLeftRadius="0dp"
                 android:topRightRadius="0dp" />
         </shape>
     </item>

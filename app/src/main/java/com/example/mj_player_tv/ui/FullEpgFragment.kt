@@ -1152,6 +1152,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                             helpViewModel.currentPlayingChannelPosition = tvChannelPos
                             val url =  catchUp.data?.removePrefix("ffmpeg ")?.trim() ?: ""
                             Log.d("CATCHUP STALKER", "CATCHUPURL: $url")
+                            mainFragment.cancelChannelLoadJob()
                             mainFragment.switchChannel(url)
                             mainFragment.setVideoViewFullScreen()
                         }
@@ -1218,6 +1219,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                 mainFragment.hideFullEpgAndDetailEpgContainer()
                 helpViewModel.currentPlayingChannelPosition =
                     tvChannelPos
+                mainFragment.cancelChannelLoadJob()
                 mainFragment.switchChannel(
                     url
                 )

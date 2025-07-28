@@ -54,6 +54,10 @@ import androidx.core.view.isVisible
 import androidx.core.view.isGone
 import androidx.core.view.isNotEmpty
 import com.example.mj_player_tv.database.entity.EpgDataOB
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -98,9 +102,20 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         )
     }
 
-
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
             requireActivity().application
         )
     }
@@ -356,6 +371,23 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             }
             return@setOnKeyListener false
         }
+
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
+            if (!seriesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvWatchlistSeries.requestFocus()
+            }
+        }
+
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
+            if (!moviesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvWatchlistMovies.requestFocus()
+            }
+        }
+
     }
 
     private fun showMoviePlaylistsRecyclerview(movies: MutableList<MovieOB>) {

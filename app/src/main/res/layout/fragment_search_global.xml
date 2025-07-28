@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="?attr/backgroundDarkDark"
+    android:background="?attr/backgroundDark"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 
@@ -13,7 +13,7 @@
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:padding="5dp"
-        android:background="?attr/backgroundDarkDark"
+        android:background="?attr/backgroundDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.92">
@@ -45,8 +45,9 @@
 
     <ImageView
         android:id="@+id/iv_settings"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
         android:layout_centerInParent="true"
         android:focusable="true"
         android:focusableInTouchMode="true"
@@ -71,7 +72,7 @@
         android:id="@+id/relLayout_categories"
         android:layout_width="match_parent"
         android:layout_height="35dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="10dp"
         android:layout_marginStart="5dp"
         android:layout_marginEnd="5dp"
         app:layout_constraintTop_toBottomOf="@id/relLayout_searchMovie">
@@ -169,17 +170,14 @@
             android:layout_marginEnd="6dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/relLayout_categories"
-            android:background="?attr/backgroundDarkDark">
+            android:background="?attr/backgroundDark">
 
             <com.rubensousa.dpadrecyclerview.DpadRecyclerView
                 android:id="@+id/recycler_playlists"
                 android:layout_width="match_parent"
                 android:layout_height="35dp"
-                app:dpadRecyclerViewItemEdgeSpacing="14dp"
+                app:dpadRecyclerViewItemEdgeSpacing="2dp"
                 app:dpadRecyclerViewItemSpacing="16dp"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:visibility="gone"
                 tools:listitem="@layout/rv_item_globalsearch_playlist"
                 android:orientation="horizontal" />
 
@@ -206,52 +204,50 @@
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintWidth_percent="0.15"
+                    app:layout_constraintWidth_percent="0.12"
                     android:gravity="center_horizontal"
-                    android:layout_marginTop="12dp"
-                    app:dpadRecyclerViewItemEdgeSpacing="6dp"
+                    app:dpadRecyclerViewItemEdgeSpacing="10dp"
                     app:dpadRecyclerViewItemSpacing="6dp"
+                    android:layout_marginTop="29dp"
                     tools:listitem="@layout/rv_item_globalsearch_epg"
                     android:orientation="vertical" />
 
                 <TextView
                     android:id="@+id/tv_selectedChannel"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    tools:text="ZDF NEO HD"
+                    android:layout_height="32dp"
+                    tools:text="ZDF NEO HDYy"
                     android:textSize="16sp"
                     android:gravity="center_vertical"
                     android:textColor="@color/white"
-                    android:visibility="gone"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:padding="6dp"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginStart="6dp"
                     app:layout_constraintStart_toEndOf="@id/recycler_epg"/>
 
                 <com.rubensousa.dpadrecyclerview.DpadRecyclerView
                     android:id="@+id/recycler_epglist"
                     android:layout_width="0dp"
                     android:layout_height="0dp"
-                    app:layout_constraintWidth_percent="0.45"
+                    app:layout_constraintWidth_percent="0.48"
                     app:layout_constraintTop_toBottomOf="@id/tv_selectedChannel"
                     app:layout_constraintStart_toEndOf="@id/recycler_epg"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:dpadRecyclerViewItemEdgeSpacing="7dp"
-                    app:dpadRecyclerViewItemSpacing="6dp"
                     tools:listitem="@layout/rv_item_fullepg"
                     android:orientation="vertical" />
 
                 <RelativeLayout
                     android:id="@+id/relLayout_epgDetail"
                     android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_height="wrap_content"
                     android:padding="12dp"
-                    android:visibility="gone"
-                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:layout_marginBottom="5dp"
+                    android:background="@drawable/background_rounded_rightup_rightdown_gradient_fullepg_detailepg"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/tv_selectedChannel"
                     app:layout_constraintStart_toEndOf="@id/recycler_epglist"
-                    app:layout_constraintWidth_percent="0.4">
+                    app:layout_constraintWidth_percent="0.38">
 
                     <TextView
                         android:id="@+id/tv_detailepg_name"

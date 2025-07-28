@@ -21,6 +21,8 @@ import com.example.mj_player_tv.databinding.FragmentSearchSeriesBycategoryBindin
 import com.example.mj_player_tv.ui.adapter.SearchSeriesAdapter
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
@@ -54,6 +56,12 @@ class SearchSeriesByCategoryFragment : Fragment(R.layout.fragment_search_series_
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
             requireActivity().application
         )
     }
@@ -216,10 +224,7 @@ class SearchSeriesByCategoryFragment : Fragment(R.layout.fragment_search_series_
     }
 
     fun closeFragment() {
-        val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (mainFragment is SeriesFragment) {
-            mainFragment.setFocusToSeries()
-        }
+        seriesViewModel.requestFocusToSeries()
         xtreamViewModel.seriesSearchList = mutableListOf()
         parentFragmentManager.popBackStack()
     }

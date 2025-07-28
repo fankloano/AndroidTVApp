@@ -1178,10 +1178,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
 
     private fun updateSeriesInRV(serie: SeriesOB) {
-        val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (mainFragment is SeriesFragment) {
-            mainFragment.updateSingleSerie(serie)
-        }
+        seriesViewModel.requestUpdateSerieInRV()
     }
 
     private fun initializeExoPlayer(url: String) {
@@ -1583,8 +1580,8 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                             parentFragmentManager.popBackStack()
                             val mainFragment =
                                 parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                            if (mainFragment is MoviesFragment) {
-                                mainFragment.setFocusToMovies()
+                            if (mainFragment is SeriesFragment) {
+                                mainFragment.setFocusToSeries()
                             }
                         }
                     }
@@ -2447,7 +2444,6 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
     override fun onStop() {
         super.onStop()
-        updateSerieSeasonEpisode()
         if (playWithVlc) {
             stopDatabaseRunnable()
             mediaPlayer?.release()

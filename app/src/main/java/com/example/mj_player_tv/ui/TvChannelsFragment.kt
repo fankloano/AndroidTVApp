@@ -1293,6 +1293,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             binding.tvNoTvCategories.visibility = View.INVISIBLE
                         }
                     } else {
+                        binding.tvLoadEpg.visibility = View.INVISIBLE
+                        binding.relLayoutEpg.visibility = View.INVISIBLE
                         binding.tvCatChannelSize.visibility = View.INVISIBLE
                         tvChannelsAdapter?.submitList(null)
                         tvChannelsAdapter?.submitListToUse(null)
@@ -2134,9 +2136,16 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.playingError.visibility = View.INVISIBLE
     }
 
+    fun cancelChannelLoadJob() {
+        channelLoadJob?.cancel()
+    }
+
+    private var channelLoadJob: Job? = null
+
     fun changedChannelSourceCheck(channelPos: ChannelPositions) {
         showProgressBar()
-        viewLifecycleOwner.lifecycleScope.launch {
+        channelLoadJob?.cancel()
+        channelLoadJob = viewLifecycleOwner.lifecycleScope.launch {
             val channel = channelPos.tvchannel.target
             val channelAccount = channel.account.target
             if (channelAccount.isStalker) {

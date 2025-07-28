@@ -29,7 +29,7 @@ class WatchlistSeriesAdapter(private val onClickListener: WatchlistSeriesAdapter
 
     var currentAccount: Accounts? = null
 
-    inner class ViewHolder(val binding: RvItemSeriesBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(val binding: RvItemGlobalsearchseriesBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(serie: SeriesOB) {
             binding.apply {
@@ -62,7 +62,7 @@ class WatchlistSeriesAdapter(private val onClickListener: WatchlistSeriesAdapter
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = RvItemSeriesBinding.inflate(
+        val binding = RvItemGlobalsearchseriesBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false

@@ -1,46 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relLayout_fullepgitem"
     android:layout_width="match_parent"
     android:layout_height="80dp"
-    app:cardBackgroundColor="?attr/transparentColor"
-    android:descendantFocusability="afterDescendants"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:focusable="true"
+    android:background="@drawable/selector_epgfull_background"
+    android:focusableInTouchMode="true"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    app:cardElevation="5dp"
-    android:padding="1dp"
-    app:cardCornerRadius="5dp">
+    xmlns:tools="http://schemas.android.com/tools">
 
-
-     <RelativeLayout
-         android:id="@+id/relLayout_fullepgitem"
-         android:layout_width="match_parent"
-         android:layout_height="match_parent"
-         android:gravity="center_vertical"
-         android:orientation="vertical"
-         android:focusable="true"
-         android:background="@drawable/selector_epgfull_background"
-         android:focusableInTouchMode="true"
-         android:paddingStart="5dp">
-
-          <ImageView
+          <com.google.android.material.imageview.ShapeableImageView
               android:layout_width="150dp"
               android:layout_height="80dp"
               android:id="@+id/iv_tvshow_poster"
               android:layout_alignParentEnd="true"
               android:alpha="0.3"
               android:layout_margin="1dp"
+              app:shapeAppearanceOverlay="@style/roundedImageViewBottomRight"
               android:visibility="gone"
+              android:duplicateParentState="true"
               tools:src="@drawable/skybundesliga"
               android:foreground="@drawable/selector_epgfull_gradient"
               android:scaleType="centerCrop"/>
 
           <View
               android:id="@+id/view_fullepg"
-              android:layout_width="150dp"
+              android:layout_width="170dp"
               android:layout_height="80dp"
               android:layout_alignParentEnd="true"
               android:visibility="gone"
-              android:layout_margin="1dp"
+              android:layout_margin="1.5dp"
+              android:duplicateParentState="true"
               android:background="@drawable/selector_epgfull_gradient"/>
 
           <LinearLayout
@@ -148,7 +140,12 @@
               android:layout_alignParentEnd="true"
               android:layout_alignParentTop="true"/>
 
+    <View
+        android:id="@+id/overlay_full"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#A0232526"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
-     </RelativeLayout>
-
-</androidx.cardview.widget.CardView>
+</RelativeLayout>

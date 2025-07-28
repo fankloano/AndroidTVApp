@@ -284,7 +284,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.btnPlay.setOnKeyListener { v, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
-                focusToEpisodes()
+                closeFragment()
                 return@setOnKeyListener true
             }
             false
@@ -308,7 +308,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.btnaddFavorite.setOnKeyListener { v, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
-                focusToEpisodes()
+                closeFragment()
                 return@setOnKeyListener true
             }
             false
@@ -372,7 +372,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.btnaddWatched.setOnKeyListener { v, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
-                focusToEpisodes()
+                closeFragment()
                 return@setOnKeyListener true
             }
             false
@@ -566,7 +566,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.btnInfo.setOnKeyListener { v, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
-                focusToEpisodes()
+                closeFragment()
                 return@setOnKeyListener true
             }
             false
@@ -629,12 +629,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                 watchlistFragment.updateSerie(helpViewModel.currentFocusedSerie!!)
             }
         } else {
-            val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-            if (mainFragment is SeriesFragment) {
-                if (helpViewModel.currentFocusedSerie != null) {
-                    mainFragment.updateSingleSerie(helpViewModel.currentFocusedSerie!!)
-                }
-            }
+            seriesViewModel.requestUpdateSerieInRV()
         }
     }
 
@@ -1254,22 +1249,10 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
     }
 
     fun closeFragment() {
-        val containerFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (containerFragment is SeriesFragment) {
-            containerFragment.setFullVisibility()
-        }
-        helpViewModel.currentSeriesImage = null
-        helpViewModel.currentFocusedSeason = null
-        helpViewModel.currentFocusedEpisode = null
-        seasonsAdapter.submitList(null)
-        episodesAdapter.submitList(null)
-        val watchlistFragment =
-            parentFragmentManager.findFragmentById(R.id.container_watchlist_stats)
-        if (watchlistFragment is WatchListFragment && helpViewModel.currentFocusedSerie != null) {
-            watchlistFragment.focusToMovieOrSerieFromDetail()
-        }
+        seriesViewModel.requestFocusToSeries()
         parentFragmentManager.popBackStack()
     }
+
 
     var currentTmdbSeriesDetailJob: Job? = null
 

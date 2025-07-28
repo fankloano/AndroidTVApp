@@ -38,6 +38,8 @@ import com.example.mj_player_tv.ui.adapter.StalkerSeriesAdapter
 import com.example.mj_player_tv.utils.Resource
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
@@ -90,6 +92,12 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
             requireActivity().application
         )
     }
@@ -178,6 +186,7 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 val firstSerie = stalkerSeriesdapter.snapshot().firstOrNull()
                 if (firstSerie != null) {
                     updateUi(firstSerie)
+                    binding.linLayoutSeriesoptions.visibility = View.VISIBLE
                 }
                 firstOpenCategory = false
             } else {
@@ -346,6 +355,22 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 return@setOnKeyListener true
             }
             false
+        }
+
+        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) {
+            updateSingleSerie()
+        }
+
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
+            binding.overlayLayout.visibility = View.GONE
+            val account = helpViewModel.currentSeriesAccount
+            if (account != null) {
+                if (account.isXtream) {
+                    binding.rvLayoutSeries.requestFocus()
+                } else {
+                    binding.rvLayoutStalkerSeries.requestFocus()
+                }
+            }
         }
 
     }
@@ -1113,6 +1138,7 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
 
     fun loadSeriesForCategory(seriesCategoryId: Long) {
         if (helpViewModel.currentSeriesCategoryOB?.id != seriesCategoryId || isFirstOpen) {
+            binding.linLayoutSeriesoptions.visibility = View.INVISIBLE
             val thisCategory = seriesCatBox.get(seriesCategoryId)
             binding.linLayoutSeriesoptions.visibility = View.INVISIBLE
             if (thisCategory.seriesaccount.target.isStalker || helpViewModel.currentSeriesCategoryOB?.seriesaccount?.target?.isStalker == true) {
@@ -1166,6 +1192,7 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                                 binding.rvLayoutSeries.setSelectedPosition(0)
                                 val firstSerie = series.first()
                                 updateUi(firstSerie)
+                                binding.linLayoutSeriesoptions.visibility = View.VISIBLE
                             }
                         } else {
                             binding.loadSeriesProgressBar.visibility = View.GONE
@@ -1179,32 +1206,21 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
         }
     }
 
-    fun updateSingleSerie(seriesOB: SeriesOB) {
+    fun updateSingleSerie() {
         if (helpViewModel.currentSeriesAccount!!.isStalker) {
-            val serie = stalkerSeriesdapter.snapshot().items.firstOrNull { it.idByAccountData == seriesOB.idByAccountData }
+            val serie = stalkerSeriesdapter.snapshot().items.firstOrNull { it.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData }
             if (serie != null) {
                 val seriesPosition = stalkerSeriesdapter.snapshot().items.indexOf(serie)
                 stalkerSeriesdapter.notifyItemChanged(seriesPosition)
                 setDetailsUi(serie)
             }
         } else if (helpViewModel.currentSeriesAccount!!.isXtream) {
-            val serie = seriesAdapter.currentList.firstOrNull { it.idByAccountData == seriesOB.idByAccountData }
+            val serie = seriesAdapter.currentList.firstOrNull { it.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData }
             if (serie != null) {
                 val seriesPosition = seriesAdapter.currentList.indexOf(serie)
                 seriesAdapter.notifyItemChanged(seriesPosition)
                 setDetailsUi(serie)
             }
-        }
-    }
-
-    fun setFullVisibility() {
-        binding.overlayLayout.visibility = View.GONE
-        if (helpViewModel.currentSeriesAccount!!.isXtream) {
-            binding.rvLayoutSeries.requestFocus()
-        } else if (helpViewModel.currentSeriesAccount!!.isStalker) {
-            binding.rvLayoutStalkerSeries.requestFocus()
-        } else {
-
         }
     }
 

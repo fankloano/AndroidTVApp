@@ -36,6 +36,8 @@ import com.example.mj_player_tv.ui.adapter.StalkerMoviesAdapter
 import com.example.mj_player_tv.utils.Resource
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
@@ -93,6 +95,13 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             requireActivity().application
         )
     }
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -346,6 +355,14 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                 return@setOnKeyListener true
             }
             false
+        }
+
+        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) {
+            updateSingleMovie()
+        }
+
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
+            setFocusToMovies()
         }
     }
 
@@ -1186,22 +1203,25 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
         }
     }
 
-    fun updateSingleMovie(movie: MovieOB) {
-        binding.ivFavorite.visibility = if (movie.isFavorite) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
-        if (helpViewModel.currentMovieAccount!!.isStalker) {
-            val moviePosition = stalkerMoviesAdapter.snapshot().items.indexOf(movie)
-            stalkerMoviesAdapter.notifyItemChanged(moviePosition)
-            setMovieDetailsNotImages(movie)
-        } else if (helpViewModel.currentMovieAccount!!.isXtream) {
-            val moviePosition = moviesAdapter.currentList.indexOf(movie)
-            moviesAdapter.notifyItemChanged(moviePosition)
-            setMovieDetailsNotImages(movie)
-        } else {
+    fun updateSingleMovie() {
+        val movie = helpViewModel.currentFocusedMovie
+        if (movie != null) {
+            binding.ivFavorite.visibility = if (movie.isFavorite) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+            if (helpViewModel.currentMovieAccount!!.isStalker) {
+                val moviePosition = stalkerMoviesAdapter.snapshot().items.indexOf(movie)
+                stalkerMoviesAdapter.notifyItemChanged(moviePosition)
+                setMovieDetailsNotImages(movie)
+            } else if (helpViewModel.currentMovieAccount!!.isXtream) {
+                val moviePosition = moviesAdapter.currentList.indexOf(movie)
+                moviesAdapter.notifyItemChanged(moviePosition)
+                setMovieDetailsNotImages(movie)
+            } else {
 
+            }
         }
     }
 

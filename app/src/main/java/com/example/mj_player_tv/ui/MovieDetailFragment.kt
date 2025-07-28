@@ -10,7 +10,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
-import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -25,6 +24,8 @@ import com.example.mj_player_tv.network.model.plex.items.Metadata
 import com.example.mj_player_tv.utils.Resource
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
@@ -66,6 +67,13 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
             requireActivity().application
         )
     }
@@ -459,6 +467,9 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
             }
         }
 
+        moviesViewModel.focusRequest.observe(viewLifecycleOwner) {
+            updateAndFocusPlayButton()
+        }
     }
 
     private fun openMovieSettings(movie: MovieOB) {
@@ -503,20 +514,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
                 View.INVISIBLE
             }
             updateMovieRunningTime()
-            val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-            if (helpViewModel.currentMovieAccount?.isPlex == true) {
-                if (mainFragment is PlexFragment) {
-                    if (helpViewModel.currentFocusedMovie != null) {
-                        mainFragment.updateSingleMovie(helpViewModel.currentFocusedMovie!!)
-                    }
-                }
-            } else {
-                if (mainFragment is MoviesFragment) {
-                    if (helpViewModel.currentFocusedMovie != null) {
-                        mainFragment.updateSingleMovie(helpViewModel.currentFocusedMovie!!)
-                    }
-                }
-            }
+            moviesViewModel.requestUpdateMovieInRV()
         }
     }
 
@@ -927,20 +925,24 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
         )
     }
 
+    private fun updateAndFocusPlayButton() {
+        val movie = helpViewModel.currentFocusedMovie
+        if (movie != null) {
+            binding.btnPlay.text = if (movie.isCompletelyWatched) {
+                "Re-Watch"
+            } else if (movie.isPartlyWatched) {
+                "Continue.."
+            } else {
+                "Play Movie"
+            }
+        }
+        binding.btnPlay.requestFocus()
+    }
 
     fun closeFragment() {
         // Gehe zurück zum vorherigen Fragment im Back Stack
-        if (helpViewModel.isSearchContainerOpened || helpViewModel.isWatchlistContainerOpened || helpViewModel.isWatchHistoryContainerOpened) {
-            parentFragmentManager.popBackStack()
-        } else {
-            val containerFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-            if (containerFragment is MoviesFragment) {
-                containerFragment.setFullVisibility()
-            } else if (containerFragment is PlexFragment) {
-                containerFragment.setFullVisibility()
-            }
-            parentFragmentManager.popBackStack()
-        }
+        moviesViewModel.requestFocusToMovies()
+        parentFragmentManager.popBackStack()
     }
 
     override fun onDestroy() {

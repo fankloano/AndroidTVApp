@@ -6,10 +6,10 @@
             <solid android:color="?attr/textColorMidLight" />
             <!-- optional, wenn du gleiche Ecken willst -->
             <corners
-                android:topLeftRadius="24dp"
-                android:topRightRadius="0dp"
-                android:bottomRightRadius="24dp"
-                android:bottomLeftRadius="0dp" />
+                android:bottomRightRadius="12dp"
+                android:bottomLeftRadius="0dp"
+                android:topLeftRadius="0dp"
+                android:topRightRadius="0dp" />
         </shape>
     </item>
 
@@ -23,10 +23,10 @@
                 android:endColor="?attr/backgroundMain"
                 android:dither="true" />
             <corners
-                android:topLeftRadius="24dp"
-                android:topRightRadius="0dp"
-                android:bottomRightRadius="24dp"
-                android:bottomLeftRadius="0dp" />
+                android:bottomRightRadius="12dp"
+                android:bottomLeftRadius="0dp"
+                android:topLeftRadius="0dp"
+                android:topRightRadius="0dp" />
         </shape>
     </item>
 

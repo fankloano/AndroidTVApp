@@ -102,6 +102,8 @@ import javax.net.ssl.SSLHandshakeException
 import kotlin.math.abs
 import kotlin.math.round
 import androidx.core.view.isVisible
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 
 
 @UnstableApi
@@ -201,6 +203,12 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
         )
     }
 
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -256,33 +264,7 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
                 binding.videoView.setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                         if (!ishudContainerVisbile) {
-                            stopRunnable = true
-                            player?.release()
-                            mediaPlayer?.release()
-                            isVideoPlaying = false
-                            currentMovieUrl = ""
-                            helpViewModel.playMovieSelectionModified = null
-                            if (helpViewModel.currentMovieAccount?.isPlex == true) {
-                                val thisFragment = parentFragmentManager.findFragmentById(R.id.container_plexitem_info)
-                                if (thisFragment is MovieDetailFragment) {
-                                    thisFragment.closeFullScreenMovie()
-                                }
-                            } else {
-                                val thisFragment =
-                                    parentFragmentManager.findFragmentById(R.id.container_movie_info)
-                                if (thisFragment is MovieDetailFragment) {
-                                    thisFragment.closeFullScreenMovie()
-                                } else {
-                                    val newthisFragment =
-                                        parentFragmentManager.findFragmentById(R.id.container_globalsearch_vod_info)
-                                    if (newthisFragment is MovieDetailFragment) {
-                                        newthisFragment.closeFullScreenMovie()
-                                    } else {
-                                        Log.d("ELSEELSA", "ELSE")
-                                    }
-                                }
-                            }
-                            parentFragmentManager.popBackStack()
+                            closeFragment()
                             return@setOnKeyListener true
                         } else {
                             hideHudContainer()
@@ -316,31 +298,7 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
                 binding.exoplayerVideoview.setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                         if (!ishudContainerVisbile) {
-                            stopRunnable = true
-                            player?.release()
-                            mediaPlayer?.release()
-                            isVideoPlaying = false
-                            currentMovieUrl = ""
-                            helpViewModel.playMovieSelectionModified = null
-                            if (helpViewModel.currentMovieAccount?.isPlex == true) {
-                                val thisFragment = parentFragmentManager.findFragmentById(R.id.container_plexitem_info)
-                                if (thisFragment is MovieDetailFragment) {
-                                    thisFragment.closeFullScreenMovie()
-                                }
-                            } else {
-                                val thisFragment =
-                                    parentFragmentManager.findFragmentById(R.id.container_movie_info)
-                                if (thisFragment is MovieDetailFragment) {
-                                    thisFragment.closeFullScreenMovie()
-                                } else {
-                                    val newthisFragment =
-                                        parentFragmentManager.findFragmentById(R.id.container_globalsearch_vod_info)
-                                    if (newthisFragment is MovieDetailFragment) {
-                                        newthisFragment.closeFullScreenMovie()
-                                    }
-                                }
-                            }
-                            parentFragmentManager.popBackStack()
+                            closeFragment()
                             return@setOnKeyListener true
                         } else {
                             hideHudContainer()
@@ -2319,12 +2277,23 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
         }
     }
 
+    private fun closeFragment() {
+        stopRunnable = true
+        player?.release()
+        mediaPlayer?.release()
+        isVideoPlaying = false
+        currentMovieUrl = ""
+        updateMovie()
+        helpViewModel.playMovieSelectionModified = null
+        helpViewModel.serieFullScreenOpened = false
+        moviesViewModel.requestFocusOnPlayMovie()
+        parentFragmentManager.popBackStack()
+    }
+
     override fun onStop() {
         super.onStop()
-        updateMovie()
         if (playWithVlc) {
             stopDatabaseRunnable()
-            org.videolan.libvlc.Dialog.setCallbacks(libVLC, null)
             mediaPlayer?.release()
             mediaPlayer = null
             binding.ivPauseVideo.visibility = View.GONE

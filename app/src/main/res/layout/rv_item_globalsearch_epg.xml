@@ -1,42 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="120dp"
-    android:layout_height="120dp"
-    android:id="@+id/cardview_epg"
+    android:layout_width="110dp"
+    android:layout_height="100dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardCornerRadius="5dp"
-    app:cardElevation="5dp"
+    android:id="@+id/cardview_epg"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:foreground="@drawable/selector_vod_card_background">
+    android:background="@drawable/selector_epgfull_background">
 
-        <RelativeLayout
-            android:background="?attr/backgroundDark"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-                <ImageView
-                    android:id="@+id/ivProgram"
-                    android:layout_width="80dp"
-                    android:layout_height="80dp"
-                    android:scaleType="centerInside"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginStart="20dp"
-                    tools:src="@drawable/hdr_bg"/>
-
-        </RelativeLayout>
+        <ImageView
+            android:id="@+id/ivProgram"
+            android:layout_width="80dp"
+            android:layout_height="70dp"
+            android:scaleType="centerInside"
+            android:layout_marginTop="10dp"
+            android:layout_centerHorizontal="true"
+            tools:src="@drawable/hdr_bg"/>
 
         <TextView
             android:id="@+id/programName"
             android:layout_width="match_parent"
             android:layout_height="20dp"
-            android:layout_below="@id/ivMovies"
+            android:layout_below="@id/ivProgram"
             android:layout_gravity="bottom"
             android:fontFamily="sans-serif-smallcaps"
             android:gravity="center"
             tools:text="DE: Sky Cinema Highlights HD"
-            android:background="?attr/backgroundLight"
             android:textColor="@color/white"
             android:textSize="12dp"
             android:padding="2dp"
@@ -46,4 +36,12 @@
             android:marqueeRepeatLimit="marquee_forever"
             android:typeface="monospace" />
 
-</androidx.cardview.widget.CardView>
+        <View
+            android:id="@+id/overlay_full"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#A0232526"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+</RelativeLayout>

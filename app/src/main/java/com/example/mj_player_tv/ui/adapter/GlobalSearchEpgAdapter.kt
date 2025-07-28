@@ -97,6 +97,9 @@ class GlobalSearchEpgAdapter(private val fragment: GlobalSearchFragment, private
             holder.binding.programName.isSelected = hasFocus
             if (hasFocus) {
                 fragment.showEpgList(tvchannel)
+                holder.binding.overlayFull.visibility = View.GONE
+            } else {
+                holder.binding.overlayFull.visibility = View.VISIBLE
             }
         }
 

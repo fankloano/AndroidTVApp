@@ -39,8 +39,12 @@ import com.example.mj_player_tv.ui.adapter.GlobalSearchPlaylistAdapter
 import com.example.mj_player_tv.ui.adapter.MoviesAdapter
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
@@ -50,6 +54,7 @@ import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import androidx.core.view.isGone
 
 @UnstableApi
 class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
@@ -73,6 +78,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
     private var lastSearchQuery = ""
 
+    private var currentfilterOption: Boolean? = null
+
     private val binding get() = _binding!!
 
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
@@ -93,9 +100,20 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         )
     }
 
-
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
             requireActivity().application
         )
     }
@@ -176,7 +194,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             if (actionId == EditorInfo.IME_ACTION_DONE ||
                 (event != null && event.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP)) {
 
-                val currentText = binding.editTextSearch.text.toString()
+                val currentText = binding.editTextSearch.text.toString().trim()
                 // Deine Funktion aufrufen
                 if (currentText != lastSearchQuery && currentText.isNotEmpty()) {
                     lastSearchQuery = currentText
@@ -216,6 +234,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         binding.ivSettings.setOnClickListener {
+            currentfilterOption = helpViewModel.settings?.globalSearchFilteredCategories
             binding.linLayoutSearchoptionsMenu.visibility = View.VISIBLE
             binding.relLayoutFiltersearch.requestFocus()
         }
@@ -246,6 +265,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         binding.relLayoutFiltersearch.setOnKeyListener { _, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 binding.linLayoutSearchoptionsMenu.visibility = View.GONE
+                if (currentfilterOption != helpViewModel.settings?.globalSearchFilteredCategories) {
+                    lastSearchQuery = ""
+                }
                 binding.editTextSearch.requestFocus()
                 return@setOnKeyListener true
             }
@@ -614,6 +636,14 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             }
             return@setOnKeyListener false
         }
+
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
+            binding.recyclerItems.requestFocus()
+        }
+
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
+            binding.recyclerItems.requestFocus()
+        }
     }
 
     private fun showSearchHistory() {
@@ -776,7 +806,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     fun showDetailEpg(epgDataOB: EpgDataOB) {
-        if (binding.relLayoutEpgDetail.visibility == View.GONE) {
+        if (binding.relLayoutEpgDetail.isGone) {
             binding.relLayoutEpgDetail.visibility = View.VISIBLE
         }
         binding.tvDetailepgName.text = epgDataOB.name
@@ -900,6 +930,13 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             adapter = epgListAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
+            addItemDecoration(
+                DpadLinearSpacingDecoration.create(
+                    perpendicularEdgeSpacing = 10,
+                    itemSpacing = 6,
+                    edgeSpacing = 10
+                )
+            )
         }
     }
 

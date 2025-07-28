@@ -20,6 +20,8 @@ import com.example.mj_player_tv.databinding.FragmentSearchMovieBycategoryBinding
 import com.example.mj_player_tv.ui.adapter.SearchMoviesAdapter
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
@@ -53,6 +55,12 @@ class SearchMovieByCategoryFragment : Fragment(R.layout.fragment_search_movie_by
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
             requireActivity().application
         )
     }
@@ -202,10 +210,7 @@ class SearchMovieByCategoryFragment : Fragment(R.layout.fragment_search_movie_by
     }
 
     fun closeFragment() {
-        val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (mainFragment is MoviesFragment) {
-            mainFragment.setFocusToMovies()
-        }
+        moviesViewModel.requestFocusToMovies()
         xtreamViewModel.movieSearchList = mutableListOf()
         parentFragmentManager.popBackStack()
     }

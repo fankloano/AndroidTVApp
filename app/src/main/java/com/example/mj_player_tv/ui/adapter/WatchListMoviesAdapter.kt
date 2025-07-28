@@ -14,6 +14,7 @@ import coil.load
 import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.MovieOB
 import com.example.mj_player_tv.database.help.Movie
+import com.example.mj_player_tv.databinding.RvItemGlobalsearchmoviesBinding
 import com.example.mj_player_tv.databinding.RvItemMoviesBinding
 import com.example.mj_player_tv.ui.MoviesFragment
 import com.example.mj_player_tv.ui.WatchListFragment
@@ -25,7 +26,7 @@ class WatchListMoviesAdapter(private val onClickListener: WatchListMoviesAdapter
 
     var currentAccount: Accounts? = null
 
-    inner class ViewHolder(val binding: RvItemMoviesBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ViewHolder(val binding: RvItemGlobalsearchmoviesBinding) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(movie: MovieOB) {
             binding.apply {
@@ -59,7 +60,7 @@ class WatchListMoviesAdapter(private val onClickListener: WatchListMoviesAdapter
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = RvItemMoviesBinding.inflate(
+        val binding = RvItemGlobalsearchmoviesBinding.inflate(
             LayoutInflater.from(parent.context),
             parent,
             false

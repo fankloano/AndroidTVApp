@@ -56,6 +56,10 @@ import androidx.core.view.isGone
 import kotlinx.coroutines.delay
 import androidx.core.view.isVisible
 import com.example.mj_player_tv.database.entity.EpisodesOB
+import com.example.mj_player_tv.viewmodel.MoviesViewModel
+import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
+import com.example.mj_player_tv.viewmodel.SeriesViewModel
+import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 
 @UnstableApi
 class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
@@ -92,9 +96,20 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         )
     }
 
-
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val seriesViewModel: SeriesViewModel by activityViewModels {
+        SeriesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val moviesViewModel: MoviesViewModel by activityViewModels {
+        MoviesViewModelFactory(
             requireActivity().application
         )
     }
@@ -301,6 +316,21 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             return@setOnKeyListener false
         }
 
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
+            if (!seriesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvHistorySeries.requestFocus()
+            }
+        }
+
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
+            if (!moviesAdapter?.currentList.isNullOrEmpty()) {
+                binding.recyclerItems.requestFocus()
+            } else {
+                binding.rvHistoryMovies.requestFocus()
+            }
+        }
     }
 
 
