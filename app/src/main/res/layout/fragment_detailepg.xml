@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_rounded_rightup_rightdown_gradient_fullepg_detailepg"
+    android:id="@+id/detailepgcontainerview"
+    android:padding="5dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+        <TextView
+            android:id="@+id/tv_currentStartTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="08:20"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="10dp"
+            android:textColor="#CBFFFFFF"
+            android:textSize="12sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"/>
+
+        <TextView
+            android:id="@+id/tv_currentEndTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="2dp"
+            tools:text=" - 08:20"
+            android:textColor="#CBFFFFFF"
+            android:textSize="12sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/tv_currentStartTime"/>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="80dp"
+            android:layout_height="5dp"
+            android:padding="1dp"
+            android:progress="20"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tv_currentEndTime"
+            android:layout_marginTop="10dp"
+            app:layout_constraintStart_toEndOf="@id/tv_currentEndTime"
+            android:layout_marginStart="15dp"
+            android:progressTint="?attr/mainPrimaryColor"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/tv_remainingTimeCurrentProgram"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toEndOf="@id/progressBar"
+            tools:text="1h 25min"
+            android:layout_marginTop="10dp"
+            android:layout_marginStart="15dp"
+            android:textSize="12sp"
+            android:textColor="?attr/textColorMidLight"/>
+
+        <TextView
+            android:id="@+id/tv_currentProgram"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="6dp"
+            tools:text="Es war einmal in Amerika"
+            android:textColor="?attr/textMainColor"
+            android:textSize="15sp"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:marqueeRepeatLimit="marquee_forever"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_currentStartTime"/>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_mainInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_currentProgram">
+
+        <TextView
+            android:id="@+id/tv_currentSubtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginEnd="10dp"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            tools:text="Folge 5, Staffel 10 - Es war einmal ein Mann"
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            android:textStyle="" />
+
+        <TextView
+            android:id="@+id/tv_currentCategory"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="2dp"
+            tools:text="Action, Abenteuer"
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            android:textStyle=""
+            android:layout_below="@id/tv_currentSubtitle"/>
+
+        <TextView
+            android:id="@+id/tv_currentCountry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text=" | DE"
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            android:layout_marginStart="5dp"
+            android:textStyle=""
+            android:layout_toEndOf="@id/tv_currentCategory"
+            android:layout_below="@id/tv_currentSubtitle"/>
+
+        <TextView
+            android:id="@+id/tv_currentDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            tools:text="| 2017"
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            android:layout_marginStart="5dp"
+            android:textStyle=""
+            android:layout_toEndOf="@id/tv_currentCountry"
+            android:layout_below="@id/tv_currentSubtitle"/>
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_description"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="3dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp"
+            android:layout_marginTop="3dp"
+            android:layout_marginBottom="8dp"
+            android:focusableInTouchMode="true"
+            android:focusable="true"
+            android:scrollbars="vertical"
+            android:overScrollMode="never"
+            android:fadeScrollbars="false"
+            android:background="?attr/backgroundDark"
+            tools:text="In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt."
+            android:textColor="?attr/textColorLight"
+            android:textSize="13sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_mainInfo" />
+
+        <View
+            android:id="@+id/gradientView"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@drawable/gradient_overlay_description"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tv_description"
+            app:layout_constraintEnd_toEndOf="@id/tv_description" />
+
+        <View
+            android:id="@+id/descriptionborder"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="1dp"
+            android:layout_marginEnd="1dp"
+            android:paddingStart="5dp"
+            android:paddingEnd="5dp"
+            android:paddingTop="6dp"
+            android:paddingBottom="8dp"
+            android:layout_marginTop="1dp"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone"
+            android:background="@drawable/background_border_grey_rounded"
+            app:layout_constraintBottom_toBottomOf="@id/tv_description"
+            app:layout_constraintTop_toTopOf="@id/tv_description"
+            app:layout_constraintStart_toStartOf="@id/tv_description"
+            app:layout_constraintEnd_toEndOf="@id/tv_description" />
+
+
+        <ImageView
+            android:id="@+id/iv_moretext"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="-10dp"
+            android:visibility="gone"
+            android:src="@drawable/ic_arrow_down"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="@id/tv_description"
+            app:layout_constraintEnd_toEndOf="@id/tv_description"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
