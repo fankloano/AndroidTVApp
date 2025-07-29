@@ -57,6 +57,8 @@ import com.example.mj_player_tv.database.entity.TvChannelOB_
 import com.example.mj_player_tv.database.help.AccountMovieCategory
 import com.example.mj_player_tv.database.help.AccountSeriesCategory
 import com.example.mj_player_tv.database.help.AccountTvCategory
+import com.example.mj_player_tv.database.help.GlobalSearchItem
+import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
 import com.example.mj_player_tv.network.model.plex.items.Metadata
 import com.example.mj_player_tv.network.model.stalker.movies.MovieData
 import com.example.mj_player_tv.network.model.tmdb.imdb_id.TMDB_imdb_id
@@ -385,15 +387,9 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var movieSelectionOption = 0
 
-    var currentGlobalSearchTvPlaylist: Accounts? = null
+    var selectedGlobalSearchCategory: GlobalSearchMainCategory? = null
 
-    var currentGlobalSearchProgramPlaylist: Accounts? = null
-
-    var currentGlobalSearchMoviePlaylist: Accounts? = null
-
-    var currentGlobalSearchSeriePlaylist: Accounts? = null
-
-    var currentSelectedGlobalSearchCategory: String = ""
+    var selectedGlobalSearchAccount: Accounts? = null
 
     var currentSelectedWatchlist: String = ""
 
@@ -1537,25 +1533,11 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         Log.d("NEWWORKER", "EPGWORKER: ${epgSource.name} UM: $executionTime")
     }
 
-    private val _playlistsWithTvChannels = MutableStateFlow<Map<Accounts, List<ChannelPositions>>>(
-        emptyMap()
-    )
-    val playlistsWithTvChannels: StateFlow<Map<Accounts, List<ChannelPositions>>> = _playlistsWithTvChannels.asStateFlow()
-
-    private val _playlistsWithMovies = MutableStateFlow<Map<Accounts, List<MovieOB>>>(emptyMap())
-    val playlistsWithMovies: StateFlow<Map<Accounts, List<MovieOB>>> = _playlistsWithMovies.asStateFlow()
-
-    private val _playlistsWithSeries = MutableStateFlow<Map<Accounts, List<SeriesOB>>>(emptyMap())
-    val playlistsWithSeries: StateFlow<Map<Accounts, List<SeriesOB>>> = _playlistsWithSeries.asStateFlow()
-
-    private val _playlistsWithPrograms = MutableStateFlow<Map<Accounts, Map<ChannelPositions, List<EpgDataOB>>>>(emptyMap())
-    val playlistsWithPrograms: StateFlow<Map<Accounts, Map<ChannelPositions, List<EpgDataOB>>>> = _playlistsWithPrograms.asStateFlow()
+    private val _searchResults = MutableStateFlow<List<GlobalSearchItem>>(emptyList())
+    val searchResults: StateFlow<List<GlobalSearchItem>> = _searchResults.asStateFlow()
 
     fun resetGlobalSearchData() {
-        _playlistsWithTvChannels.value = emptyMap()
-        _playlistsWithMovies.value = emptyMap()
-        _playlistsWithSeries.value = emptyMap()
-        _playlistsWithPrograms.value = emptyMap()
+        _searchResults.value = emptyList()
     }
 
     private val _isSearching = MutableStateFlow(false)
@@ -1588,7 +1570,12 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                         compareBy { it.name.lowercase() }
                     )
                 }
-                _playlistsWithTvChannels.value = tvChannelPositions
+                tvChannelPositions.forEach { (account, channels) ->
+                    if (channels.isNotEmpty()) {
+                        _searchResults.update { it + GlobalSearchItem.TvChannels(account, channels) }
+                    }
+                }
+
                 val searchProgramsJob = async { searchPrograms(searchString, showFilteredCategories) }
 
                 val playlistsQuery = accountBox.query(Accounts_.isSelected.equal(true)).order(Accounts_.name).build()
@@ -1624,49 +1611,34 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             val movies = moviesJob.await()
 
             if (movies.isNotEmpty()) {
+                val filtered = if (showFilteredCategories) {
+                    val favCats = movieCatBox.query(MovieCategoryOB_.favorite.equal(true)).build().find()
+                    movies.filter { it.relatedMovieCategoryId in favCats.map { it.movieCatId } }
+                } else movies
 
-                _playlistsWithMovies.update { currentMap ->
-                    if (showFilteredCategories) {
-                        val filteredMovieCategories = movieCatBox.query(
-                            MovieCategoryOB_.favorite.equal(true)
-                        ).build().find().associateBy { it.movieCatId }
-
-                        val filteredMovies = movies.filter { it.relatedMovieCategoryId in filteredMovieCategories }
-                        if (filteredMovies.isNotEmpty()) {
-                            currentMap + (playlist to filteredMovies)
-                        } else {
-                            currentMap // einfach unverändert zurückgeben → Playlist wird nicht hinzugefügt
-                        }
-                    } else {
-                        currentMap + (playlist to movies)
-                    }
+                if (filtered.isNotEmpty()) {
+                    _searchResults.update { it + GlobalSearchItem.Movies(playlist, filtered) }
                 }
-            } else {
+            }
+            else {
                 Log.d("GS CHECKER", "get movies OK: ${playlist.name} = EMPTY")
             }
 
             val series = seriesJob.await()
 
             if (series.isNotEmpty()) {
+                val filtered = if (showFilteredCategories) {
+                    val favCats = seriesCatBox.query(SeriesCategoryOB_.favorite.equal(true)).build().find()
+                    series.filter { it.relatedSeriesCategoryId in favCats.map { it.seriesCatId } }
+                } else series
 
-                _playlistsWithSeries.update { currentMap ->
-                    if (showFilteredCategories) {
-                        val filteredSeriesCategories = seriesCatBox.query(
-                            SeriesCategoryOB_.favorite.equal(true)
-                        ).build().find().associateBy { it.seriesCatId }
+                if (filtered.isNotEmpty()) {
+                    _searchResults.update { it + GlobalSearchItem.Series(playlist, filtered) }
+                } else {
 
-                        val filteredSeries = series.filter { it.relatedSeriesCategoryId in filteredSeriesCategories }
-
-                        if (filteredSeries.isNotEmpty()) {
-                            currentMap + (playlist to filteredSeries)
-                        } else {
-                            currentMap
-                        }
-                    } else {
-                        currentMap + (playlist to series)
-                    }
                 }
-            } else {
+            }
+            else {
                 Log.d("GS CHECKER", "get series OK: ${playlist.name} = EMPTY")
             }
         }
@@ -1706,8 +1678,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             ).build().find()
 
             if (matchingChannelPositions.isNotEmpty()) {
-                matchingChannelPositions.forEach {
-                }
+
                 val groupedTvChannels = matchingChannelPositions.map { tvChannel ->
                     val epgChannelId = tvChannel.tvchannel.target.linkedEpgChannel?.target?.chEpgId
                     val epgDataForChannel = matchingEpgEntries.filter { it.epgChId == epgChannelId }
@@ -1716,13 +1687,25 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
                 val accountToTvChannelMap: Map<Accounts, Map<ChannelPositions, List<EpgDataOB>>> =
                     groupedTvChannels
-                        .groupBy { it.first.tvcategory.target.tvaccount.target }
+                        .filter {
+                            it.first.tvcategory.target?.tvaccount?.target != null
+                        }
+                        .groupBy {
+                            it.first.tvcategory.target!!.tvaccount.target!!
+                        }
                         .mapValues { entry ->
                             entry.value.groupBy { it.first }
                                 .mapValues { tvChannelEntry -> tvChannelEntry.value.flatMap { it.second } }
                         }
 
-                _playlistsWithPrograms.value = accountToTvChannelMap
+
+                accountToTvChannelMap.forEach { (account, channelMap) ->
+                    if (channelMap.isNotEmpty()) {
+                        val asList = channelMap.map { it.key to it.value }
+                        _searchResults.update { it + GlobalSearchItem.Programs(account, asList) }
+                    }
+                }
+
             } else {
                 return@launch
             }
@@ -1838,6 +1821,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                                     val seriesOB = SeriesOB(
                                         id = 0,
                                         idByAccountData = idByAccountData,
+                                        accountId =  playlist.id,
                                         seriesId = seriesData.series_id.toString(),
                                         relatedSeriesCategoryId = seriesData.category_id ?: "",
                                         seriesName = seriesData.name ?: "",

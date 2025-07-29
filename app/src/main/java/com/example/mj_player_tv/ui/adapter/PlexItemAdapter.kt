@@ -60,7 +60,7 @@ class PlexItemAdapter(private val onClickListener: PlexItemAdapter.OnClickListen
                     View.INVISIBLE
                 }
 
-                binding.cardviewMovie.setOnKeyListener { _, keyCode, event ->
+                binding.cardviewTvchannel.setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && event.action == KeyEvent.ACTION_DOWN) {
                         // Rufen Sie die Funktion im Fragment auf
                         if (bindingAdapterPosition % 7 == 0) {
@@ -81,7 +81,7 @@ class PlexItemAdapter(private val onClickListener: PlexItemAdapter.OnClickListen
                     }
                     if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
                         if (bindingAdapterPosition == itemCount - 1) {
-                            binding.cardviewMovie.requestFocus()
+                            binding.cardviewTvchannel.requestFocus()
                             return@setOnKeyListener true
                         }
                     }
@@ -105,7 +105,7 @@ class PlexItemAdapter(private val onClickListener: PlexItemAdapter.OnClickListen
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = getItem(position)!!
         holder.bind(item)
-        holder.binding.cardviewMovie.setOnFocusChangeListener { _, hasFocus ->
+        holder.binding.cardviewTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvMovies.isSelected = hasFocus
             if (hasFocus && helpViewModel.currentPlexItemId != item.guid) {
                 fragment.resetDetailsUi()
@@ -113,10 +113,10 @@ class PlexItemAdapter(private val onClickListener: PlexItemAdapter.OnClickListen
             } else {
             }
         }
-        holder.binding.cardviewMovie.setOnClickListener {
+        holder.binding.cardviewTvchannel.setOnClickListener {
             onClickListener.onClick(item)
         }
-        holder.binding.cardviewMovie.setOnLongClickListener {
+        holder.binding.cardviewTvchannel.setOnLongClickListener {
 
             true
         }

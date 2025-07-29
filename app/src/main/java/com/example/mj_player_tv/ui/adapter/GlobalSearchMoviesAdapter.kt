@@ -42,7 +42,7 @@ class GlobalSearchMoviesAdapter(private val onClickListener: GlobalSearchMoviesA
 
                 binding.tvIsPartlyWatched.visibility = if (movie.isPartlyWatched) View.VISIBLE else View.INVISIBLE
 
-                binding.cardviewMovie.setOnKeyListener { _, keyCode, event ->
+                binding.cardviewTvchannel.setOnKeyListener { _, keyCode, event ->
                     if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                         fragment.focusToPlaylist()
                         return@setOnKeyListener true
@@ -67,10 +67,10 @@ class GlobalSearchMoviesAdapter(private val onClickListener: GlobalSearchMoviesA
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val movie = getItem(position)!!
         holder.bind(movie)
-        holder.binding.cardviewMovie.setOnFocusChangeListener { _, hasFocus ->
+        holder.binding.cardviewTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvMovies.isSelected = hasFocus
         }
-        holder.binding.cardviewMovie.setOnClickListener {
+        holder.binding.cardviewTvchannel.setOnClickListener {
             onClickListener.onClick(movie)
         }
     }

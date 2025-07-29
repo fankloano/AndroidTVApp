@@ -899,6 +899,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     private fun onAccountClicked(position: Int) {
+
+        val list = tvAccountCategoryAdapter.currentList
+
+        if (position !in list.indices) {
+            return
+        }
+
         val item = tvAccountCategoryAdapter.currentList[position] as AccountTvCategory.Account
 
         if (expandedAccountId == item.id) {

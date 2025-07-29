@@ -64,7 +64,7 @@ class GlobalSearchTvChannelsAdapter(private val onClickListener: GlobalSearchTvC
                     tvIsFavorite.visibility = View.INVISIBLE
                 }
 
-                binding.cardviewMovie.setOnKeyListener { _, keyCode, event ->
+                binding.cardviewTvchannel.setOnKeyListener { _, keyCode, event ->
                     if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                         fragment.focusToPlaylist()
                         return@setOnKeyListener true
@@ -93,12 +93,16 @@ class GlobalSearchTvChannelsAdapter(private val onClickListener: GlobalSearchTvC
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val channelPos = getItem(position)!!
         holder.bind(channelPos)
-        holder.binding.cardviewMovie.setOnFocusChangeListener { _, hasFocus ->
+        holder.binding.cardviewTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvChannel.isSelected = hasFocus
-
+            if (hasFocus) {
+                holder.binding.overlayFull.visibility = View.GONE
+            } else {
+                holder.binding.overlayFull.visibility = View.VISIBLE
+            }
         }
 
-        holder.binding.cardviewMovie.setOnClickListener {
+        holder.binding.cardviewTvchannel.setOnClickListener {
             onClickListener.onClick(channelPos)
         }
 

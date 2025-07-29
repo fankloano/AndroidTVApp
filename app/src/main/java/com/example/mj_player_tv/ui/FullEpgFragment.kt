@@ -970,10 +970,12 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                     }
                     val currentEpgPosition = fullEpgAdapter?.currentList?.indexOf(currentEpg)
                     binding.rvFullepg.post {
-                        if (currentEpgPosition != null) {
-                            binding.rvFullepg.setSelectedPosition(currentEpgPosition)
-                            if (currentEpg != null) {
-                                showDetailEpg(currentEpg)
+                        val safeBinding = _binding ?: return@post  // binding ist evtl. schon null
+
+                        currentEpgPosition?.let { pos ->
+                            safeBinding.rvFullepg.setSelectedPosition(pos)
+                            currentEpg?.let { epg ->
+                                showDetailEpg(epg)
                             }
                         }
                     }

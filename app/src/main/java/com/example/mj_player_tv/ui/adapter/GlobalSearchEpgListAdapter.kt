@@ -24,7 +24,9 @@ import java.util.Date
 import java.util.Locale
 
 @UnstableApi
-class GlobalSearchEpgListAdapter(private val onClickListener: GlobalSearchEpgListAdapter.OnClickListener, private val fragment: GlobalSearchFragment, private val helpViewModel: HelpViewModel) : ListAdapter<EpgDataOB, GlobalSearchEpgListAdapter.ViewHolder>(
+class GlobalSearchEpgListAdapter(
+    private val onEpgFocused: (EpgDataOB) -> Unit,
+    private val helpViewModel: HelpViewModel) : ListAdapter<EpgDataOB, GlobalSearchEpgListAdapter.ViewHolder>(
     FULLEPG_COMPERATOR) {
 
     var selectedChannel: ChannelPositions? = null
@@ -66,23 +68,6 @@ class GlobalSearchEpgListAdapter(private val onClickListener: GlobalSearchEpgLis
                 binding.ivCatchup.visibility = View.VISIBLE
             }
 
-
-            binding.relLayoutFullepgitem.setOnKeyListener { _, keyCode, event ->
-                if (((keyCode) == KeyEvent.KEYCODE_BACK || (keyCode) == KeyEvent.KEYCODE_DPAD_LEFT) && event.action == KeyEvent.ACTION_DOWN) {
-                    fragment.focusToEpgChannels()
-                    return@setOnKeyListener true
-                }
-                if (((keyCode) == KeyEvent.KEYCODE_DPAD_UP && event.action == KeyEvent.ACTION_DOWN) && bindingAdapterPosition == 0) {
-                    binding.relLayoutFullepgitem.requestFocus()
-                    return@setOnKeyListener true
-                }
-                if (((keyCode) == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) && bindingAdapterPosition == (itemCount - 1)) {
-                    binding.relLayoutFullepgitem.requestFocus()
-                    return@setOnKeyListener true
-                }
-                return@setOnKeyListener false
-            }
-
         }
 
         fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {
@@ -122,14 +107,10 @@ class GlobalSearchEpgListAdapter(private val onClickListener: GlobalSearchEpgLis
             holder.binding.tvSubTitleProgram.isSelected = hasFocus
             if (hasFocus) {
                 holder.binding.overlayFull.visibility = View.GONE
-                fragment.showDetailEpg(epgData)
+                onEpgFocused.invoke(epgData)
             } else {
                 holder.binding.overlayFull.visibility = View.VISIBLE
             }
-        }
-
-        holder.binding.relLayoutFullepgitem.setOnClickListener {
-            onClickListener.onClick(epgData)
         }
     }
 

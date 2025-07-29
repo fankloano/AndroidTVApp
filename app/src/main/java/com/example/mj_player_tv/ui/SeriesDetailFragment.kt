@@ -121,6 +121,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         if (helpViewModel.currentFocusedSerie != null) {
             currentAccount = helpViewModel.currentFocusedSerie?.accountId?.let { accountBox.get(it) }
+            Log.d("SERIESDETAILGLOBALSEARCH", "$currentAccount")
             if (currentAccount != null) {
                 if (currentAccount!!.isXtream) {
                     if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {

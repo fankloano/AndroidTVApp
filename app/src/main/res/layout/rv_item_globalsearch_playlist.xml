@@ -2,6 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="6dp"
     android:id="@+id/const_gs_pl"
     android:focusable="true"
@@ -18,5 +19,6 @@
         android:textColor="@drawable/selector_textview_watchlist_accounts"
         android:duplicateParentState="true"
         android:layout_centerInParent="true"/>
+
 
 </RelativeLayout>

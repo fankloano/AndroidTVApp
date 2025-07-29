@@ -46,6 +46,7 @@
 
     <style name="roundedImageViewBottomRight" parent="">
         <item name="cornerFamily">rounded</item>
-        <item name="cornerSizeBottomRight">24dp</item>
+        <item name="cornerSizeBottomRight">12dp</item>
     </style>
+
 </resources>

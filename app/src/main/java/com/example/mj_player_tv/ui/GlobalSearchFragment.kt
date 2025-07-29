@@ -27,16 +27,13 @@ import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.SeasonsOB
 import com.example.mj_player_tv.database.entity.Settings
-import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.databinding.FragmentSearchGlobalBinding
-import com.example.mj_player_tv.ui.adapter.GlobalSearchEpgAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchEpgListAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchHistoryAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchMoviesAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchSeriesAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchTvChannelsAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchPlaylistAdapter
-import com.example.mj_player_tv.ui.adapter.MoviesAdapter
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.MoviesViewModel
@@ -50,11 +47,14 @@ import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
 import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
 import com.rubensousa.dpadrecyclerview.FocusableDirection
-import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
-import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import androidx.core.view.isGone
+import com.example.mj_player_tv.database.entity.MovieOB
+import com.example.mj_player_tv.database.entity.SeriesOB
+import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
+import com.example.mj_player_tv.database.help.GlobalSearchItem
+import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.ui.adapter.GlobalSearchItemsAdapter
+import kotlinx.coroutines.flow.collectLatest
 
 @UnstableApi
 class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
@@ -67,12 +67,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
     private lateinit var searchHistoryAdapter: GlobalSearchHistoryAdapter
 
+    private lateinit var globalSearchItemAdapter: GlobalSearchItemsAdapter
+
     private lateinit var playlistAdapter: GlobalSearchPlaylistAdapter
-    private var tvChannelsAdapter: GlobalSearchTvChannelsAdapter? = null
-    private var moviesAdapter: GlobalSearchMoviesAdapter? = null
-    private var seriesAdapter: GlobalSearchSeriesAdapter? = null
-    private var epgAdapter: GlobalSearchEpgAdapter? = null
-    private var epgListAdapter: GlobalSearchEpgListAdapter? = null
 
     private var isFirstOpenGlobalSearch = true
 
@@ -81,6 +78,20 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private var currentfilterOption: Boolean? = null
 
     private val binding get() = _binding!!
+
+    private var selectedGlobalSearchCategory: GlobalSearchMainCategory? = null
+
+    private var lastLoadedCategory: GlobalSearchMainCategory? = null
+
+    private var selectedAccount: Accounts? = null
+
+    private var channelsByAccount: Map<Accounts, List<ChannelPositions>>? = null
+
+    private var moviesByAccount: Map<Accounts, List<MovieOB>>? = null
+
+    private var seriesByAccount: Map<Accounts, List<SeriesOB>>? = null
+
+    private var programsByAccount: Map<Accounts, List<Pair<ChannelPositions, List<EpgDataOB>>>>? = null
 
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
         StalkerViewModelFactory(
@@ -136,11 +147,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
         prepareSearchHistoryRecyclerView()
         preparePlaylistRecyclerView()
-        prepareTvChannelsRecyclerView()
-        prepareMoviesRecyclerView()
-        prepareSeriesRecyclerView()
-        prepareEpgTvChannelsRecyclerView()
-        prepareEpgListRecyclerView()
+        prepareItemsRecyclerView()
 
         showSearchHistory()
 
@@ -304,169 +311,87 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
 
+
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.playlistsWithTvChannels.collect {
-                if (it.isNotEmpty()) {
-                    binding.tvCatTv.visibility = View.VISIBLE
-                    if (helpViewModel.currentSelectedGlobalSearchCategory == "TV") {
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                        if (binding.tvCatTv.isFocused ||
-                            binding.editTextSearch.isFocused ||
-                            binding.ivSettings.isFocused ||
-                            binding.relLayoutFiltersearch.isFocused ||
-                            binding.relLayoutClearhistory.isFocused) {
-                            if (playlistAdapter.currentList.isNotEmpty()) {
-                                binding.recyclerItems.post {
-                                    binding.recyclerItems.setSelectedPosition(0)
-                                    val firstAccount = playlistAdapter.currentList.firstOrNull()
-                                    Log.d("GS SELECT TV ACCOUNT", "${firstAccount?.name}")
-                                    if (firstAccount != null) {
-                                        showFocusedTvChannels(playlistAdapter.currentList.first())
-                                    }
-                                }
-                            }
-                        }
+            helpViewModel.searchResults.collectLatest { results ->
+                val tvResults = results.filterIsInstance<GlobalSearchItem.TvChannels>()
+                channelsByAccount  = tvResults.groupBy(
+                    keySelector = {it.account},
+                    valueTransform = {it.channels}
+                ).mapValues { it.value.flatten() }
+                binding.tvCatTv.visibility =
+                    if (channelsByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
+                val movieResults = results.filterIsInstance<GlobalSearchItem.Movies>()
+                moviesByAccount  = movieResults.groupBy(
+                    keySelector = {it.account},
+                    valueTransform = {it.movies}
+                ).mapValues { it.value.flatten() }
+                binding.tvCatMovies.visibility =
+                    if (moviesByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
+                val seriesResults = results.filterIsInstance<GlobalSearchItem.Series>()
+                seriesByAccount = seriesResults.groupBy(
+                    keySelector = { it.account },
+                    valueTransform = { it.series }
+                ).mapValues { it.value.flatten() } // Alle Listen zu einer Liste zusammenfassen
+                binding.tvCatSeries.visibility =
+                    if (seriesByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
+                val programResults = results.filterIsInstance<GlobalSearchItem.Programs>()
+                programsByAccount = programResults.groupBy(
+                    keySelector = { it.account },
+                    valueTransform = { it.programs }
+                ).mapValues { it.value.flatten() }
+                binding.tvCatEpg.visibility =
+                    if (programsByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
+                if (isFirstOpenGlobalSearch) {
+                    val (firstCategory, firstMap) = listOf(
+                        GlobalSearchMainCategory.TV to channelsByAccount,
+                        GlobalSearchMainCategory.MOVIES to moviesByAccount,
+                        GlobalSearchMainCategory.SERIES to seriesByAccount,
+                        GlobalSearchMainCategory.PROGRAMS to programsByAccount
+                    ).firstOrNull { it.second?.isNotEmpty() == true } ?: return@collectLatest // keine Ergebnisse
+
+                    val firstAccount = firstMap?.keys?.firstOrNull() ?: return@collectLatest
+                    helpViewModel.selectedGlobalSearchCategory = firstCategory
+                    selectedGlobalSearchCategory = firstCategory
+                    when (selectedGlobalSearchCategory) {
+                        GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
+                        GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
+                        GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
+                        GlobalSearchMainCategory.PROGRAMS -> binding.tvCatEpg.requestFocus()
+                        else -> {} // optional: nichts tun oder Default setzen
                     }
-                    if (isFirstOpenGlobalSearch) {
-                        binding.ivShowSearch.visibility = View.VISIBLE
-                        if (binding.recyclerItems.adapter != tvChannelsAdapter) {
-                            binding.recyclerItems.adapter = tvChannelsAdapter
-                        }
-                        isFirstOpenGlobalSearch = false
-                        helpViewModel.currentSelectedGlobalSearchCategory = "TV"
-                        binding.recyclerPlaylists.visibility = View.VISIBLE
-                        focusToTextView()
-                        showFocusedTvChannels(it.keys.first())
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                } else {
-                    binding.tvCatTv.visibility = View.GONE
+                    helpViewModel.selectedGlobalSearchAccount = firstAccount
+                    selectedAccount = firstAccount
+
+                    // 👉 Playlists zur ersten Kategorie setzen
+                    val initialPlaylists = firstMap.keys.toList()
+                    playlistAdapter.submitList(initialPlaylists)
+
+                    updateItemList(firstAccount) // Items der ersten Playlist + Kategorie anzeigen
                 }
             }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.playlistsWithPrograms.collect {
-                if (it.isNotEmpty()) {
-                    if (helpViewModel.currentSelectedGlobalSearchCategory == "EPG") {
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                    binding.tvCatEpg.visibility = View.VISIBLE
-                    if (isFirstOpenGlobalSearch) {
-                        binding.ivShowSearch.visibility = View.VISIBLE
-                        isFirstOpenGlobalSearch = false
-                        helpViewModel.currentSelectedGlobalSearchCategory = "EPG"
-                        binding.recyclerPlaylists.visibility = View.VISIBLE
-                        focusToTextView()
-                        showTvChannelsWithEpg(it.keys.first())
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                } else {
-                    binding.tvCatEpg.visibility = View.GONE
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.playlistsWithMovies.collect {
-                if (it.isNotEmpty()) {
-                    if (helpViewModel.currentSelectedGlobalSearchCategory == "MOVIE") {
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                    binding.tvCatMovies.visibility = View.VISIBLE
-                    if (isFirstOpenGlobalSearch) {
-                        binding.ivShowSearch.visibility = View.VISIBLE
-                        if (binding.recyclerItems.adapter != moviesAdapter) {
-                            binding.recyclerItems.adapter = moviesAdapter
-                        }
-                        isFirstOpenGlobalSearch = false
-                        helpViewModel.currentSelectedGlobalSearchCategory = "MOVIE"
-                        binding.recyclerPlaylists.visibility = View.VISIBLE
-                        focusToTextView()
-                        showFocusedMovies(it.keys.first())
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                } else {
-                    binding.tvCatMovies.visibility = View.GONE
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.playlistsWithSeries.collect {
-                if (it.isNotEmpty()) {
-                    if (helpViewModel.currentSelectedGlobalSearchCategory == "SERIE") {
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                    binding.tvCatSeries.visibility = View.VISIBLE
-                    if (isFirstOpenGlobalSearch) {
-                        binding.ivShowSearch.visibility = View.VISIBLE
-                        if (binding.recyclerItems.adapter != seriesAdapter) {
-                            binding.recyclerItems.adapter = seriesAdapter
-                        }
-                        isFirstOpenGlobalSearch = false
-                        helpViewModel.currentSelectedGlobalSearchCategory = "SERIE"
-                        binding.recyclerPlaylists.visibility = View.VISIBLE
-                        focusToTextView()
-                        showFocusedSeries(it.keys.first())
-                        playlistAdapter.submitList(it.keys.sortedBy { it.name }.toMutableList())
-                    }
-                } else {
-                    binding.tvCatSeries.visibility = View.GONE
-                }
-            }
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.isSearching.collect { searching ->
+            helpViewModel.isSearching.collectLatest { searching ->
                 if (searching) {
-                    binding.tvNodatafound.visibility = View.GONE
+                    // Zeige z.B. ProgressBar, lade Spinner etc.
                     binding.progressBar.visibility = View.VISIBLE
                 } else {
+                    // Verberge ProgressBar, zeige UI mit Ergebnissen
                     binding.progressBar.visibility = View.GONE
-                    if (helpViewModel.playlistsWithTvChannels.value.isEmpty() &&
-                        helpViewModel.playlistsWithMovies.value.isEmpty() &&
-                        helpViewModel.playlistsWithSeries.value.isEmpty() &&
-                        helpViewModel.playlistsWithPrograms.value.isEmpty() && !isFirstOpenGlobalSearch) {
-                        binding.tvNodatafound.visibility = View.VISIBLE
-                    }
                 }
             }
         }
 
 
         binding.tvCatTv.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && helpViewModel.currentSelectedGlobalSearchCategory != "TV" && !helpViewModel.isSearchContainerOpened) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    helpViewModel.currentSelectedGlobalSearchCategory = "TV"
-                    playlistAdapter.submitList(listOf())
-                    binding.tvCatTv.isSelected = true
-                    binding.tvCatMovies.isSelected = false
-                    binding.tvCatEpg.isSelected = false
-                    binding.tvCatSeries.isSelected = false
-                    delay(500)
-                    playlistAdapter.submitList(helpViewModel.playlistsWithTvChannels.value.keys.sortedBy { it.name }
-                        .toMutableList())
-                    if (binding.recyclerItems.adapter != tvChannelsAdapter) {
-                        binding.recyclerItems.adapter = tvChannelsAdapter
-                    }
-                    if (binding.constEpg.visibility == View.VISIBLE) {
-                        binding.recyclerItems.visibility = View.VISIBLE
-                        binding.constEpg.visibility = View.GONE
-                    }
-                    binding.recyclerPlaylists.post {
-                        binding.recyclerPlaylists.setSelectedPosition(0)
-                        val firstAccount = playlistAdapter.currentList.firstOrNull()
-                        if (firstAccount != null) {
-                            showFocusedTvChannels(firstAccount)
-                        }
-                    }
-                    helpViewModel.currentGlobalSearchProgramPlaylist = null
-                    helpViewModel.currentGlobalSearchSeriePlaylist = null
-                    helpViewModel.currentGlobalSearchMoviePlaylist = null
-                    binding.tvSelectedChannel.visibility = View.INVISIBLE
-                    binding.tvSelectedChannel.text = ""
-                }
+            if (hasFocus) {
+                binding.tvCatTv.isSelected = true
+                binding.tvCatMovies.isSelected = false
+                binding.tvCatSeries.isSelected = false
+                binding.tvCatEpg.isSelected = false
+                onCategorySelected(GlobalSearchMainCategory.TV)
             }
         }
 
@@ -488,38 +413,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         binding.tvCatMovies.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && helpViewModel.currentSelectedGlobalSearchCategory != "MOVIE" && !helpViewModel.isSearchContainerOpened) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    playlistAdapter.submitList(listOf())
-                    helpViewModel.currentSelectedGlobalSearchCategory = "MOVIE"
-                    binding.tvCatTv.isSelected = false
-                    binding.tvCatMovies.isSelected = true
-                    binding.tvCatEpg.isSelected = false
-                    binding.tvCatSeries.isSelected = false
-                    delay(500)
-                    playlistAdapter.submitList(helpViewModel.playlistsWithMovies.value.keys.sortedBy { it.name }
-                        .toMutableList())
-                    // Hier prüfen, ob der Adapter bereits gesetzt ist
-                    if (binding.recyclerItems.adapter != moviesAdapter) {
-                        binding.recyclerItems.adapter = moviesAdapter
-                    }
-                    if (binding.constEpg.visibility == View.VISIBLE) {
-                        binding.recyclerItems.visibility = View.VISIBLE
-                        binding.constEpg.visibility = View.GONE
-                    }
-                    binding.recyclerPlaylists.post {
-                        binding.recyclerPlaylists.setSelectedPosition(0)
-                        val firstAccount = playlistAdapter.currentList.firstOrNull()
-                        if (firstAccount != null) {
-                            showFocusedMovies(firstAccount)
-                        }
-                    }
-                    helpViewModel.currentGlobalSearchTvPlaylist = null
-                    helpViewModel.currentGlobalSearchSeriePlaylist = null
-                    helpViewModel.currentGlobalSearchProgramPlaylist = null
-                    binding.tvSelectedChannel.visibility = View.INVISIBLE
-                    binding.tvSelectedChannel.text = ""
-                }
+            if (hasFocus) {
+                binding.tvCatTv.isSelected = false
+                binding.tvCatMovies.isSelected = true
+                binding.tvCatSeries.isSelected = false
+                binding.tvCatEpg.isSelected = false
+                onCategorySelected(GlobalSearchMainCategory.MOVIES)
             }
         }
 
@@ -541,37 +440,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         binding.tvCatSeries.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && helpViewModel.currentSelectedGlobalSearchCategory != "SERIE" && !helpViewModel.isSearchContainerOpened) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    Log.d("EPG VISIBILITY", "visi: ${binding.constEpg.visibility}")
-                    helpViewModel.currentSelectedGlobalSearchCategory = "SERIE"
-                    playlistAdapter.submitList(listOf())
-                    binding.tvCatTv.isSelected = false
-                    binding.tvCatMovies.isSelected = false
-                    binding.tvCatEpg.isSelected = false
-                    binding.tvCatSeries.isSelected = true
-                    delay(500)
-                    playlistAdapter.submitList(helpViewModel.playlistsWithSeries.value.keys.sortedBy { it.name }.toMutableList())
-                    binding.recyclerItems.visibility = View.VISIBLE
-                    binding.recyclerPlaylists.post {
-                        binding.recyclerPlaylists.setSelectedPosition(0)
-                        val firstAccount = playlistAdapter.currentList.firstOrNull()
-                        if (firstAccount != null) {
-                            showFocusedSeries(firstAccount)
-                        }
-                    }
-                    if (binding.recyclerItems.adapter != seriesAdapter) {
-                        binding.recyclerItems.adapter = seriesAdapter
-                    }
-                    if (binding.constEpg.visibility == View.VISIBLE) {
-                        binding.constEpg.visibility = View.GONE
-                    }
-                    helpViewModel.currentGlobalSearchTvPlaylist = null
-                    helpViewModel.currentGlobalSearchMoviePlaylist = null
-                    helpViewModel.currentGlobalSearchProgramPlaylist = null
-                    binding.tvSelectedChannel.visibility = View.INVISIBLE
-                    binding.tvSelectedChannel.text = ""
-                }
+            if (hasFocus) {
+                binding.tvCatTv.isSelected = false
+                binding.tvCatMovies.isSelected = false
+                binding.tvCatSeries.isSelected = true
+                binding.tvCatEpg.isSelected = false
+                onCategorySelected(GlobalSearchMainCategory.SERIES)
             }
         }
 
@@ -593,31 +467,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         binding.tvCatEpg.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus && helpViewModel.currentSelectedGlobalSearchCategory != "EPG" && !helpViewModel.isSearchContainerOpened) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    binding.recyclerItems.visibility = View.GONE
-                    Log.d("EPG VISIBILITY", "visi 2: ${binding.constEpg.visibility}")
-                    helpViewModel.currentSelectedGlobalSearchCategory = "EPG"
-                    playlistAdapter.submitList(listOf())
-                    binding.tvCatTv.isSelected = false
-                    binding.tvCatMovies.isSelected = false
-                    binding.tvCatSeries.isSelected = false
-                    binding.tvCatEpg.isSelected = true
-                    delay(500)
-                    playlistAdapter.submitList(helpViewModel.playlistsWithPrograms.value.keys.sortedBy { it.name }
-                        .toMutableList())
-                    binding.constEpg.visibility = View.VISIBLE
-                    binding.recyclerPlaylists.post {
-                        binding.recyclerPlaylists.setSelectedPosition(0)
-                        val firstAccount = playlistAdapter.currentList.firstOrNull()
-                        if (firstAccount != null) {
-                            showTvChannelsWithEpg(firstAccount)
-                        }
-                    }
-                    helpViewModel.currentGlobalSearchTvPlaylist = null
-                    helpViewModel.currentGlobalSearchMoviePlaylist = null
-                    helpViewModel.currentGlobalSearchSeriePlaylist = null
-                }
+            if (hasFocus) {
+                binding.tvCatTv.isSelected = false
+                binding.tvCatMovies.isSelected = false
+                binding.tvCatSeries.isSelected = false
+                binding.tvCatEpg.isSelected = true
+                onCategorySelected(GlobalSearchMainCategory.PROGRAMS)
             }
         }
 
@@ -645,6 +500,89 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             binding.recyclerItems.requestFocus()
         }
     }
+
+    private fun getDisplayableItemsFor(account: Accounts, category: GlobalSearchMainCategory): List<GlobalSearchDisplayItem> {
+        return when (category) {
+            GlobalSearchMainCategory.TV -> channelsByAccount?.get(account)?.map { GlobalSearchDisplayItem.ChannelItem(it) } ?: emptyList()
+            GlobalSearchMainCategory.MOVIES -> moviesByAccount?.get(account)?.map { GlobalSearchDisplayItem.MovieItem(it) } ?: emptyList()
+            GlobalSearchMainCategory.SERIES -> seriesByAccount?.get(account)?.map { GlobalSearchDisplayItem.SeriesItem(it) } ?: emptyList()
+            GlobalSearchMainCategory.PROGRAMS -> {
+                programsByAccount?.get(account)?.let { programs ->
+                    listOf(GlobalSearchDisplayItem.ProgramItem(programs))
+                } ?: emptyList()
+            }
+
+        }
+    }
+
+    fun updateItemList(account: Accounts) {
+        if (account == selectedAccount && selectedGlobalSearchCategory == lastLoadedCategory) {
+            return
+        }
+        if (selectedGlobalSearchCategory != null) {
+            globalSearchItemAdapter.submitList(null)
+            when (selectedGlobalSearchCategory) {
+                GlobalSearchMainCategory.PROGRAMS -> binding.recyclerItems.setSpanCount(1)
+                else -> {
+                    binding.recyclerItems.setSpanCount(7)
+                } // optional: nichts tun oder Default setzen
+            }
+            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.selectedGlobalSearchAccount)
+            val newPosition = playlistAdapter.currentList.indexOf(account)
+            helpViewModel.selectedGlobalSearchAccount = account
+            selectedAccount = account
+            lastLoadedCategory = selectedGlobalSearchCategory
+            playlistAdapter.notifyItemChanged(oldPosition)
+            playlistAdapter.notifyItemChanged(newPosition)
+            val items = getDisplayableItemsFor(account, selectedGlobalSearchCategory!!)
+            globalSearchItemAdapter.submitList(items)
+        }
+    }
+
+    fun onCategorySelected(category: GlobalSearchMainCategory) {
+        if (selectedGlobalSearchCategory == category) {
+            // Kategorie ist schon aktiv → nichts tun
+            return
+        }
+        playlistAdapter.submitList(null)
+        helpViewModel.selectedGlobalSearchCategory = category
+        selectedGlobalSearchCategory = category
+
+        val accounts = when (category) {
+            GlobalSearchMainCategory.TV -> channelsByAccount?.keys?.toList()
+            GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys?.toList()
+            GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys?.toList()
+            GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
+        }
+
+        playlistAdapter.submitList(accounts)
+        helpViewModel.selectedGlobalSearchAccount = accounts?.firstOrNull()
+        selectedAccount = accounts?.firstOrNull()
+        selectedAccount?.let { updateItemList(it) }
+    }
+
+    fun focusToItems() {
+        if (globalSearchItemAdapter.currentList.isNotEmpty()) {
+
+            binding.recyclerItems.requestFocus()
+        } else {
+            return
+        }
+    }
+
+
+    fun updatePlaylistsForSelectedCategory() {
+        val accounts = when (selectedGlobalSearchCategory) {
+            GlobalSearchMainCategory.TV -> channelsByAccount?.keys?.toList()
+            GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys?.toList()
+            GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys?.toList()
+            GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
+            null -> TODO()
+        }
+
+        playlistAdapter.submitList(accounts)
+    }
+
 
     private fun showSearchHistory() {
         if (helpViewModel.settings != null) {
@@ -691,142 +629,11 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         binding.ivSettings.requestFocus()
     }
 
-    fun showFocusedTvChannels(tvPlaylistAccount: Accounts) {
-        if (tvPlaylistAccount.id != helpViewModel.currentGlobalSearchTvPlaylist?.id) {
-            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.currentGlobalSearchTvPlaylist)
-            val newPosition = playlistAdapter.currentList.indexOf(tvPlaylistAccount)
-            helpViewModel.currentGlobalSearchTvPlaylist = tvPlaylistAccount
-            playlistAdapter.notifyItemChanged(oldPosition)
-            playlistAdapter.notifyItemChanged(newPosition)
-            viewLifecycleOwner.lifecycleScope.launch {
-                // Die passende List<TvChannels> aus dem StateFlow holen
-                val channels = helpViewModel.playlistsWithTvChannels.value[tvPlaylistAccount] ?: emptyList()
-                tvChannelsAdapter?.submitList(listOf())
-                if (channels.isNotEmpty()) {
-
-                    binding.recyclerItems.visibility = View.VISIBLE
-                    // Die Channels in den zweiten RecyclerView laden
-                    tvChannelsAdapter?.submitList(channels)
-                } else {
-                    binding.recyclerItems.visibility = View.GONE
-                }
-            }
-        }
-    }
-
-    fun showFocusedMovies(moviesPlaylistAccount: Accounts) {
-        if (moviesPlaylistAccount.id != helpViewModel.currentGlobalSearchMoviePlaylist?.id) {
-            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.currentGlobalSearchMoviePlaylist)
-            val newPosition = playlistAdapter.currentList.indexOf(moviesPlaylistAccount)
-            helpViewModel.currentGlobalSearchMoviePlaylist = moviesPlaylistAccount
-            playlistAdapter.notifyItemChanged(oldPosition)
-            playlistAdapter.notifyItemChanged(newPosition)
-            viewLifecycleOwner.lifecycleScope.launch {
-                // Die passende List<TvChannels> aus dem StateFlow holen
-                val movies = helpViewModel.playlistsWithMovies.value[moviesPlaylistAccount] ?: emptyList()
-                moviesAdapter?.submitList(listOf())
-                if (movies.isNotEmpty()) {
-                    movies.forEach { channel ->
-                        Log.d("GLOBAL SEARCH MOVIES", "PL: ${moviesPlaylistAccount.name} CHANNELS: ${channel.movieName}")
-                    }
-                    binding.recyclerItems.visibility = View.VISIBLE
-                    // Die Channels in den zweiten RecyclerView laden
-                    moviesAdapter?.submitList(movies)
-                } else {
-                    binding.recyclerItems.visibility = View.GONE
-                }
-            }
-        }
-    }
-
-    fun showFocusedSeries(seriesPlaylistAccount: Accounts) {
-        if (seriesPlaylistAccount.id != helpViewModel.currentGlobalSearchSeriePlaylist?.id) {
-            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.currentGlobalSearchSeriePlaylist)
-            val newPosition = playlistAdapter.currentList.indexOf(seriesPlaylistAccount)
-            helpViewModel.currentGlobalSearchSeriePlaylist = seriesPlaylistAccount
-            playlistAdapter.notifyItemChanged(oldPosition)
-            playlistAdapter.notifyItemChanged(newPosition)
-            viewLifecycleOwner.lifecycleScope.launch {
-                // Die passende List<TvChannels> aus dem StateFlow holen
-                val series = helpViewModel.playlistsWithSeries.value[seriesPlaylistAccount] ?: emptyList()
-                seriesAdapter?.submitList(listOf())
-                if (series.isNotEmpty()) {
-                    series.forEach { channel ->
-                        Log.d("GLOBAL SEARCH SERIES", "PL: ${seriesPlaylistAccount.name} CHANNELS: ${channel.seriesName}")
-                    }
-                    binding.recyclerItems.visibility = View.VISIBLE
-                    // Die Channels in den zweiten RecyclerView laden
-                    seriesAdapter?.submitList(series)
-                } else {
-                    binding.recyclerItems.visibility = View.GONE
-                }
-            }
-        }
-    }
-
-    fun showTvChannelsWithEpg(programPlaylistAccount: Accounts) {
-        if (programPlaylistAccount.id != helpViewModel.currentGlobalSearchProgramPlaylist?.id) {
-            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.currentGlobalSearchProgramPlaylist)
-            val newPosition = playlistAdapter.currentList.indexOf(programPlaylistAccount)
-            helpViewModel.currentGlobalSearchProgramPlaylist = programPlaylistAccount
-            playlistAdapter.notifyItemChanged(oldPosition)
-            playlistAdapter.notifyItemChanged(newPosition)
-            viewLifecycleOwner.lifecycleScope.launch {
-                // Die passende List<TvChannels> aus dem StateFlow holen
-                val tvchannelsWithEpg = helpViewModel.playlistsWithPrograms.value[programPlaylistAccount]?.keys ?: emptyList()
-                epgAdapter?.submitList(listOf())
-                if (tvchannelsWithEpg.isNotEmpty()) {
-
-                    binding.recyclerItems.visibility = View.GONE
-                    binding.recyclerEpg.visibility = View.VISIBLE
-                    binding.constEpg.visibility = View.VISIBLE
-                    // Die Channels in den zweiten RecyclerView laden
-                    epgAdapter?.submitList(tvchannelsWithEpg.toMutableList())
-                    showEpgList(tvchannelsWithEpg.first())
-                } else {
-                    binding.recyclerEpg.visibility = View.GONE
-                }
-            }
-        }
-    }
-
-    fun showEpgList(tvchannelPos: ChannelPositions) {
-        val relatedShowsForChannel = helpViewModel.playlistsWithPrograms.value[helpViewModel.currentGlobalSearchProgramPlaylist]?.get(tvchannelPos)?.sortedBy { it.startTimestamp } ?: emptyList()
-        if (relatedShowsForChannel.isNotEmpty()) {
-            binding.tvSelectedChannel.visibility = View.VISIBLE
-            binding.tvSelectedChannel.text = tvchannelPos.tvchannel.target.showingName
-            binding.recyclerEpglist.visibility = View.VISIBLE
-            epgListAdapter?.selectedChannel = tvchannelPos
-            epgListAdapter?.submitList(relatedShowsForChannel)
-            showDetailEpg(relatedShowsForChannel.first())
-        } else {
-            binding.tvSelectedChannel.visibility = View.INVISIBLE
-            binding.tvSelectedChannel.text = ""
-        }
-    }
-
-    fun showDetailEpg(epgDataOB: EpgDataOB) {
-        if (binding.relLayoutEpgDetail.isGone) {
-            binding.relLayoutEpgDetail.visibility = View.VISIBLE
-        }
-        binding.tvDetailepgName.text = epgDataOB.name
-        if (epgDataOB.sub_title.isNotEmpty()) {
-            binding.tvDetailepgSubtitle.visibility = View.VISIBLE
-            binding.tvDetailepgSubtitle.text = epgDataOB.sub_title
-        } else {
-            binding.tvDetailepgSubtitle.visibility = View.GONE
-        }
-        binding.tvDetailepgDescription.text = epgDataOB.descr
-    }
 
     private fun searchFor(searchTerm: String) {
         viewLifecycleOwner.lifecycleScope.launch {
-                playlistAdapter.submitList(listOf())
-                tvChannelsAdapter?.submitList(listOf())
-                moviesAdapter?.submitList(listOf())
-                seriesAdapter?.submitList(listOf())
-                epgAdapter?.submitList(listOf())
-                epgListAdapter?.submitList(listOf())
+                playlistAdapter.submitList(null)
+                globalSearchItemAdapter.submitList(null)
                 binding.tvCatTv.visibility = View.GONE
                 binding.tvCatMovies.visibility = View.GONE
                 binding.tvCatSeries.visibility = View.GONE
@@ -838,10 +645,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 binding.progressBar.visibility = View.VISIBLE
                 helpViewModel.resetGlobalSearchData()
 
-                helpViewModel.currentGlobalSearchTvPlaylist = null
-                helpViewModel.currentGlobalSearchMoviePlaylist = null
-                helpViewModel.currentGlobalSearchSeriePlaylist = null
-                helpViewModel.currentGlobalSearchProgramPlaylist = null
                 isFirstOpenGlobalSearch = true
                 val settings = helpViewModel.settings
                 if (settings != null) {
@@ -888,55 +691,72 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
-    private fun prepareTvChannelsRecyclerView() {
-        tvChannelsAdapter = GlobalSearchTvChannelsAdapter(onChannelClickListener, this, helpViewModel)
+    private fun prepareItemsRecyclerView() {
+        globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this) { clickedItem ->
+            when (clickedItem) {
+                is GlobalSearchDisplayItem.ChannelItem -> {
+
+                }
+                is GlobalSearchDisplayItem.MovieItem -> {
+                    helpViewModel.currentMovieAccount = selectedAccount
+                    helpViewModel.currentFocusedMovie = clickedItem.movie
+                    openMovieDetailFragment()
+                }
+                is GlobalSearchDisplayItem.SeriesItem -> {
+                    if (selectedAccount != null) {
+                        if (selectedAccount!!.isXtream) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                val seasons =
+                                    xtreamViewModel.getXtreamSerieDetails(clickedItem.series, selectedAccount!!)
+                                clickedItem.series.totalSeasons = seasons.size
+                                helpViewModel.focusedSeasons =
+                                    seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE })
+                                        .toMutableList()
+                                helpViewModel.focusedEpisodes =
+                                    xtreamViewModel.episodesList.sortedWith(
+                                        compareBy(
+                                            { it.seasonNumber },
+                                            { it.episodeNumber })
+                                    ).toMutableList()
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        } else {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
+                                stalkerViewModel.getSeriesDetail(clickedItem.series, selectedAccount!!)
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
+                                    clickedItem.series.totalSeasons = seasons.size
+                                    helpViewModel.focusedSeasons =
+                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                            .thenBy {
+                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
+                                            }).toMutableList()
+                                    helpViewModel.focusedEpisodes =
+                                        stalkerViewModel.episodesList.sortedWith(
+                                            compareBy(
+                                                { it.seasonNumber },
+                                                { it.episodeNumber })
+                                        ).toMutableList()
+                                }
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        }
+                    }
+                }
+                is GlobalSearchDisplayItem.ProgramItem -> {
+
+                }
+            }
+        }
         binding.recyclerItems.apply {
-            adapter = tvChannelsAdapter
+            adapter = globalSearchItemAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
-        }
-    }
-
-    private fun prepareMoviesRecyclerView() {
-        moviesAdapter = GlobalSearchMoviesAdapter(onMovieClickListener, this, helpViewModel)
-        binding.recyclerItems.apply {
-            adapter = moviesAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-        }
-    }
-
-    private fun prepareSeriesRecyclerView() {
-        seriesAdapter = GlobalSearchSeriesAdapter(onSeriesClickListener, this, helpViewModel)
-        binding.recyclerItems.apply {
-            adapter = seriesAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-        }
-    }
-
-    private fun prepareEpgTvChannelsRecyclerView() {
-        epgAdapter = GlobalSearchEpgAdapter(this, helpViewModel)
-        binding.recyclerEpg.apply {
-            adapter = epgAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-        }
-    }
-
-    private fun prepareEpgListRecyclerView() {
-        epgListAdapter = GlobalSearchEpgListAdapter(onEpgDataListener, this, helpViewModel)
-        binding.recyclerEpglist.apply {
-            adapter = epgListAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-            addItemDecoration(
-                DpadLinearSpacingDecoration.create(
-                    perpendicularEdgeSpacing = 10,
-                    itemSpacing = 6,
-                    edgeSpacing = 10
-                )
-            )
         }
     }
 
@@ -1041,6 +861,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         transaction.add(R.id.container_globalsearch_vod_info, MovieDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
+        binding.focusBlocker.requestFocus()
         binding.containerGlobalsearchVodInfo.visibility = View.VISIBLE
     }
 
@@ -1050,39 +871,20 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         transaction.add(R.id.container_globalsearch_vod_info, SeriesDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
+        binding.focusBlocker.requestFocus()
         binding.containerGlobalsearchVodInfo.visibility = View.VISIBLE
     }
 
-
-    fun focusToEpgList() {
-        if (!epgListAdapter?.currentList.isNullOrEmpty()) {
-            binding.recyclerEpglist.requestFocus()
-        } else {
-            return
-        }
-    }
-
-    fun focusToEpgChannels() {
-        if (!epgAdapter?.currentList.isNullOrEmpty()) {
-            binding.recyclerEpg.requestFocus()
-        } else {
-            return
-        }
-    }
-
     fun focusToTextView() {
-        if (helpViewModel.currentSelectedGlobalSearchCategory == "TV") {
-            binding.tvCatTv.requestFocus()
-        } else if (helpViewModel.currentSelectedGlobalSearchCategory == "MOVIE") {
-            binding.tvCatMovies.requestFocus()
-        } else if (helpViewModel.currentSelectedGlobalSearchCategory == "SERIE") {
-            binding.tvCatSeries.requestFocus()
-        } else if (helpViewModel.currentSelectedGlobalSearchCategory == "EPG") {
-            binding.tvCatEpg.requestFocus()
-        } else {
-            return
+        when (selectedGlobalSearchCategory) {
+            GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
+            GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
+            GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
+            GlobalSearchMainCategory.PROGRAMS -> binding.tvCatEpg.requestFocus()
+            else -> {} // optional: nichts tun oder Default setzen
         }
     }
+
 
     fun focusToPlaylist() {
         if (playlistAdapter.currentList.isNotEmpty()) {
@@ -1092,33 +894,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
-    fun focusToItems() {
-        if (helpViewModel.currentSelectedGlobalSearchCategory == "TV") {
-            if (!tvChannelsAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            }
-        } else if (helpViewModel.currentSelectedGlobalSearchCategory == "MOVIE") {
-            if (!moviesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            }
-        } else if (helpViewModel.currentSelectedGlobalSearchCategory == "SERIE") {
-            if (!seriesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            }
-        } else {
-            if (!epgAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerEpg.requestFocus()
-            } else {
-                return
-            }
-        }
-    }
-
     fun closeFragment() {
-        moviesAdapter = null
-        seriesAdapter = null
-        tvChannelsAdapter = null
-        epgAdapter = null
         playlistAdapter.submitList(listOf())
         helpViewModel.resetGlobalSearchData()
         parentFragmentManager.popBackStack()
@@ -1127,12 +903,20 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
     private val backStackListener = FragmentManager.OnBackStackChangedListener {
         if (isAdded && parentFragmentManager.fragments.lastOrNull() == this && helpViewModel.isSearchContainerOpened) {
-            if (helpViewModel.currentSelectedGlobalSearchCategory == "EPG") {
-                binding.recyclerEpglist.requestFocus()
-            } else {
-                focusToItems()
+            if (globalSearchItemAdapter.currentList.isNotEmpty()) {
+                helpViewModel.isSearchContainerOpened = false
+                binding.recyclerItems.requestFocus()
             }
-            helpViewModel.isSearchContainerOpened = false
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (selectedGlobalSearchCategory == GlobalSearchMainCategory.MOVIES) {
+            // keine Aktion nötig
+        } else {
+            onCategorySelected(GlobalSearchMainCategory.MOVIES)
         }
     }
 
@@ -1143,12 +927,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
     override fun onDestroy() {
         super.onDestroy()
-        moviesAdapter = null
-        seriesAdapter = null
-        tvChannelsAdapter = null
-        epgAdapter = null
         playlistAdapter.submitList(listOf())
         helpViewModel.resetGlobalSearchData()
+        helpViewModel.selectedGlobalSearchCategory = null
         _binding = null
     }
 }

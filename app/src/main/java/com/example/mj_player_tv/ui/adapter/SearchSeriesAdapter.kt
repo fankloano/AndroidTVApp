@@ -42,7 +42,7 @@ class SearchSeriesAdapter(private val onClickListener: SearchSeriesAdapter.OnCli
 
                 binding.tvIsPartlyWatched.visibility = if (serie.isPartlyWatched) View.VISIBLE else View.INVISIBLE
 
-                binding.cardviewMovie.setOnKeyListener { _, keyCode, event ->
+                binding.cardviewTvchannel.setOnKeyListener { _, keyCode, event ->
                     if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                         fragment.closeFragment()
                         return@setOnKeyListener true
@@ -55,7 +55,7 @@ class SearchSeriesAdapter(private val onClickListener: SearchSeriesAdapter.OnCli
                     }
                     if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
                         if (bindingAdapterPosition == itemCount - 1) {
-                            binding.cardviewMovie.requestFocus()
+                            binding.cardviewTvchannel.requestFocus()
                             return@setOnKeyListener true
                         }
                     }
@@ -79,10 +79,10 @@ class SearchSeriesAdapter(private val onClickListener: SearchSeriesAdapter.OnCli
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val movie = getItem(position)!!
         holder.bind(movie)
-        holder.binding.cardviewMovie.setOnFocusChangeListener { _, hasFocus ->
+        holder.binding.cardviewTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvMovies.isSelected = hasFocus
         }
-        holder.binding.cardviewMovie.setOnClickListener {
+        holder.binding.cardviewTvchannel.setOnClickListener {
             onClickListener.onClick(movie)
         }
     }
