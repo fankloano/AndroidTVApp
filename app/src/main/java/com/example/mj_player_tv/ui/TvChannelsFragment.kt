@@ -887,6 +887,12 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         tvAccountCategoryAdapter.submitList(currentList)
         binding.rvLayoutTvAccountsMenu.post {
             if (isFirstOpen) {
+                if (helpViewModel.channelFromSearchContainer) {
+                    helpViewModel.clickedTvAccountId = helpViewModel.currentFocusedTvAccount?.id
+                    val currAcc = tvAccountCategoryAdapter.currentList.firstOrNull { it is AccountTvCategory.Account && it.id == helpViewModel.currentFocusedTvAccount?.id }
+                    val pos = tvAccountCategoryAdapter.currentList.indexOf(currAcc)
+                    helpViewModel.clickedTvAccountPosition = pos
+                }
                 if (helpViewModel.clickedTvAccountId != 0L && helpViewModel.clickedTvAccountPosition != -1) {
                     onAccountClicked(helpViewModel.clickedTvAccountPosition)
                 } else {
@@ -951,7 +957,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         currentList = flatList
         tvAccountCategoryAdapter.submitList(flatList) {
             binding.rvLayoutTvAccountsMenu.post {
-                val list = tvAccountCategoryAdapter.currentList
+                val thisList = tvAccountCategoryAdapter.currentList
                 val clickedAccount = tvAccountCategoryAdapter.currentList.firstOrNull {
                     it is AccountTvCategory.Account && it.id == item.id
                 } as? AccountTvCategory.Account
@@ -960,8 +966,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.rvLayoutTvAccountsMenu.scrollToPosition(clickedAccountPosition)
 
                 // WICHTIG: Stelle sicher, dass die Kategorie darunter aufgebaut wird
-                if (position + 1 < list.size &&
-                    list[position + 1] is AccountTvCategory.TvCategory
+                if (position + 1 < thisList.size &&
+                    thisList[position + 1] is AccountTvCategory.TvCategory
                 ) {
 
                     // Kein requestFocus()! Nur sicherstellen, dass ViewHolder aufgebaut ist.
@@ -974,16 +980,26 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 if (isFirstOpen) {
                     val focusedCategoryId = helpViewModel.currentFocusedTvCategory?.id ?: 0L
                     if (focusedCategoryId != 0L) {
-                        val categoryPosition = list.indexOfFirst {
+                        val categoryPosition = thisList.indexOfFirst {
                             it is AccountTvCategory.TvCategory && it.id == focusedCategoryId
                         }
 
                         if (categoryPosition != -1) {
                             binding.rvLayoutTvAccountsMenu.setSelectedPosition(categoryPosition)
                             binding.rvLayoutTvAccountsMenu.post {
-                                binding.rvLayoutTvAccountsMenu
-                                    .findViewHolderForAdapterPosition(categoryPosition)
-                                    ?.itemView?.requestFocus()
+                                if (!helpViewModel.channelFromSearchContainer) {
+                                    binding.rvLayoutTvAccountsMenu
+                                        .findViewHolderForAdapterPosition(categoryPosition)
+                                        ?.itemView?.requestFocus()
+                                } else {
+                                    helpViewModel.currentFocusedChannPosition?.let {
+                                        changingPlayingChannel(it)
+                                    }
+                                    setVideoViewFullScreen()
+                                    helpViewModel.currentFocusedTvCategory?.let {
+                                        showChannelList(it.id)
+                                    }
+                                }
                             }
                         }
                     }
@@ -1184,7 +1200,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.videoViewPreview.visibility = VISIBLE
             firstOpenTvChannels = false
         }
-        if (helpViewModel.currentFocusedTvCategory?.id != accounttvCategoryId || helpViewModel.wasTvSectionOpened) {
+        if (helpViewModel.currentFocusedTvCategory?.id != accounttvCategoryId || helpViewModel.wasTvSectionOpened || helpViewModel.channelFromSearchContainer) {
             tvChannelsAdapter?.submitList(null)
             val tvCategory = tvCatBox.get(accounttvCategoryId)
             firstOpenTvCategory = true
@@ -1273,7 +1289,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 }
                             }
                             firstOpenTvCategory = false
-                            if (helpViewModel.wasTvSectionOpened) {
+                            if (helpViewModel.wasTvSectionOpened || helpViewModel.channelFromSearchContainer) {
+                                if (helpViewModel.channelFromSearchContainer) {
+                                    helpViewModel.channelFromSearchContainer = false
+                                }
                                 val lastChannel = tvChannelsAdapter?.currentList?.firstOrNull { it.catAndChannelAccount == helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount }
                                 if (lastChannel != null) {
                                     withContext(Dispatchers.Main) {
@@ -2806,6 +2825,12 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         player?.clearVideoFrameMetadataListener(videoFrameMetadataListener)
         player?.setVideoFrameMetadataListener(videoFrameMetadataListener)
 
+        if (helpViewModel.channelFromSearchContainer) {
+            getFirstAndLastEpgForChannel()
+            isFirstPlayingChannel = true
+            helpViewModel.closeOverlayFragment()
+            setVideoViewFullScreen()
+        }
         // Qualität und Audio-Infos ermitteln
     }
 

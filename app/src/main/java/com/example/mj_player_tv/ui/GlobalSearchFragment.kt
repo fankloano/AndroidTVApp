@@ -539,6 +539,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
             binding.recyclerItems.requestFocus()
         }
+
+        helpViewModel.closeOverlayFragment.observe(viewLifecycleOwner) {
+            parentFragmentManager.popBackStack()
+        }
     }
 
     private fun getDisplayableItemsFor(account: Accounts, category: GlobalSearchMainCategory): List<GlobalSearchDisplayItem> {
@@ -738,7 +742,11 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this, programmeBox, epgDataBox) { clickedItem ->
             when (clickedItem) {
                 is GlobalSearchDisplayItem.ChannelItem -> {
-
+                    helpViewModel.currentFocusedChannPosition = clickedItem.channel
+                    helpViewModel.channelFromSearchContainer = true
+                    helpViewModel.currentFocusedTvAccount = clickedItem.channel.tvcategory.target.tvaccount.target
+                    helpViewModel.currentFocusedTvCategory = clickedItem.channel.tvcategory.target
+                    (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
                 }
                 is GlobalSearchDisplayItem.MovieItem -> {
                     helpViewModel.currentMovieAccount = selectedAccount

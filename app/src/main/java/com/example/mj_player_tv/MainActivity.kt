@@ -176,7 +176,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             toggleActivateOnMenu(it)
             toggleVisibilityOfMainContainer(true)
             val transaction = supportFragmentManager.beginTransaction()
-            transaction.add(R.id.navHostFragment, GlobalSearchFragment())
+            transaction.replace(R.id.overlayContainer, GlobalSearchFragment())
             transaction.addToBackStack(null)
             transaction.commit()
             closeMenu()
@@ -209,6 +209,12 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     closeMenu()
                     hideMenu()
                     containerFragment.focusToLast()
+                }
+                val overlayFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (overlayFragment is GlobalSearchFragment) {
+                    closeMenu()
+                    hideMenu()
+                    overlayFragment.focusToSearchBar()
                 }
                 return@setOnKeyListener true
             }
@@ -635,6 +641,24 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             activityMainBinding.navHostFragment.alpha = 1F
         } else {
             activityMainBinding.navHostFragment.alpha = 0.7F
+        }
+    }
+
+    @OptIn(UnstableApi::class)
+    fun checkTvChannelsFragmentFromGlobalSearch() {
+        val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
+        if (containerFragment is TvChannelsFragment) {
+
+        } else {
+            closeMenu()
+            hideMenu()
+            resetNavHostFragment()
+            toggleActivateOnMenu(activityMainBinding.btnTv)
+            viewModel.firstOpenTvChFrag = true
+            toggleVisibilityOfMainContainer(true)
+            viewModel.isTvAccountMenuOpened = true
+            lastOpenedFragment = Constants.FRAGMENT_TV
+            changeFragment(TvChannelsFragment())
         }
     }
 

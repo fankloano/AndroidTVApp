@@ -345,6 +345,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var isSearchContainerOpened = false
 
+    var channelFromSearchContainer = false
+
     var isWatchlistContainerOpened = false
 
     var isWatchHistoryContainerOpened = false
@@ -360,6 +362,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     var currentlyPlayingMovieUrl = ""
 
     var currentEpgTab = ""
+
+    var globalSearchClickedTvChannelPos: ChannelPositions? = null
 
     var isFullScreenFullEpg = false
 
@@ -628,6 +632,13 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
 
         seriesAccountsWithCategoriesLiveData.postValue(combined)
+    }
+
+    private val _closeOverlayFragment = MutableLiveData<Unit>()
+    val closeOverlayFragment: LiveData<Unit> = _closeOverlayFragment
+
+    fun closeOverlayFragment() {
+        _closeOverlayFragment.value = Unit
     }
 
     fun checkForUpdates() {
