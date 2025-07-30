@@ -1545,6 +1545,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     private var globalSearchJob: Job? = null
 
+    var hasSearched = false
+
     fun makeGlobalSearch(showFilteredCategories: Boolean, searchString: String) {
         globalSearchJob?.cancel()
         globalSearchJob = viewModelScope.launch {
@@ -1591,6 +1593,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 // Warten, bis alle Playlists fertig sind
                 tasks.awaitAll()
                 searchProgramsJob.await()
+                hasSearched = true
             }
             _isSearching.value = false
         }

@@ -2,6 +2,8 @@ package com.example.mj_player_tv.ui
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -13,6 +15,8 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
@@ -49,11 +53,15 @@ import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
 import com.rubensousa.dpadrecyclerview.FocusableDirection
 import kotlinx.coroutines.launch
 import com.example.mj_player_tv.database.entity.MovieOB
+import com.example.mj_player_tv.database.entity.Programme
+import com.example.mj_player_tv.database.entity.Programme_
 import com.example.mj_player_tv.database.entity.SeriesOB
+import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
 import com.example.mj_player_tv.database.help.GlobalSearchItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
 import com.example.mj_player_tv.ui.adapter.GlobalSearchItemsAdapter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 
 @UnstableApi
@@ -64,6 +72,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private val settingsBox = ObjectBox.store.boxFor(Settings::class.java)
 
     private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
+
+    private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
+
+    private val epgDataBox = ObjectBox.store.boxFor(EpgDataOB::class.java)
 
     private lateinit var searchHistoryAdapter: GlobalSearchHistoryAdapter
 
@@ -156,10 +168,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         parentFragmentManager.addOnBackStackChangedListener(backStackListener)
-        binding.editTextSearch.requestFocus()
         (requireActivity() as? MainActivity)?.hideMenu()
         val imm =
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        binding.editTextSearch.requestFocus()
+        binding.editTextSearch.isCursorVisible = true
+        binding.editTextSearch.setSelection(binding.editTextSearch.length())
         imm.showSoftInput(binding.editTextSearch, InputMethodManager.SHOW_IMPLICIT)
 
         binding.editTextSearch.setOnKeyListener { v, keyCode, event ->
@@ -348,26 +362,35 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                         GlobalSearchMainCategory.MOVIES to moviesByAccount,
                         GlobalSearchMainCategory.SERIES to seriesByAccount,
                         GlobalSearchMainCategory.PROGRAMS to programsByAccount
-                    ).firstOrNull { it.second?.isNotEmpty() == true } ?: return@collectLatest // keine Ergebnisse
+                    ).firstOrNull { it.second?.isNotEmpty() == true }
+                        ?: return@collectLatest // keine Ergebnisse
 
                     val firstAccount = firstMap?.keys?.firstOrNull() ?: return@collectLatest
+
                     helpViewModel.selectedGlobalSearchCategory = firstCategory
                     selectedGlobalSearchCategory = firstCategory
-                    when (selectedGlobalSearchCategory) {
-                        GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
-                        GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
-                        GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
-                        GlobalSearchMainCategory.PROGRAMS -> binding.tvCatEpg.requestFocus()
-                        else -> {} // optional: nichts tun oder Default setzen
-                    }
                     helpViewModel.selectedGlobalSearchAccount = firstAccount
                     selectedAccount = firstAccount
 
-                    // 👉 Playlists zur ersten Kategorie setzen
+                    // 👉 Playlists setzen
                     val initialPlaylists = firstMap.keys.toList()
                     playlistAdapter.submitList(initialPlaylists)
 
-                    updateItemList(firstAccount) // Items der ersten Playlist + Kategorie anzeigen
+                    // 👉 Items laden
+                    updateItemList(firstAccount)
+
+                    // 👉 Fokus-Setzen verzögert nach UI-Update
+                    binding.root.post {
+                        when (firstCategory) {
+                            GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
+                            GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
+                            GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
+                            GlobalSearchMainCategory.PROGRAMS -> binding.tvCatEpg.requestFocus()
+                        }
+                    }
+
+                    // **Nur einmal setzen**
+                    isFirstOpenGlobalSearch = false
                 }
             }
         }
@@ -376,10 +399,27 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             helpViewModel.isSearching.collectLatest { searching ->
                 if (searching) {
                     // Zeige z.B. ProgressBar, lade Spinner etc.
+                    binding.tvNodatafound.visibility = View.GONE
                     binding.progressBar.visibility = View.VISIBLE
                 } else {
+                    if (!helpViewModel.hasSearched) {
+                        // Noch keine Suche gestartet -> kein "No Data" anzeigen
+                        binding.tvNodatafound.visibility = View.GONE
+                        return@collectLatest
+                    }
+
                     // Verberge ProgressBar, zeige UI mit Ergebnissen
                     binding.progressBar.visibility = View.GONE
+                    val hasResults = !(channelsByAccount?.values?.flatten().isNullOrEmpty()
+                            && moviesByAccount?.values?.flatten().isNullOrEmpty()
+                            && seriesByAccount?.values?.flatten().isNullOrEmpty()
+                            && programsByAccount?.values?.flatten().isNullOrEmpty())
+
+                    if (hasResults) {
+                        binding.tvNodatafound.visibility = View.GONE
+                    } else {
+                        binding.tvNodatafound.visibility = View.VISIBLE
+                    }
                 }
             }
         }
@@ -570,6 +610,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
+    fun focusToSearchBar() {
+        binding.editTextSearch.requestFocus()
+    }
 
     fun updatePlaylistsForSelectedCategory() {
         val accounts = when (selectedGlobalSearchCategory) {
@@ -582,7 +625,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
         playlistAdapter.submitList(accounts)
     }
-
 
     private fun showSearchHistory() {
         if (helpViewModel.settings != null) {
@@ -638,7 +680,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 binding.tvCatMovies.visibility = View.GONE
                 binding.tvCatSeries.visibility = View.GONE
                 binding.tvCatEpg.visibility = View.GONE
-
                 binding.backgroundDarker.visibility = View.GONE
                 hideSearchBarShowArrow()
                 saveSearchTerm(searchTerm)
@@ -659,12 +700,14 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             helpViewModel.settings?.searchString?.add(0, searchTerm)
             helpViewModel.settings?.let {
                 settingsBox.put(it)
+                searchHistoryAdapter.submitList(null)
                 searchHistoryAdapter.submitList(it.searchString)
             }
         } else {
             helpViewModel.settings?.searchString?.add(0, searchTerm)
             helpViewModel.settings?.let {
                 settingsBox.put(it)
+                searchHistoryAdapter.submitList(null)
                 searchHistoryAdapter.submitList(it.searchString)
             }
         }
@@ -692,7 +735,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     private fun prepareItemsRecyclerView() {
-        globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this) { clickedItem ->
+        globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this, programmeBox, epgDataBox) { clickedItem ->
             when (clickedItem) {
                 is GlobalSearchDisplayItem.ChannelItem -> {
 
@@ -748,6 +791,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                         }
                     }
                 }
+
                 is GlobalSearchDisplayItem.ProgramItem -> {
 
                 }
@@ -763,7 +807,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private val onSearchHistoryClickListener = GlobalSearchHistoryAdapter.OnClickListener {
         if (it.isNotEmpty()) {
             lastSearchQuery = it
-            Log.d("EDITTEXTNAME","START SEARCH HISTORY: $lastSearchQuery")
             searchFor(it)
         }
     }
@@ -772,14 +815,33 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         AlertDialog.Builder(requireContext())
             .setMessage("Delete search term?")
             .setPositiveButton("Yes") { dialog, _ ->
-                helpViewModel.settings?.let {
-                    Log.d("HISTORYTERMS", "OLD: ${it.searchString}")
-                    it.searchString.remove(searchTerm)
-                    settingsBox.put(it)
-                    Log.d("HISTORYTERMS", "NEW: ${it.searchString}")
-                    val newList = it.searchString.toList()
-                    Log.d("HISTORYTERMS", "NEW 2: ${newList}")
-                    searchHistoryAdapter.submitList(newList)
+                helpViewModel.settings?.let { settings ->
+                    // 1) NEUE Liste aus der aktuellen bauen (immutabel für DiffUtil)
+
+                    val updated = searchHistoryAdapter.currentList
+                        .toMutableList()                // kopieren
+                        .apply {
+                            // ENTWEDER nur erstes Vorkommen entfernen:
+                            val idx = indexOfFirst { it.equals(searchTerm, ignoreCase = true) }
+                            if (idx != -1) removeAt(idx)
+
+                            // ODER alle Vorkommen entfernen:
+                            // removeAll { it.equals(term, ignoreCase = true) }
+                        }
+                        .toList()                        // wieder immutable machen
+                    // 2) Neue Liste submitten (Main-Thread; Click-Listener ist bereits Main)
+                    searchHistoryAdapter.submitList(updated)
+
+                    // 3) Optional: Persistieren (z. B. in Settings/DB) – im IO-Thread
+                    viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                        helpViewModel.settings?.let { settings ->
+                            val persisted = settings.searchString
+                                .filterNot { it.equals(searchTerm, ignoreCase = true) }
+                            settings.searchString.clear()
+                            settings.searchString.addAll(persisted)
+                            settingsBox.put(settings)
+                        }
+                    }
                 }
 
                 dialog.dismiss()
@@ -789,31 +851,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 binding.relLayoutClearhistory.requestFocus()
             }
             .show()
-    }
-
-    private val onChannelClickListener = GlobalSearchTvChannelsAdapter.OnClickListener {
-        parentFragmentManager.popBackStack()
-        (requireActivity() as? MainActivity)?.openTvChannelsFragmentFromGlobalSearch(it)
-    }
-
-    private val onMovieClickListener = GlobalSearchMoviesAdapter.OnClickListener { movie ->
-        val account = movie.accountId?.let {
-            accountBox.get(it)
-        }
-        if (account != null) {
-            if (account.isXtream) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(movie, account)
-                    helpViewModel.currentFocusedMovie = xtreamMovie
-                    helpViewModel.currentMovieAccount = account
-                    openMovieDetailFragment()
-                }
-            } else {
-                helpViewModel.currentMovieAccount = account
-                helpViewModel.currentFocusedMovie = movie
-                openMovieDetailFragment()
-            }
-        }
     }
 
     private val onSeriesClickListener = GlobalSearchSeriesAdapter.OnClickListener { serie ->
@@ -891,6 +928,121 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             binding.recyclerPlaylists.requestFocus()
         } else {
             return
+        }
+    }
+
+    private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View, position: Int) {
+        val popup = PopupMenu(view.context, view)
+        popup.menuInflater.inflate(R.menu.menu_search_program_options, popup.menu)
+        val tvchannel = tvchannelPos.tvchannel.target
+        val isProgramFinished = (program.stopTimestamp ?: 0L) < System.currentTimeMillis()
+        val isProgramNotStarted = (program.startTimestamp ?: 0) > System.currentTimeMillis()
+        val isCatchupChannel = tvchannel.enable_tv_archive == 1
+        val isProgramCurrentlyPlaying = (((program.stopTimestamp
+            ?: 0L) > System.currentTimeMillis() &&
+                System.currentTimeMillis() >= (program.startTimestamp ?: 0)))
+        val playItem = popup.menu.findItem(R.id.mark_play)
+        val replayItem = popup.menu.findItem(R.id.mark_replay)
+        val reminderItem = popup.menu.findItem(R.id.mark_remember)
+        playItem.setVisible(isProgramCurrentlyPlaying)
+        replayItem.setVisible(isCatchupChannel && (isProgramCurrentlyPlaying || isProgramFinished))
+        reminderItem.setVisible(isProgramNotStarted)
+        val replayText = if (isProgramFinished && isCatchupChannel) {
+            "Rewatch"
+        } else {
+            if (isProgramCurrentlyPlaying && isCatchupChannel) {
+                "Play from beginning"
+            } else {
+                ""
+            }
+        }
+        replayItem.setTitle(replayText)
+        val isProgrammReminded = programmeBox.query(
+            Programme_.epgForCh.equal("${program.idByAccountData}_${tvchannel.idByAccountData}")
+        ).build().findFirst()
+        val remindText = if (isProgrammReminded != null) {
+            "Remove reminder"
+        } else {
+            "Set reminder"
+        }
+        reminderItem.setTitle(remindText)
+
+        var wasItemClicked = false
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.mark_play -> {
+                    wasItemClicked = true
+                    playProgram()
+                    true
+                }
+                R.id.mark_replay -> {
+                    wasItemClicked = true
+                    replayProgram()
+                    true
+                }
+                R.id.mark_remember -> {
+                    wasItemClicked = true
+                    checkReminder(program, tvchannelPos)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.setOnDismissListener {
+            if (!wasItemClicked) {
+                wasItemClicked = false
+                binding.recyclerItems.requestFocus()
+            }
+        }
+        popup.show()
+    }
+
+    private fun playProgram() {
+
+    }
+
+    private fun replayProgram() {
+
+    }
+
+    private fun checkReminder(epg: EpgDataOB, tvChannelPos: ChannelPositions) {
+        val tvChannel = tvChannelPos.tvchannel.target
+        val isProgramme = programmeBox.query(Programme_.epgForCh.equal("${epg.idByAccountData}_${tvChannel.idByAccountData}")).build().findFirst()
+        if (isProgramme != null) {
+            programmeBox.remove(isProgramme)
+            epg.isRemembered = false
+            epgDataBox.put(epg)
+        } else {
+            val timeOffSet =
+                tvChannel?.epgTimeOffSet ?: tvChannelPos?.tvcategory?.target?.epgTimeOffSet
+                ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+            val thisProgramme = Programme(
+                0,
+                "${epg.idByAccountData}_${tvChannel.idByAccountData}",
+                epg.startTimestamp ?: 0L,
+                epg.stopTimestamp ?: 0L,
+                helpViewModel.settings?.tvReminderTime ?: 10L
+            )
+            programmeBox.put(thisProgramme)
+            thisProgramme.apply {
+                epgData.target = epg
+                tvchannels.target = tvChannel
+            }
+            programmeBox.put(thisProgramme)
+            epg.isRemembered = true
+            epgDataBox.put(epg)
+
+            if (!android.provider.Settings.canDrawOverlays(requireContext())) {
+                val intent = Intent(
+                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + requireContext().packageName)
+                )
+                startActivity(intent)
+            }
+            Log.d("REMIND INTERN EPG", "$epg")
+            helpViewModel.setReminder(requireContext(), thisProgramme, timeOffSet)
+            Toast.makeText(this@GlobalSearchFragment.requireActivity(), "Reminder added: ${thisProgramme.epgData.target.name}", Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -1438,6 +1438,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             val containerFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
             if (containerFragment is TvChannelsFragment) {
                 containerFragment.setVideoViewFullScreen()
+                containerFragment.showFullScreenChannelSelectorEpg()
             }
             val fullScreenChannelChangeContainer = parentFragmentManager.findFragmentById(R.id.container_fullscreen_channelchange)
             if (fullScreenChannelChangeContainer is FullScreenSelectorFragment) {

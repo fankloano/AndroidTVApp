@@ -14,6 +14,7 @@
         android:gravity="center_horizontal"
         app:dpadRecyclerViewItemEdgeSpacing="10dp"
         app:dpadRecyclerViewItemSpacing="6dp"
+        android:nextFocusLeft="@id/recycler_epg"
         android:layout_marginTop="29dp"
         tools:listitem="@layout/rv_item_globalsearch_epg"
         android:orientation="vertical" />
@@ -51,6 +52,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="12dp"
+        android:layout_marginTop="9dp"
         android:layout_marginBottom="5dp"
         android:layout_marginStart="10dp"
         android:background="@drawable/background_rounded_rightup_rightdown_gradient_fullepg_detailepg"

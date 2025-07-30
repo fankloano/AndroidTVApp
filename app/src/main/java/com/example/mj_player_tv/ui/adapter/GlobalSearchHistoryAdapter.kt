@@ -35,9 +35,15 @@ class GlobalSearchHistoryAdapter(private val onclicklistener: GlobalSearchHistor
             binding.rvLinearSearchHistory.setOnKeyListener { v, keyCode, event ->
                 if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                     // Rufen Sie die Funktion im Fragment auf
-
-
+                    fragment.focusToSearchBar()
                     return@setOnKeyListener true
+                }
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP && event.action == KeyEvent.ACTION_DOWN) {
+                    // Rufen Sie die Funktion im Fragment auf
+                    if (bindingAdapterPosition in 0..2) {
+                        fragment.focusToSearchBar()
+                        return@setOnKeyListener true
+                    }
                 }
                 return@setOnKeyListener false
             }

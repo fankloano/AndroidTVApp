@@ -47,6 +47,12 @@ class GlobalSearchMoviesAdapter(private val onClickListener: GlobalSearchMoviesA
                         fragment.focusToPlaylist()
                         return@setOnKeyListener true
                     }
+                    if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                        if (bindingAdapterPosition in 0..6) {
+                            fragment.focusToPlaylist()
+                            return@setOnKeyListener true
+                        }
+                    }
                     return@setOnKeyListener false
                 }
             }

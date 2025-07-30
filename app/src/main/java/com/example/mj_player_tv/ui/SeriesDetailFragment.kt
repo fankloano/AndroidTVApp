@@ -118,10 +118,8 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         prepareEpisodesRecyclerView()
 
         binding.constSeries.requestFocus()
-
         if (helpViewModel.currentFocusedSerie != null) {
-            currentAccount = helpViewModel.currentFocusedSerie?.accountId?.let { accountBox.get(it) }
-            Log.d("SERIESDETAILGLOBALSEARCH", "$currentAccount")
+            currentAccount = helpViewModel.currentSeriesAccount
             if (currentAccount != null) {
                 if (currentAccount!!.isXtream) {
                     if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {
@@ -553,7 +551,6 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             }
         }
 
-
         binding.btnInfo.setOnFocusChangeListener { _, hasFocus ->
             val params = binding.btnInfo.layoutParams
             if (hasFocus) {
@@ -575,6 +572,10 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.focusBlocker.setOnKeyListener { v, keyCode, event ->
             true
+        }
+
+        seriesViewModel.updateSeriesDetail.observe(viewLifecycleOwner) {
+            updateEpisodeSeasonSeries()
         }
 
         seriesViewModel.focusRequest.observe(viewLifecycleOwner) {
@@ -1149,13 +1150,29 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             binding.btnaddWatched.text = "Mark as watched"
         }
 
-        if (serie.isPartlyWatched) {
-            binding.tvRemainingTime.visibility = View.VISIBLE
+        if (serie.seriesPercentagePlayed != 0.0) {
+            if (serie.isCompletelyWatched) {
+                binding.progressBar.progress = 100
+                binding.tvRemainingTime.visibility = View.VISIBLE
+                binding.tvRemainingTime.text = "Completed!"
+            } else if (serie.isPartlyWatched) {
+                binding.tvRemainingTime.visibility = View.VISIBLE
+                // Schritt 1: Berechne den Fortschritt in Prozent
+                val progressPercentage = serie.seriesPercentagePlayed * 100  // Wandelt den Fortschritt in Prozent um (von 0.0 bis 100.0)
 
-        } else if (serie.isCompletelyWatched) {
-            binding.tvRemainingTime.visibility = View.INVISIBLE
-            binding.tvRemainingTime.text = "Completed!"
-            binding.progressBar.progress = 100
+// Schritt 2: Runden auf maximal 2 Dezimalstellen
+                val formattedPercentage = String.format("%.2f", progressPercentage)  // Formatierung auf 2 Dezimalstellen
+
+// Schritt 3: Update der ProgressBar
+                val progressBarPercentage = (serie.seriesPercentagePlayed * 100).toInt()  // ProgressBar erwartet einen Integer zwischen 0 und 100
+                binding.progressBar.progress = progressBarPercentage
+
+// Schritt 4: Anzeige des Fortschritts als Text
+                binding.tvRemainingTime.text = "$formattedPercentage% watched.."  // Zeigt den Fortschritt als Text im Prozentformat an
+
+            } else {
+                binding.tvRemainingTime.visibility = View.INVISIBLE
+            }
         } else {
             binding.tvRemainingTime.visibility = View.INVISIBLE
         }
@@ -1217,10 +1234,13 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun setOnlyNewEpisode() {
         val position = episodesAdapter.currentList.indexOf(helpViewModel.currentFocusedEpisode)
+        Log.d("EPISODEPOSTION", "${helpViewModel.currentFocusedEpisode?.seasonNumber} & ${helpViewModel.currentFocusedEpisode?.episodeNumber} == POSITION: $position")
         binding.rvLayoutSeriesEpisodes.setSelectedPosition(position)
         if (!helpViewModel.serieFullScreenOpened) {
-            binding.rvLayoutSeriesEpisodes.requestFocus()
             binding.fullscreenSerie.visibility = View.GONE
+            binding.rvLayoutSeriesEpisodes.post {
+                binding.rvLayoutSeriesEpisodes.requestFocus()
+            }
         }
     }
 
@@ -1548,6 +1568,16 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         }
     }
 
+    private fun updateEpisodeSeasonSeries() {
+        val episode = helpViewModel.currentFocusedEpisode
+        val season = helpViewModel.currentFocusedSeason
+        val series = helpViewModel.currentFocusedSerie
+        series?.let {
+            showDetailUi(series)
+        }
+        seasonsAdapter.notifyDataSetChanged()
+        episodesAdapter.notifyDataSetChanged()
+    }
 
     override fun onDestroy() {
         super.onDestroy()

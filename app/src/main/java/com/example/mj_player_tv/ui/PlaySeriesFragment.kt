@@ -2395,6 +2395,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     }
 
     private fun persistAll(serie: SeriesOB, season: SeasonsOB?, episode: EpisodesOB?) {
+        seriesViewModel.updateSeriesDetail()
         serie.seriesAccount.target = helpViewModel.currentSeriesAccount
         serie.seriescat.target = helpViewModel.currentSeriesCategoryOB
 

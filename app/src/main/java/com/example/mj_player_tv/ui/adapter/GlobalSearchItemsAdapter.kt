@@ -1,16 +1,25 @@
 package com.example.mj_player_tv.ui.adapter
 
+import android.content.Intent
+import android.net.Uri
+import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
+import android.widget.Toast
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.mj_player_tv.R
+import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.MovieOB
+import com.example.mj_player_tv.database.entity.Programme
+import com.example.mj_player_tv.database.entity.Programme_
 import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchProgramsBinding
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchTvchannelBinding
@@ -18,11 +27,14 @@ import com.example.mj_player_tv.databinding.RvItemGlobalsearchmoviesBinding
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchseriesBinding
 import com.example.mj_player_tv.ui.GlobalSearchFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
+import io.objectbox.Box
 
 @UnstableApi
 class GlobalSearchItemsAdapter(
     private val helpViewModel: HelpViewModel,
     private val fragment: GlobalSearchFragment,
+    private val programmeBox: Box<Programme>,
+    private val epgDataBox: Box<EpgDataOB>,
     private val onItemClick: (GlobalSearchDisplayItem) -> Unit
 ) : ListAdapter<GlobalSearchDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
@@ -233,19 +245,24 @@ class GlobalSearchItemsAdapter(
         private lateinit var epgAdapter: GlobalSearchEpgListAdapter
         private lateinit var channelAdapter: GlobalSearchProgramsChannelAdapter
 
+        private var currentChannel: ChannelPositions? = null
+
         fun bind(item: GlobalSearchDisplayItem.ProgramItem) {
             val channelList = item.programs.map { it.first }
             val programMap = item.programs.toMap()
 
             // 1. Kanal-RecyclerView (links)
-            channelAdapter = GlobalSearchProgramsChannelAdapter { selectedChannel ->
-                // Update rechte Liste (EPGs) + Detail
-                val epgs = programMap[selectedChannel] ?: emptyList()
-                epgAdapter.submitList(epgs)
+            channelAdapter = GlobalSearchProgramsChannelAdapter (
+                onChannelFocused = { selectedChannel ->
+                    val epgs= programMap[selectedChannel] ?: emptyList()
+                    epgAdapter.submitList(epgs)
+                    binding.tvSelectedChannel.text = selectedChannel.tvchannel.target.showingName
+                    updateDetail(epgs.firstOrNull())
+                    currentChannel = selectedChannel
+                },
+                fragment
+            )
 
-                binding.tvSelectedChannel.text = selectedChannel.tvchannel.target.showingName
-                updateDetail(epgs.firstOrNull())
-            }
 
             binding.recyclerEpg.adapter = channelAdapter
             channelAdapter.submitList(channelList)
@@ -255,7 +272,11 @@ class GlobalSearchItemsAdapter(
                 onEpgFocused = { selectedEpg ->
                     updateDetail(selectedEpg)
                 },
-                helpViewModel = helpViewModel // ✅ Übergib hier das ViewModel
+                onEpgClicked = { clickedEpg, thisview ->
+                    showProgramPopup(clickedEpg, currentChannel ?: item.programs.first().first, thisview, bindingAdapterPosition)
+                },
+                helpViewModel = helpViewModel,
+                fragment// ✅ Übergib hier das ViewModel
             )
 
             binding.recyclerEpglist.adapter = epgAdapter
@@ -281,8 +302,125 @@ class GlobalSearchItemsAdapter(
             binding.tvDetailepgSubtitle.text = epg.sub_title ?: ""
             binding.tvDetailepgDescription.text = epg.descr ?: ""
         }
-    }
 
+        private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View, position: Int) {
+            val popup = PopupMenu(view.context, view)
+            popup.menuInflater.inflate(R.menu.menu_search_program_options, popup.menu)
+            val tvchannel = tvchannelPos.tvchannel.target
+            val currentTime = System.currentTimeMillis() / 1000
+            val isProgramFinished = (program.stopTimestamp ?: 0L) < currentTime
+            val isProgramNotStarted = (program.startTimestamp ?: 0) > currentTime
+            val isCatchupChannel = tvchannel.enable_tv_archive == 1
+            val isProgramCurrentlyPlaying = (((program.stopTimestamp
+                ?: 0L) > currentTime &&
+                    currentTime >= (program.startTimestamp ?: 0)))
+            val playItem = popup.menu.findItem(R.id.mark_play)
+            val replayItem = popup.menu.findItem(R.id.mark_replay)
+            val reminderItem = popup.menu.findItem(R.id.mark_remember)
+            playItem.setVisible(isProgramCurrentlyPlaying)
+            replayItem.setVisible(isCatchupChannel && (isProgramCurrentlyPlaying || isProgramFinished))
+            reminderItem.setVisible(isProgramNotStarted)
+            val replayText = if (isProgramFinished && isCatchupChannel) {
+                "Rewatch"
+            } else {
+                if (isProgramCurrentlyPlaying && isCatchupChannel) {
+                    "Play from beginning"
+                } else {
+                    ""
+                }
+            }
+            replayItem.setTitle(replayText)
+            val isProgrammReminded = programmeBox.query(
+                Programme_.epgForCh.equal("${program.idByAccountData}_${tvchannel.idByAccountData}")
+            ).build().findFirst()
+            val remindText = if (isProgrammReminded != null) {
+                "Remove reminder"
+            } else {
+                "Set reminder"
+            }
+            reminderItem.setTitle(remindText)
+
+            var wasItemClicked = false
+            popup.setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.mark_play -> {
+                        wasItemClicked = true
+                        playProgram()
+                        true
+                    }
+                    R.id.mark_replay -> {
+                        wasItemClicked = true
+                        replayProgram()
+                        true
+                    }
+                    R.id.mark_remember -> {
+                        wasItemClicked = true
+                        checkReminder(program, tvchannelPos, view)
+                        true
+                    }
+                    else -> false
+                }
+            }
+            popup.setOnDismissListener {
+                if (!wasItemClicked) {
+                    wasItemClicked = false
+                    binding.recyclerEpglist.requestFocus()
+                }
+            }
+            popup.show()
+        }
+
+        private fun playProgram() {
+
+        }
+
+        private fun replayProgram() {
+
+        }
+
+        private fun checkReminder(epg: EpgDataOB, tvChannelPos: ChannelPositions, view: View) {
+            val tvChannel = tvChannelPos.tvchannel.target
+            val isProgramme = programmeBox.query(Programme_.epgForCh.equal("${epg.idByAccountData}_${tvChannel.idByAccountData}")).build().findFirst()
+            if (isProgramme != null) {
+                programmeBox.remove(isProgramme)
+                epg.isRemembered = false
+                epgDataBox.put(epg)
+                val currentEpgPos = epgAdapter.currentList.indexOf(epg)
+                epgAdapter.notifyItemChanged(currentEpgPos)
+            } else {
+                val timeOffSet =
+                    tvChannel?.epgTimeOffSet ?: tvChannelPos.tvcategory.target?.epgTimeOffSet
+                    ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                    ?: 0
+                val thisProgramme = Programme(
+                    0,
+                    "${epg.idByAccountData}_${tvChannel.idByAccountData}",
+                    epg.startTimestamp ?: 0L,
+                    epg.stopTimestamp ?: 0L,
+                    helpViewModel.settings?.tvReminderTime ?: 10L
+                )
+                programmeBox.put(thisProgramme)
+                thisProgramme.apply {
+                    epgData.target = epg
+                    tvchannels.target = tvChannel
+                }
+                programmeBox.put(thisProgramme)
+                epg.isRemembered = true
+                epgDataBox.put(epg)
+                val currentEpgPos = epgAdapter.currentList.indexOf(epg)
+                epgAdapter.notifyItemChanged(currentEpgPos)
+                if (!android.provider.Settings.canDrawOverlays(view.context)) {
+                    val intent = Intent(
+                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + fragment.requireContext().packageName)
+                    )
+                    fragment.requireActivity().startActivity(intent)
+                }
+                helpViewModel.setReminder(fragment.requireContext(), thisProgramme, timeOffSet)
+            }
+        }
+
+    }
 
     class DiffCallback : DiffUtil.ItemCallback<GlobalSearchDisplayItem>() {
         override fun areItemsTheSame(oldItem: GlobalSearchDisplayItem, newItem: GlobalSearchDisplayItem): Boolean {

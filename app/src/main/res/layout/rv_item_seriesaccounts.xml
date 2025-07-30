@@ -10,6 +10,8 @@
     tools:text="DE: Sky Cinema Highlights FHD"
     android:padding="8dp"
     android:textSize="15sp"
+    android:maxLines="1"
+    android:ellipsize="end"
     android:layout_marginEnd="1dp"
     android:layout_marginTop="1dp"
     android:layout_marginBottom="1dp"

@@ -26,7 +26,9 @@ import java.util.Locale
 @UnstableApi
 class GlobalSearchEpgListAdapter(
     private val onEpgFocused: (EpgDataOB) -> Unit,
-    private val helpViewModel: HelpViewModel) : ListAdapter<EpgDataOB, GlobalSearchEpgListAdapter.ViewHolder>(
+    private val onEpgClicked: (EpgDataOB, View) -> Unit,
+    private val helpViewModel: HelpViewModel,
+    private val fragment: GlobalSearchFragment) : ListAdapter<EpgDataOB, GlobalSearchEpgListAdapter.ViewHolder>(
     FULLEPG_COMPERATOR) {
 
     var selectedChannel: ChannelPositions? = null
@@ -56,16 +58,34 @@ class GlobalSearchEpgListAdapter(
             }
             binding.tvDate.text = epgData.datum
 
+            binding.ivReminder.visibility = if (epgData.isRemembered) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+
             val currentTime = System.currentTimeMillis() / 1000
             val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
             val currentTimePlusTimeOffSet = currentTime.plus(timeOffSetSeconds)
 
             if (epgData.startTimestamp!! < currentTimePlusTimeOffSet && epgData.stopTimestamp!! > currentTimePlusTimeOffSet) {
                 binding.ivPlayTv.visibility = View.VISIBLE
-            } else if (epgData.startTimestamp!! > currentTimePlusTimeOffSet) {
-                binding.ivLater.visibility = View.VISIBLE
-            } else if (epgData.stopTimestamp!! < currentTimePlusTimeOffSet && selectedChannel?.tvchannel?.target?.enable_tv_archive == 1) {
-                binding.ivCatchup.visibility = View.VISIBLE
+            } else {
+                binding.ivPlayTv.visibility = View.GONE
+            }
+
+            binding.relLayoutFullepgitem.setOnKeyListener { _, keyCode, event ->
+                if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
+                    fragment.focusToPlaylist()
+                    return@setOnKeyListener true
+                }
+                if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                    if (bindingAdapterPosition == 0) {
+                        fragment.focusToPlaylist()
+                        return@setOnKeyListener true
+                    }
+                }
+                return@setOnKeyListener false
             }
 
         }
@@ -112,6 +132,10 @@ class GlobalSearchEpgListAdapter(
                 holder.binding.overlayFull.visibility = View.VISIBLE
             }
         }
+        holder.binding.relLayoutFullepgitem.setOnClickListener {
+            onEpgClicked.invoke(epgData, holder.binding.relLayoutFullepgitem)
+        }
+
     }
 
     companion object {

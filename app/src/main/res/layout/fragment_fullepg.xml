@@ -153,9 +153,9 @@
         android:layout_height="0dp"
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
+        android:visibility="gone"
         app:layout_constraintWidth_percent="0.20"
         app:layout_constraintHeight_percent="0.50"
-        android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/relLayout_detailEpg"
         android:background="@drawable/background_fullepg_options"
         app:layout_constraintBottom_toBottomOf="parent">

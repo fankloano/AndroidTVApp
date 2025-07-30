@@ -91,7 +91,7 @@
                 app:layout_constraintStart_toStartOf="parent"
                 android:progressTint="?attr/mainPrimaryColor"
                 android:layout_marginStart="10dp"
-                android:layout_marginEnd="280dp"/>
+                android:layout_marginEnd="210dp"/>
 
             <LinearLayout
                 android:id="@+id/linLayout_seriesdetailinfo"
@@ -165,7 +165,7 @@
                 android:layout_height="wrap_content"
                 tools:text="1h 35min remaining"
                 android:textSize="12sp"
-                android:layout_marginStart="20dp"
+                android:layout_marginStart="15dp"
                 app:layout_constraintStart_toEndOf="@id/linLayout_seriesdetailinfo"
                 android:layout_marginTop="8dp"
                 app:layout_constraintTop_toBottomOf="@id/progressBar"/>

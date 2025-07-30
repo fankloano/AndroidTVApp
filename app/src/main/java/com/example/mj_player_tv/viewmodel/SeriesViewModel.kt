@@ -31,5 +31,18 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
         _focusToSeriesRequest.value = Unit
     }
 
+    private val _focusToEpisode = MutableLiveData<Unit>()
+    val focusToEpisode: LiveData<Unit> = _focusToEpisode
+
+    fun requestFocusToEpisode() {
+        _focusToEpisode.value = Unit
+    }
+
+    private val _updateSeriesDetail = MutableLiveData<Unit>()
+    val updateSeriesDetail: LiveData<Unit> = _updateSeriesDetail
+
+    fun updateSeriesDetail() {
+        _updateSeriesDetail.value = Unit
+    }
 
 }

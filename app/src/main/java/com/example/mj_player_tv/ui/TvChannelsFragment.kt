@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.ProgressBar
@@ -216,7 +217,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         helpViewModel.tvAccountsWithCategoriesLiveData.observe(viewLifecycleOwner) { accounts ->
             if (accounts.isEmpty()) {
                 if (isFirstOpen) {
-                    binding.tvNoTvAccounts.visibility = View.VISIBLE
+                    binding.tvNoTvAccounts.visibility = VISIBLE
                     binding.rvLayoutTvAccountsMenu.visibility = View.INVISIBLE
                     openMainMenu()
                     if (isFirstOpen) {
@@ -225,9 +226,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 }
             } else {
                 binding.tvNoTvAccounts.visibility = View.INVISIBLE
-                binding.rvLayoutTvAccountsMenu.visibility = View.VISIBLE
+                binding.rvLayoutTvAccountsMenu.visibility = VISIBLE
                 binding.tvNoTvAccounts.visibility = View.INVISIBLE
-                binding.rvLayoutTvAccountsMenu.visibility = View.VISIBLE
+                binding.rvLayoutTvAccountsMenu.visibility = VISIBLE
                 fullAccountList = accounts
                 // ✅ Liste immer neu bauen!
 
@@ -411,11 +412,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                             View.INVISIBLE
                                     } else {
                                         Log.d("EPGHUD", "LINKS EXTERN: NICHT LETZTE")
-                                        binding.fullscreenChannelnextepg.visibility = View.VISIBLE
+                                        binding.fullscreenChannelnextepg.visibility = VISIBLE
                                     }
                                     if (thisEpg != null) {
                                         binding.fullscreenChannelpreviousepg.visibility =
-                                            View.VISIBLE
+                                            VISIBLE
                                         changeHudNextEpg(thisEpg)
                                     } else {
                                         binding.fullscreenChannelpreviousepg.visibility =
@@ -491,17 +492,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                         binding.fullscreenChannelpreviousepg.visibility =
                                             View.INVISIBLE
                                     } else {
-                                        binding.fullscreenChannelnextepg.visibility = View.VISIBLE
+                                        binding.fullscreenChannelnextepg.visibility = VISIBLE
                                     }
                                     if (thisEpg?.idByAccountData == focusedChannelLastEpgIdByAccountData) {
                                         binding.fullscreenChannelnextepg.visibility = View.INVISIBLE
                                     } else {
                                         binding.fullscreenChannelpreviousepg.visibility =
-                                            View.VISIBLE
+                                            VISIBLE
                                     }
                                     if (thisEpg != null) {
                                         binding.fullscreenChannelpreviousepg.visibility =
-                                            View.VISIBLE
+                                            VISIBLE
                                         changeHudNextEpg(thisEpg)
                                     } else {
                                         binding.fullscreenChannelnextepg.visibility = View.INVISIBLE
@@ -533,9 +534,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             if (previousChannelPosition.id == tvChannelsAdapter?.currentList?.firstOrNull()?.id) {
                                 binding.fullscreenChannelprevious.visibility = View.INVISIBLE
                             } else {
-                                binding.fullscreenChannelpreviousepg.visibility = View.VISIBLE
+                                binding.fullscreenChannelpreviousepg.visibility = VISIBLE
                             }
-                            binding.fullscreenChannelnext.visibility = View.VISIBLE
+                            binding.fullscreenChannelnext.visibility = VISIBLE
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val epgChannelId = previousChannel.linkedEpgChannel?.target?.chEpgId
                                 val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(
@@ -585,7 +586,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     val currentPlayingChannelIndex =
                         tvChannelsAdapter?.currentList?.indexOf(helpViewModel.currentHudFocusedChannelPosition)
                     if (currentPlayingChannelIndex != null && totalChannels != null && currentPlayingChannelIndex < (totalChannels - 1)) {
-                        binding.fullscreenChannelprevious.visibility = View.VISIBLE
+                        binding.fullscreenChannelprevious.visibility = VISIBLE
                         val nextChannelPosition =
                             tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex + 1)
                         if (nextChannelPosition != null) {
@@ -593,9 +594,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             if (nextChannelPosition.id == tvChannelsAdapter?.currentList?.lastOrNull()?.id) {
                                 binding.fullscreenChannelnext.visibility = View.INVISIBLE
                             } else {
-                                binding.fullscreenChannelnext.visibility = View.VISIBLE
+                                binding.fullscreenChannelnext.visibility = VISIBLE
                             }
-                            binding.fullscreenChannelprevious.visibility = View.VISIBLE
+                            binding.fullscreenChannelprevious.visibility = VISIBLE
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val epgChannelId = nextChannel.linkedEpgChannel?.target?.chEpgId
                                 val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(
@@ -657,7 +658,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.tvShowFullEpg.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
                 binding.tvDescription.requestFocus()
-                binding.borderAnimated.visibility = View.VISIBLE
+                binding.borderAnimated.visibility = VISIBLE
                 val animation = AnimationUtils.loadAnimation(
                     this@TvChannelsFragment.requireActivity(),
                     R.anim.blinked_border
@@ -682,7 +683,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
         binding.tvDescription.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                binding.borderAnimated.visibility = View.VISIBLE
+                binding.borderAnimated.visibility = VISIBLE
                 val animation = AnimationUtils.loadAnimation(
                     this@TvChannelsFragment.requireActivity(),
                     R.anim.blinked_border
@@ -1002,7 +1003,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     fun saveCurrentList(tvChannelPos: ChannelPositions) {
         val current = tvChannelsAdapter?.currentList
-
+        current?.forEachIndexed { index, channel ->
+            channel.position = index
+        }
         manualPositionsBox.put(current) // oder viewModel.persistList()
         val tvCategory = tvChannelPos.tvcategory.target
         if (tvCategory.orderBy != 2) {
@@ -1176,9 +1179,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     fun showChannelList(accounttvCategoryId: Long) {
         if (firstOpenTvChannels || helpViewModel.wasTvSectionOpened) {
-            binding.rvLayoutTvChannels.visibility = View.VISIBLE
-            binding.relLayoutEpg.visibility = View.VISIBLE
-            binding.videoViewPreview.visibility = View.VISIBLE
+            binding.rvLayoutTvChannels.visibility = VISIBLE
+            binding.relLayoutEpg.visibility = VISIBLE
+            binding.videoViewPreview.visibility = VISIBLE
             firstOpenTvChannels = false
         }
         if (helpViewModel.currentFocusedTvCategory?.id != accounttvCategoryId || helpViewModel.wasTvSectionOpened) {
@@ -1251,7 +1254,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     if (sortedChannels.isNotEmpty()) {
 
                         withContext(Dispatchers.Main) {
-                            binding.tvCatChannelSize.visibility = View.VISIBLE
+                            binding.tvCatChannelSize.visibility = VISIBLE
                             binding.tvCatChannelSize.text = "${sortedChannels.size}"
                             tvChannelsAdapter?.submitList(sortedChannels)
                             tvChannelsAdapter?.submitListToUse(sortedChannels)
@@ -1363,7 +1366,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         currentEpgJob = viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.IO) {
                 withContext(Dispatchers.Main) {
-                    binding.tvLoadEpg.visibility = View.VISIBLE
+                    binding.tvLoadEpg.visibility = VISIBLE
                 }
                 channelPositions.filter { channelPos ->
                     val tvChannel = channelPos.tvchannel.target
@@ -1425,7 +1428,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     fun notifyChannelAdapterOrderChannels(channPos: ChannelPositions) {
         binding.containerChannelOptions.visibility = View.GONE
-        binding.relLayoutChOrderInfo.visibility = View.VISIBLE
+        binding.relLayoutChOrderInfo.visibility = VISIBLE
         val stringOk = SpannableStringBuilder()
             .bold {
                 append("OK:\n") }
@@ -1437,7 +1440,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 append("BACK:\n") }
             .append("Change channel")
         binding.tvOrderChInfoReturn.text = stringReturn
-        binding.tvOrderChInfoUpDown.visibility = View.VISIBLE
+        binding.tvOrderChInfoUpDown.visibility = VISIBLE
 
         val stringUpDown = SpannableStringBuilder()
             .bold {
@@ -1459,7 +1462,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun changeChOrderInfoMoving() {
-        binding.tvOrderChInfoUpDown.visibility = View.VISIBLE
+        binding.tvOrderChInfoUpDown.visibility = VISIBLE
         val stringOk = SpannableStringBuilder()
             .bold {
                 append("OK:\n") }
@@ -1472,7 +1475,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             .append("Change channel")
         binding.tvOrderChInfoReturn.text = stringReturn
 
-        binding.tvOrderChInfoUpDown.visibility = View.VISIBLE
+        binding.tvOrderChInfoUpDown.visibility = VISIBLE
         val stringUpDown = SpannableStringBuilder()
             .bold {
                 append("UP/DOWN:\n") }
@@ -1562,7 +1565,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             hudcurrentNextEpg = epgDataOB
             binding.tvHudNextProgramName.text = epgDataOB.name
             if (epgDataOB.sub_title.isNotEmpty()) {
-                binding.tvHudNextProgramSubtitle.visibility = View.VISIBLE
+                binding.tvHudNextProgramSubtitle.visibility = VISIBLE
                 binding.tvHudNextProgramSubtitle.text = epgDataOB.sub_title
             } else {
                 binding.tvHudNextProgramSubtitle.visibility = View.INVISIBLE
@@ -1640,7 +1643,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         val tvchannel = channelPos.tvchannel.target
 
         if (tvchannel.idByAccountData == helpViewModel.currentPlayingChannel?.idByAccountData) {
-            binding.channelQualityInfoFullscreen.visibility = View.VISIBLE
+            binding.channelQualityInfoFullscreen.visibility = VISIBLE
         } else {
             binding.channelQualityInfoFullscreen.visibility = View.GONE
         }
@@ -1675,13 +1678,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             if (channelPos.catAndChannelAccount == tvChannelsAdapter?.currentList?.first()?.catAndChannelAccount) {
                 binding.fullscreenChannelprevious.visibility = View.INVISIBLE
             } else {
-                binding.fullscreenChannelprevious.visibility = View.VISIBLE
+                binding.fullscreenChannelprevious.visibility = VISIBLE
             }
 
             if (channelPos.catAndChannelAccount == tvChannelsAdapter?.currentList?.last()?.catAndChannelAccount) {
                 binding.fullscreenChannelnext.visibility = View.INVISIBLE
             } else {
-                binding.fullscreenChannelnext.visibility = View.VISIBLE
+                binding.fullscreenChannelnext.visibility = VISIBLE
             }
 
             val currentTime = System.currentTimeMillis()
@@ -1697,7 +1700,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 if (firstEpgDataOB.sub_title.isEmpty()) {
                     binding.tvHudCurrenProgramSubtitle.visibility = View.INVISIBLE
                 } else {
-                    binding.tvHudCurrenProgramSubtitle.visibility = View.VISIBLE
+                    binding.tvHudCurrenProgramSubtitle.visibility = VISIBLE
                     binding.tvHudCurrenProgramSubtitle.text = firstEpgDataOB.sub_title
                 }
                 val startTime = formatUnixTimestampToTime(firstEpgDataOB.startTimestamp ?: 0, timeOffSet)
@@ -1729,7 +1732,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
                 // Setze den Text im TextView
                 binding.tvRemainingTimeCurrentProgram.text = "$remainingTimeText remaining.."
-                binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
+                binding.tvRemainingTimeCurrentProgram.visibility = VISIBLE
             } else {
                 binding.hudprogressBar.progress = 0
                 binding.tvHudCurrentProgramTime.text =
@@ -1740,22 +1743,22 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.tvRemainingTimeCurrentProgram.visibility = View.INVISIBLE
             }
             if (nextEpgDataOB != null) {
-                binding.tvHudPrograminfo.visibility = View.VISIBLE
+                binding.tvHudPrograminfo.visibility = VISIBLE
                 val datum =  reformatDate(nextEpgDataOB.datum)
                 binding.tvHudPrograminfo.text = "$datum"
-                binding.tvHudNextProgramTime.visibility = View.VISIBLE
-                binding.tvHudNextProgramSubtitle.visibility = View.VISIBLE
-                binding.fullscreenChannelpreviousepg.visibility = View.VISIBLE
-                binding.fullscreenChannelnextepg.visibility = View.VISIBLE
+                binding.tvHudNextProgramTime.visibility = VISIBLE
+                binding.tvHudNextProgramSubtitle.visibility = VISIBLE
+                binding.fullscreenChannelpreviousepg.visibility = VISIBLE
+                binding.fullscreenChannelnextepg.visibility = VISIBLE
                 hudcurrentNextEpg = nextEpgDataOB
                 val nextStartTime = formatUnixTimestampToTime(nextEpgDataOB.startTimestamp ?: 0, timeOffSet)
                 val nextEndTime = formatUnixTimestampToTime(nextEpgDataOB.stopTimestamp ?: 0, timeOffSet)
                 binding.tvHudNextProgramName.text = nextEpgDataOB.name
-                binding.tvHudNextProgramName.visibility = View.VISIBLE
+                binding.tvHudNextProgramName.visibility = VISIBLE
                 binding.tvHudNextProgramTime.text =
                     "${nextStartTime} - ${nextEndTime}"
                 if (nextEpgDataOB.sub_title.isNotEmpty()) {
-                    binding.tvHudNextProgramSubtitle.visibility = View.VISIBLE
+                    binding.tvHudNextProgramSubtitle.visibility = VISIBLE
                     binding.tvHudNextProgramSubtitle.text = nextEpgDataOB.sub_title
                 } else {
                     binding.tvHudNextProgramSubtitle.visibility = View.INVISIBLE
@@ -1771,7 +1774,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             }
         } else {
             binding.tvHudPrograminfo.visibility = View.INVISIBLE
-            binding.relLayoutSeekbar.visibility = View.VISIBLE
+            binding.relLayoutSeekbar.visibility = VISIBLE
             val startTimestamp = helpViewModel.catchupEpgData?.startTimestamp ?: 0
             val stopTimestamp = helpViewModel.catchupEpgData?.stopTimestamp ?: 0
             val datum = helpViewModel.catchupEpgData?.datum?.let {
@@ -1781,7 +1784,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             val catchupEndTime = formatUnixTimestampToTime(stopTimestamp, timeOffSet)
             binding.tvHudCurrenProgramName.text = helpViewModel.catchupEpgData?.name ?: "No Information"
             if (helpViewModel.catchupEpgData?.sub_title != null) {
-                binding.tvHudCurrenProgramSubtitle.visibility = View.VISIBLE
+                binding.tvHudCurrenProgramSubtitle.visibility = VISIBLE
                 binding.tvHudCurrenProgramSubtitle.text = helpViewModel.catchupEpgData?.sub_title
             } else {
                 binding.tvHudCurrenProgramSubtitle.visibility = View.INVISIBLE
@@ -1806,7 +1809,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
                 // Setze den Text im TextView
                 binding.tvRemainingTimeCurrentProgram.text = "$remainingTimeText remaining.."
-                binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
+                binding.tvRemainingTimeCurrentProgram.visibility = VISIBLE
             } else {
                 binding.tvHudCurrentProgramTime.text = "00:00 - 00:00"
                 binding.hudprogressBar.progress = 0
@@ -1823,17 +1826,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
         if (tvchannel.idByAccountData == helpViewModel.currentPlayingChannel?.idByAccountData) {
             if (binding.tvFullscreenChannelQuality.text.toString().isNotEmpty()) {
-                binding.tvFullscreenChannelQuality.visibility = View.VISIBLE
+                binding.tvFullscreenChannelQuality.visibility = VISIBLE
             } else {
                 binding.tvFullscreenChannelQuality.visibility = View.GONE
             }
             if (binding.tvFullscreenFps.text.toString().isNotEmpty()) {
-                binding.tvFullscreenFps.visibility = View.VISIBLE
+                binding.tvFullscreenFps.visibility = VISIBLE
             } else {
                 binding.tvFullscreenFps.visibility = View.GONE
             }
             if (binding.tvFullscreenAudio.text.toString().isNotEmpty()) {
-                binding.tvFullscreenAudio.visibility = View.VISIBLE
+                binding.tvFullscreenAudio.visibility = VISIBLE
             } else {
                 binding.tvFullscreenAudio.visibility = View.GONE
             }
@@ -1867,7 +1870,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     private fun showHudContainer() {
-        binding.hudLayout.visibility = View.VISIBLE
+        binding.hudLayout.visibility = VISIBLE
         // Entferne vorherige geplante Ausführungen des Runnables, falls vorhanden
         handler.removeCallbacks(hideHudRunnable)
         isHudContainerOpened = true
@@ -1971,7 +1974,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.videoViewPreview.requestLayout()
 
         // Fokus und Sichtbarkeit des Players
-        binding.videoView.visibility = View.VISIBLE
+        binding.videoView.visibility = VISIBLE
         binding.videoView.isFocusable = true
         binding.videoView.isFocusableInTouchMode = true
         binding.videoView.requestFocus()
@@ -1985,10 +1988,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.fullScreenProgressBar.visibility = View.INVISIBLE
         binding.fullScreenPlayingError.visibility = View.INVISIBLE
         // Andere Views wieder sichtbar machen
-        binding.tvTvchannelname.visibility = View.VISIBLE
-        binding.relLayoutEpg.visibility = View.VISIBLE
-        binding.relLayoutChannelInfo.visibility = View.VISIBLE
-        binding.tvAudio.visibility = View.VISIBLE
+        binding.tvTvchannelname.visibility = VISIBLE
+        binding.relLayoutEpg.visibility = VISIBLE
+        binding.relLayoutChannelInfo.visibility = VISIBLE
+        binding.tvAudio.visibility = VISIBLE
         // Status auf Nicht-Vollbildmodus setzen
         helpViewModel.isTvFullScreen = false
 
@@ -2010,13 +2013,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.videoViewPreview.requestLayout()
 
         // Fokus und Sichtbarkeit des Players
-        binding.videoView.visibility = View.VISIBLE
+        binding.videoView.visibility = VISIBLE
         binding.videoView.isFocusable = false
         binding.videoView.isFocusableInTouchMode = false
         if (!helpViewModel.isFullScreenFullEpg) {
             if (!helpViewModel.isPlayingCatchup) {
-                binding.relLayoutEpg.visibility = View.VISIBLE
-                binding.relLayoutChannelInfo.visibility = View.VISIBLE
+                binding.relLayoutEpg.visibility = VISIBLE
+                binding.relLayoutChannelInfo.visibility = VISIBLE
 
                 helpViewModel.currentPlayingChannelPosition?.let { currentChannel ->
                     val clickedPosition =
@@ -2100,7 +2103,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         helpViewModel.currentFocusedChannPosition = channPos
         helpViewModel.currentFocusedChannel = channPos.tvchannel.target
         if (chPos != -1) {
-            binding.tvActualChNr.visibility = View.VISIBLE
+            binding.tvActualChNr.visibility = VISIBLE
             binding.tvActualChNr.text = "$chPos / "
         } else {
             binding.tvActualChNr.visibility = View.INVISIBLE
@@ -2129,7 +2132,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     fun resetChannelQualityInfo(channel: TvChannelOB) {
         if (!helpViewModel.isTvFullScreen) {
-            binding.tvTvchannelname.visibility = View.VISIBLE
+            binding.tvTvchannelname.visibility = VISIBLE
         }
         binding.tvTvchannelname.text = channel.showingName
         binding.tvAudio.visibility = View.INVISIBLE
@@ -2138,8 +2141,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.tvFullscreenAudio.visibility = View.INVISIBLE
         binding.tvFullscreenFps.visibility = View.INVISIBLE
         binding.tvFullscreenChannelQuality.visibility = View.INVISIBLE
-        binding.videoView.visibility = View.VISIBLE
-        binding.relLayoutChannelInfo.visibility = View.VISIBLE
+        binding.videoView.visibility = VISIBLE
+        binding.relLayoutChannelInfo.visibility = VISIBLE
         binding.playingError.visibility = View.INVISIBLE
     }
 
@@ -2196,10 +2199,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.tvAudio.visibility = View.INVISIBLE
         binding.tvFps.visibility = View.INVISIBLE
         binding.tvChannelQuality.visibility = View.INVISIBLE
-        binding.tvTvchannelname.visibility = View.VISIBLE
+        binding.tvTvchannelname.visibility = VISIBLE
         binding.tvTvchannelname.text = channel.showingName
-        binding.videoView.visibility = View.VISIBLE
-        binding.relLayoutChannelInfo.visibility = View.VISIBLE
+        binding.videoView.visibility = VISIBLE
+        binding.relLayoutChannelInfo.visibility = VISIBLE
         binding.playingError.visibility = View.INVISIBLE
         showProgressBar()
         switchChannel(catchupUrl)
@@ -2232,7 +2235,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun showFullScreenChannelEpg() {
-        binding.containerFullscreenEpgInfo.visibility = View.VISIBLE
+        binding.containerFullscreenEpgInfo.visibility = VISIBLE
     }
 
     var isFirstOpenDetailEpgFullScreen = true
@@ -2242,7 +2245,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         transaction.add(R.id.container_fullscreen_epgInfo, FullScreenChannelSelectorEpg())
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.containerFullscreenEpgInfo.visibility = View.VISIBLE
+        binding.containerFullscreenEpgInfo.visibility = VISIBLE
         val slideIn = AnimationUtils.loadAnimation(this@TvChannelsFragment.requireActivity(), R.anim.slide_in_right)
         binding.containerFullscreenEpgInfo.startAnimation(slideIn)
     }
@@ -2258,8 +2261,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun showEpgPreview(tvChannel: TvChannelOB) {
-        if (binding.relLayoutEpg.isInvisible) {
-            binding.relLayoutEpg.visibility = View.VISIBLE
+        if (binding.relLayoutEpg.isInvisible && !helpViewModel.isTvFullScreen) {
+            binding.relLayoutEpg.visibility = VISIBLE
         }
         tvChannel.account.target.epgsources.reset()
         resetEpgPreview()
@@ -2292,17 +2295,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     }
                 if (currentProgram != null) {
                     helpViewModel.currentSelectedEpgForSelectedChannel = currentProgram
-                    binding.epgpreviewDivider.visibility = View.VISIBLE
+                    binding.epgpreviewDivider.visibility = VISIBLE
                     binding.tvNoepgavailable.visibility = View.GONE
-                    binding.relLayoutCurrentProgram.visibility = View.VISIBLE
-                    binding.tvShowFullEpg.visibility = View.VISIBLE
-                    binding.tvDescription.visibility = View.VISIBLE
+                    binding.relLayoutCurrentProgram.visibility = VISIBLE
+                    binding.tvShowFullEpg.visibility = VISIBLE
+                    binding.tvDescription.visibility = VISIBLE
                     binding.tvShowFullEpg.isFocusable = true
                     binding.tvShowFullEpg.isFocusableInTouchMode = true
-                    binding.tvCurrentStartTime.visibility = View.VISIBLE
-                    binding.tvCurrentEndTime.visibility = View.VISIBLE
-                    binding.tvCurrentProgram.visibility = View.VISIBLE
-                    binding.tvDescription.visibility = View.VISIBLE
+                    binding.tvCurrentStartTime.visibility = VISIBLE
+                    binding.tvCurrentEndTime.visibility = VISIBLE
+                    binding.tvCurrentProgram.visibility = VISIBLE
+                    binding.tvDescription.visibility = VISIBLE
                     // Verarbeite currentEpgData und nextEpgData nach Bedarf und binde sie an die UI
                     // Zum Beispiel: tvProgramInfo.text = "${currentEpgData.name} - ${currentEpgData.descr}"
                     binding.tvCurrentStartTime.text =
@@ -2315,7 +2318,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     if (currentProgram.sub_title.isEmpty()) {
                         binding.tvCurrentSubtitle.visibility = View.GONE
                     } else {
-                        binding.tvCurrentSubtitle.visibility = View.VISIBLE
+                        binding.tvCurrentSubtitle.visibility = VISIBLE
                         binding.tvCurrentSubtitle.text = currentProgram.sub_title
                     }
                     if (currentProgram.descr.isEmpty()) {
@@ -2325,9 +2328,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     }
 
                     if (nextEpgData != null) {
-                        binding.tvNextStartTime.visibility = View.VISIBLE
-                        binding.tvNextEndTime.visibility = View.VISIBLE
-                        binding.tvNextProgram.visibility = View.VISIBLE
+                        binding.tvNextStartTime.visibility = VISIBLE
+                        binding.tvNextEndTime.visibility = VISIBLE
+                        binding.tvNextProgram.visibility = VISIBLE
                         binding.tvNextStartTime.text =
                             formatUnixTimestampToTime(nextEpgData.startTimestamp ?: 0, timeOffSet)
 
@@ -2344,7 +2347,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 View.GONE
                             } else {
                                 binding.tvNextsubtitle.text = nextEpgData.sub_title
-                                View.VISIBLE
+                                VISIBLE
                             }
                         val overnextProgam = if (heuteListe.size >= 3) {
                             heuteListe[2]
@@ -2352,9 +2355,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             null
                         }
                         if (overnextProgam != null) {
-                            binding.tvOvernextStartTime.visibility = View.VISIBLE
-                            binding.tvOvernextEndTime.visibility = View.VISIBLE
-                            binding.tvOvernextProgram.visibility = View.VISIBLE
+                            binding.tvOvernextStartTime.visibility = VISIBLE
+                            binding.tvOvernextEndTime.visibility = VISIBLE
+                            binding.tvOvernextProgram.visibility = VISIBLE
                             binding.tvOvernextStartTime.text = formatUnixTimestampToTime(
                                 overnextProgam.startTimestamp ?: 0,
                                 timeOffSet
@@ -2375,7 +2378,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                     View.GONE
                                 } else {
                                     binding.tvOvernextsubtitle.text = overnextProgam.sub_title
-                                    View.VISIBLE
+                                    VISIBLE
                                 }
 
                         } else {
@@ -2412,7 +2415,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.tvShowFullEpg.isFocusable = false
             binding.tvShowFullEpg.isFocusableInTouchMode = false
             binding.tvShowFullEpg.visibility = View.INVISIBLE
-            binding.tvNoepgavailable.visibility = View.VISIBLE
+            binding.tvNoepgavailable.visibility = VISIBLE
         }
     }
 
@@ -2543,7 +2546,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.relLayoutEpg.requestLayout()
             binding.rvPreviewFullEpg.visibility = View.GONE
             binding.rvLayoutFullEpg.visibility = View.GONE
-            binding.relLayoutEpg.visibility = View.VISIBLE
+            binding.relLayoutEpg.visibility = VISIBLE
             binding.containerChannelOptions.visibility = View.GONE
             helpViewModel.isTvChannelsMenuFocused = true
             binding.rvLayoutTvChannels.requestFocus()
@@ -2641,7 +2644,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                     binding.tvErrorChannelPlay.text = response.message
                                     val handler = Handler(Looper.getMainLooper())
                                     handler.postDelayed({
-                                        if (binding.tvErrorChannelPlay.visibility == View.VISIBLE) {
+                                        if (binding.tvErrorChannelPlay.visibility == VISIBLE) {
                                             clearPlayingChannel()
                                             binding.tvErrorChannelPlay.visibility = View.GONE // TextView ausblenden
                                         }
@@ -2669,7 +2672,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         binding.tvErrorChannelPlay.text = "Can't get new token!"
                         val handler = Handler(Looper.getMainLooper())
                         handler.postDelayed({
-                            if (binding.tvErrorChannelPlay.visibility == View.VISIBLE) {
+                            if (binding.tvErrorChannelPlay.visibility == VISIBLE) {
                                 clearPlayingChannel()
                                 binding.tvErrorChannelPlay.visibility = View.GONE // TextView ausblenden
                             }
@@ -2787,7 +2790,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
         lastFpsToShow = 0
         helpViewModel.currentlyPlayingUrl = url
-        binding.videoView.visibility = View.VISIBLE
+        binding.videoView.visibility = VISIBLE
         // MediaSource für den neuen Sender erstellen
         val mediaSource: MediaSource =
             createMediaSource(url)
@@ -2854,9 +2857,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.tvChannelQuality.text = resolution
             binding.tvFullscreenChannelQuality.text = resolution
             if (helpViewModel.isTvFullScreen) {
-                binding.tvFullscreenChannelQuality.visibility = View.VISIBLE
+                binding.tvFullscreenChannelQuality.visibility = VISIBLE
             } else {
-                binding.tvChannelQuality.visibility = View.VISIBLE
+                binding.tvChannelQuality.visibility = VISIBLE
             }
         }
 
@@ -2869,9 +2872,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.tvAudio.text = audioFormat
             binding.tvFullscreenAudio.text = audioFormat
             if (helpViewModel.isTvFullScreen) {
-                binding.tvFullscreenAudio.visibility = View.VISIBLE
+                binding.tvFullscreenAudio.visibility = VISIBLE
             } else {
-                binding.tvAudio.visibility = View.VISIBLE
+                binding.tvAudio.visibility = VISIBLE
             }
         }
         override fun onPlayerError(eventTime: AnalyticsListener.EventTime, error: PlaybackException) {
@@ -2918,13 +2921,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     binding.fullScreenProgressBar.visibility = View.GONE
                     Handler(Looper.getMainLooper()).postDelayed({
                         binding.fullScreenProgressBar.visibility =
-                            View.VISIBLE // Zurücksetzen der Sichtbarkeit
+                            VISIBLE // Zurücksetzen der Sichtbarkeit
                     }, 250) // 500 Millisekunden = 0,5 Sekunden
                 } else {
                     binding.playerProgressBar.visibility = View.GONE
                     Handler(Looper.getMainLooper()).postDelayed({
                         binding.playerProgressBar.visibility =
-                            View.VISIBLE // Zurücksetzen der Sichtbarkeit
+                            VISIBLE // Zurücksetzen der Sichtbarkeit
                     }, 250) // 500 Millisekunden = 0,5 Sekunden
                 }
             }
@@ -2971,10 +2974,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 binding.tvFps.text = "FPS: $fpsToShow"
                                 binding.tvFullscreenFps.text = "FPS: $fpsToShow"
                                 if (helpViewModel.isTvFullScreen && helpViewModel.currentHudFocusedChannel == helpViewModel.currentPlayingChannel) {
-                                    binding.tvFullscreenFps.visibility = View.VISIBLE
+                                    binding.tvFullscreenFps.visibility = VISIBLE
                                 } else {
                                     if (!helpViewModel.isTvFullScreen) {
-                                        binding.tvFps.visibility = View.VISIBLE
+                                        binding.tvFps.visibility = VISIBLE
                                     }
                                 }
                             }
@@ -2999,7 +3002,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     retryCount = 0
                     hideProgressBar()
                     hideFullScreenProgressBar()
-                    if (isFirstPlayingChannel && helpViewModel.isTvFullScreen && binding.containerFullscreenChannelchange.visibility != View.VISIBLE) {
+                    if (isFirstPlayingChannel && helpViewModel.isTvFullScreen && binding.containerFullscreenChannelchange.visibility != VISIBLE) {
                         showHudContainer()
                         isFirstPlayingChannel = false
                     }
@@ -3115,7 +3118,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             "Unknown error occurred: ${cause?.message ?: "Please try again later.."}"
         }
             binding.tvErrorChannelPlay.text = errorMessage
-            binding.tvErrorChannelPlay.visibility = View.VISIBLE
+            binding.tvErrorChannelPlay.visibility = VISIBLE
             binding.videoView.useController = false
             if (!helpViewModel.isPlayingCatchup) {
                 if (retryCount < maxRetries && helpViewModel.currentPlayingChannelPosition != null) {
@@ -3150,7 +3153,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     binding.tvErrorChannelPlay.text =
                         "Stream could not be started. Please try again later."
                     errorHandler.postDelayed({
-                        if (binding.tvErrorChannelPlay.visibility == View.VISIBLE) {
+                        if (binding.tvErrorChannelPlay.visibility == VISIBLE) {
                             clearPlayingChannel()
                             binding.tvErrorChannelPlay.visibility = View.GONE // TextView ausblenden
                             if (helpViewModel.isTvFullScreen) {
@@ -3206,15 +3209,15 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         if (helpViewModel.currentFocusedChannPosition != null && !helpViewModel.isFullScreenFullEpg) {
             helpViewModel.isFullEpgContainerOpened = true
             binding.relLayoutEpg.visibility = View.INVISIBLE
-            binding.rvLayoutFullEpg.visibility = View.VISIBLE
+            binding.rvLayoutFullEpg.visibility = VISIBLE
             binding.rvLayoutFullEpg.requestFocus()
         }
     }
 
     fun makeFullEpgVisible() {
         helpViewModel.isFullEpgContainerOpened = true
-        binding.rvLayoutFullEpg.visibility = View.VISIBLE
-        binding.rvPreviewFullEpg.visibility = View.VISIBLE
+        binding.rvLayoutFullEpg.visibility = VISIBLE
+        binding.rvPreviewFullEpg.visibility = VISIBLE
     }
 
     private fun showChannelOptionsContainer() {
@@ -3223,7 +3226,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         transaction.replace(R.id.container_ChannelOptions, ChannelOptionsFragment())
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.containerChannelOptions.visibility = View.VISIBLE
+        binding.containerChannelOptions.visibility = VISIBLE
         binding.containerChannelOptions.requestFocus()
         helpViewModel.isChannelOptionsContainerOpened = true
     }
@@ -3233,7 +3236,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         transaction.replace(R.id.container_AssignChannelToEpg, CategoryOptionsFragment())
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.containerAssignChannelToEpg.visibility = View.VISIBLE
+        binding.containerAssignChannelToEpg.visibility = VISIBLE
         binding.containerAssignChannelToEpg.requestFocus()
         helpViewModel.isCategoryManagementOpened = true
         tvAccountCategoryAdapter.isHandled = false
@@ -3252,7 +3255,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             helpViewModel.currentFocusedChannPosition?.let { showEpgPreview(it.tvchannel.target) }
             tvChannelsAdapter?.notifyItemChanged(currentChannelPosition)
         }
-        binding.containerChannelOptions.visibility = View.VISIBLE
+        binding.containerChannelOptions.visibility = VISIBLE
     }
 
     fun closeChannelOptionsContainer() {
@@ -3271,7 +3274,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         showMainMenu()
         if (helpViewModel.currentFocusedTvAccount?.tvcategories?.filter { it.favorite }.isNullOrEmpty()) {
             helpViewModel.isTvAccountMenuOpened = true
-            binding.tvNoTvCategories.visibility = View.VISIBLE
+            binding.tvNoTvCategories.visibility = VISIBLE
             val userAccountQuery = accountBox.query(Accounts_.isUserCategories.equal(true)).build()
             val userAccount = userAccountQuery.findFirst()
             userAccountQuery.close()
@@ -3393,7 +3396,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun showProgressBar() {
-        progressBar!!.visibility = View.VISIBLE
+        progressBar!!.visibility = VISIBLE
     }
 
     private fun hideFullScreenProgressBar() {
@@ -3401,13 +3404,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     private fun showFullScreenProgressBar() {
-        fullScreenProgressBar!!.visibility = View.VISIBLE
+        fullScreenProgressBar!!.visibility = VISIBLE
     }
 
     fun setVisibilityAssignChannelEpg(visibility: Boolean) {
         if (visibility) {
             helpViewModel.assignChannelToEpgActive = true
-            binding.containerAssignChannelToEpg.visibility = View.VISIBLE
+            binding.containerAssignChannelToEpg.visibility = VISIBLE
             changeFragment(AssingChannelToEpgFragment())
             binding.containerAssignChannelToEpg.requestFocus()
         } else {
@@ -3428,7 +3431,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         transaction.replace(R.id.container_fullscreen_channelchange, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.containerFullscreenChannelchange.visibility = View.VISIBLE
+        binding.containerFullscreenChannelchange.visibility = VISIBLE
         binding.containerFullscreenChannelchange.requestFocus()
     }
 
@@ -3456,7 +3459,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         transaction.replace(R.id.rv_preview_FullEpg, DetailEpgFragment())
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.rvPreviewFullEpg.visibility = View.VISIBLE
+        binding.rvPreviewFullEpg.visibility = VISIBLE
     }
 
     fun showFullScreenFullEpg() {
@@ -3470,7 +3473,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun visibleFullEpgAndDetailEpgContainer() {
-        binding.rvLayoutFullEpg.visibility = View.VISIBLE
+        binding.rvLayoutFullEpg.visibility = VISIBLE
         val fullepgFragment = parentFragmentManager.findFragmentById(R.id.rv_layout_FullEpg)
         if (fullepgFragment is FullEpgFragment) {
             fullepgFragment.setFocusToEpgData()
@@ -3559,7 +3562,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             helpViewModel.isCurrentlyPlayingTv) {
             tvChannelsAdapter?.notifyDataSetChanged()
             resumeFromBackground = true
-            binding.videoView.visibility = View.VISIBLE
+            binding.videoView.visibility = VISIBLE
             switchChannel(helpViewModel.currentlyPlayingUrl)
         }
     }

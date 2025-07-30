@@ -20,6 +20,7 @@
     </style>
     <style name="CustomPopupMenu" parent="android:Widget.PopupMenu">
         <item name="android:popupBackground">@drawable/popup_custom_background</item>
+        <item name="android:colorFocusedHighlight">@color/light_mid_grey</item>
         <item name="android:textSize">12sp</item>
     </style>
 

@@ -14,7 +14,7 @@
                     android:insetLeft="-4dp"
                     android:insetTop="-4dp"
                     android:insetBottom="-4dp"
-                    android:insetRight="-1.5dp"> <!-- Rahmen rechts ausblenden -->
+                    android:insetRight="0dp"> <!-- Rahmen rechts ausblenden -->
                     <shape android:shape="rectangle">
 
                         <stroke
