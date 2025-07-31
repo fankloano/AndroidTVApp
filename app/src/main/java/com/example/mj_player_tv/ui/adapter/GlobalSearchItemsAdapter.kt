@@ -257,6 +257,7 @@ class GlobalSearchItemsAdapter(
                     val epgs= programMap[selectedChannel] ?: emptyList()
                     epgAdapter.submitList(epgs)
                     binding.tvSelectedChannel.text = selectedChannel.tvchannel.target.showingName
+                    binding.tvSelectedTvCategory.text = "in ${selectedChannel.tvcategory.target.showingName}"
                     updateDetail(epgs.firstOrNull())
                     currentChannel = selectedChannel
                 },
@@ -273,7 +274,7 @@ class GlobalSearchItemsAdapter(
                     updateDetail(selectedEpg)
                 },
                 onEpgClicked = { clickedEpg, thisview ->
-                    showProgramPopup(clickedEpg, currentChannel ?: item.programs.first().first, thisview, bindingAdapterPosition)
+                    showProgramPopup(clickedEpg, currentChannel ?: item.programs.first().first, thisview)
                 },
                 helpViewModel = helpViewModel,
                 fragment// ✅ Übergib hier das ViewModel
@@ -287,6 +288,7 @@ class GlobalSearchItemsAdapter(
 
             epgAdapter.submitList(initialEpgs)
             binding.tvSelectedChannel.text = firstChannel?.tvchannel?.target?.showingName.orEmpty()
+            binding.tvSelectedTvCategory.text = firstChannel?.tvcategory?.target?.showingName.orEmpty()
             updateDetail(initialEpgs.firstOrNull())
         }
 
@@ -303,7 +305,7 @@ class GlobalSearchItemsAdapter(
             binding.tvDetailepgDescription.text = epg.descr ?: ""
         }
 
-        private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View, position: Int) {
+        private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View) {
             val popup = PopupMenu(view.context, view)
             popup.menuInflater.inflate(R.menu.menu_search_program_options, popup.menu)
             val tvchannel = tvchannelPos.tvchannel.target
@@ -311,6 +313,9 @@ class GlobalSearchItemsAdapter(
             val isProgramFinished = (program.stopTimestamp ?: 0L) < currentTime
             val isProgramNotStarted = (program.startTimestamp ?: 0) > currentTime
             val isCatchupChannel = tvchannel.enable_tv_archive == 1
+            if (isProgramFinished && !isCatchupChannel) {
+                return
+            }
             val isProgramCurrentlyPlaying = (((program.stopTimestamp
                 ?: 0L) > currentTime &&
                     currentTime >= (program.startTimestamp ?: 0)))
@@ -320,7 +325,7 @@ class GlobalSearchItemsAdapter(
             playItem.setVisible(isProgramCurrentlyPlaying)
             replayItem.setVisible(isCatchupChannel && (isProgramCurrentlyPlaying || isProgramFinished))
             reminderItem.setVisible(isProgramNotStarted)
-            val replayText = if (isProgramFinished && isCatchupChannel) {
+            val replayText = if (isProgramFinished) {
                 "Rewatch"
             } else {
                 if (isProgramCurrentlyPlaying && isCatchupChannel) {
@@ -345,12 +350,12 @@ class GlobalSearchItemsAdapter(
                 when (item.itemId) {
                     R.id.mark_play -> {
                         wasItemClicked = true
-                        playProgram()
+                        playProgram(tvchannelPos)
                         true
                     }
                     R.id.mark_replay -> {
                         wasItemClicked = true
-                        replayProgram()
+                        replayProgram(tvchannelPos, program)
                         true
                     }
                     R.id.mark_remember -> {
@@ -370,12 +375,12 @@ class GlobalSearchItemsAdapter(
             popup.show()
         }
 
-        private fun playProgram() {
-
+        private fun playProgram(tvchannelPos: ChannelPositions) {
+                fragment.playChannel(tvchannelPos)
         }
 
-        private fun replayProgram() {
-
+        private fun replayProgram(tvchannelPos: ChannelPositions, clickedEpg: EpgDataOB) {
+                fragment.replayProgram(tvchannelPos, clickedEpg)
         }
 
         private fun checkReminder(epg: EpgDataOB, tvChannelPos: ChannelPositions, view: View) {

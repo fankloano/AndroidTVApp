@@ -21,17 +21,29 @@
 
     <TextView
         android:id="@+id/tv_selectedChannel"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="29dp"
         tools:text="ZDF NEO HDYy"
         android:textSize="16sp"
-        android:gravity="center_vertical"
-        android:textColor="@color/white"
+        android:textColor="?attr/textMainColor"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:padding="6dp"
         android:layout_marginStart="6dp"
         app:layout_constraintStart_toEndOf="@id/recycler_epg"/>
+
+    <TextView
+        android:id="@+id/tv_selectedTvCategory"
+        android:layout_width="0dp"
+        android:layout_height="29dp"
+        tools:text=" in ZDF NEO HDYy"
+        android:textSize="16sp"
+        android:gravity="center_vertical"
+        android:textColor="?attr/textColorMidLight"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:padding="6dp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintStart_toEndOf="@id/tv_selectedChannel"/>
 
     <com.rubensousa.dpadrecyclerview.DpadRecyclerView
         android:id="@+id/recycler_epglist"

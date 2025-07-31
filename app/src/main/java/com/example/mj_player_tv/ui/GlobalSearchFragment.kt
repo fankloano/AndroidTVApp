@@ -21,6 +21,8 @@ import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.mj_player_tv.MainActivity
@@ -56,13 +58,18 @@ import com.example.mj_player_tv.database.entity.MovieOB
 import com.example.mj_player_tv.database.entity.Programme
 import com.example.mj_player_tv.database.entity.Programme_
 import com.example.mj_player_tv.database.entity.SeriesOB
+import com.example.mj_player_tv.database.entity.TvCategoryOB
 import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
 import com.example.mj_player_tv.database.help.GlobalSearchItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
 import com.example.mj_player_tv.ui.adapter.GlobalSearchItemsAdapter
+import com.example.mj_player_tv.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import org.threeten.bp.Duration
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.format.DateTimeFormatter
 
 @UnstableApi
 class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
@@ -72,6 +79,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private val settingsBox = ObjectBox.store.boxFor(Settings::class.java)
 
     private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
+
+    private val tvCatBox = ObjectBox.store.boxFor(TvCategoryOB::class.java)
 
     private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
 
@@ -324,10 +333,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             return@setOnKeyListener false
         }
 
-
-
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.searchResults.collectLatest { results ->
+            helpViewModel.searchResults.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { results ->
                 val tvResults = results.filterIsInstance<GlobalSearchItem.TvChannels>()
                 channelsByAccount  = tvResults.groupBy(
                     keySelector = {it.account},
@@ -396,7 +403,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.isSearching.collectLatest { searching ->
+            helpViewModel.isSearching.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { searching ->
                 if (searching) {
                     // Zeige z.B. ProgressBar, lade Spinner etc.
                     binding.tvNodatafound.visibility = View.GONE
@@ -538,10 +545,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
         moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
             binding.recyclerItems.requestFocus()
-        }
-
-        helpViewModel.closeOverlayFragment.observe(viewLifecycleOwner) {
-            parentFragmentManager.popBackStack()
         }
     }
 
@@ -742,11 +745,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this, programmeBox, epgDataBox) { clickedItem ->
             when (clickedItem) {
                 is GlobalSearchDisplayItem.ChannelItem -> {
-                    helpViewModel.currentFocusedChannPosition = clickedItem.channel
-                    helpViewModel.channelFromSearchContainer = true
-                    helpViewModel.currentFocusedTvAccount = clickedItem.channel.tvcategory.target.tvaccount.target
-                    helpViewModel.currentFocusedTvCategory = clickedItem.channel.tvcategory.target
-                    (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
+                    playChannel(clickedItem.channel)
                 }
                 is GlobalSearchDisplayItem.MovieItem -> {
                     helpViewModel.currentMovieAccount = selectedAccount
@@ -811,6 +810,169 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             setSmoothFocusChangesEnabled(false)
         }
     }
+
+    fun playChannel(tvChannelPos: ChannelPositions) {
+        helpViewModel.currentFocusedChannPosition = tvChannelPos
+        helpViewModel.channelFromSearchContainer = true
+        helpViewModel.currentFocusedTvAccount = tvChannelPos.tvcategory.target.tvaccount.target
+        helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+        helpViewModel.checkCategoryActivated(tvChannelPos.tvcategory.target)
+        Log.d("CLICKEDFROMGLOBALSEARCH", "${tvChannelPos.tvchannel.target.showingName} IN ${tvChannelPos.tvcategory.target.showingName}")
+        (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
+    }
+
+
+    fun replayProgram(tvChannelPos: ChannelPositions, clickedEpgData: EpgDataOB) {
+        val tvCategory = tvChannelPos.tvcategory.target
+        val tvChannel = tvChannelPos.tvchannel.target
+        helpViewModel.currentFocusedChannPosition = tvChannelPos
+        helpViewModel.currentFocusedTvCategory = tvCategory
+        if (tvChannel.linkedEpgChannel?.target?.isExternalEpg == true) {
+            if (tvChannel.account.target.isXtream) {
+                clickedEpgData.let { epgData ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val thisEpg = xtreamViewModel.findEpgMatch(
+                            epgData,
+                            tvChannel,
+                            tvCategory!!
+                        )
+                        when (thisEpg) {
+                            is Resource.Success -> {
+                                if (thisEpg.data != null) {
+                                    val startTime = thisEpg.data.start
+                                    val endTime = thisEpg.data.end
+                                    getXtreamCatchup(
+                                        tvChannelPos,
+                                        startTime,
+                                        endTime,
+                                        clickedEpgData
+                                    )
+                                }
+                            }
+                            is Resource.Error -> {
+                                Toast.makeText(
+                                    this@GlobalSearchFragment.requireActivity(),
+                                    "Error fetching Catchup Link!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+                        }
+                    }
+                }
+            } else {
+                clickedEpgData.let { epgData ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val thisEpg = stalkerViewModel.findEpgMatch(
+                            epgData,
+                            tvChannel,
+                            epgData.datum,
+                            tvCategory!!
+                        )
+                        Log.d("CATCHUP STALKER", "NOT EXTERN: ${epgData.name}")
+                        when (thisEpg) {
+                            is Resource.Success -> {
+                                if (thisEpg.data != null) {
+                                    val epgId = thisEpg.data.id
+                                    getStalkerCatchupLink(
+                                        tvChannelPos,
+                                        epgId,
+                                        epgData
+                                    )
+                                }
+                            }
+
+                            is Resource.Error -> {
+                                Toast.makeText(
+                                    this@GlobalSearchFragment.requireActivity(),
+                                    "Error fetching Catchup Link!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            if (tvChannel.linkedEpgChannel?.target?.epgsource?.target?.isXtreamEpg == true) {
+                clickedEpgData.let { epgData ->
+                    getXtreamCatchup(tvChannelPos, epgData.startTime, epgData.endTime, clickedEpgData)
+                }
+            } else {
+                clickedEpgData.let { epgData ->
+                    getStalkerCatchupLink(tvChannelPos, epgData.epgId, clickedEpgData)
+                }
+            }
+        }
+    }
+
+    fun getXtreamCatchup(tvChannelPos: ChannelPositions, startTime: String, endTime: String, clickedEpgData: EpgDataOB) {
+        val account = tvChannelPos.tvchannel.target.account.target
+        if (account != null) {
+            val accountUrl = account.stalkerUrl
+            val accountUserName = account.username
+            val accountPassword = account.macAddress
+            val epgStart = startTime.substring(0, 10) + ":" + startTime.substring(
+                11,
+                13
+            ) + "-" + startTime.substring(14, 16)
+            val duration = calculateDurationInMinutes(startTime, endTime)
+            val url =
+                "$accountUrl/streaming/timeshift.php?username=$accountUserName&password=$accountPassword&stream=${tvChannelPos.tvchannel.target.channelId}&start=$epgStart&duration=$duration"
+            helpViewModel.globalSearchCatchupUrl = url
+            helpViewModel.isPlayingCatchup = true
+            helpViewModel.catchupEpgData = clickedEpgData
+            helpViewModel.currentFocusedTvAccount = account
+            helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+            helpViewModel.channelFromSearchContainer = true
+            (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
+        }
+    }
+
+    fun calculateDurationInMinutes(startString: String, endString: String): Long {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val startDateTime = LocalDateTime.parse(startString, formatter)
+        val endDateTime = LocalDateTime.parse(endString, formatter)
+        return Duration.between(startDateTime, endDateTime).toMinutes()
+    }
+
+
+    fun getStalkerCatchupLink(tvChannelPos: ChannelPositions, epgId: String, clickedEpgData: EpgDataOB) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val account = tvChannelPos.tvchannel.target.account.target
+            if (account != null) {
+                val catchUp = stalkerViewModel.getTvCatchupLink(
+                    account.stalkerUrl,
+                    cmd = "/media/$epgId.mpg",
+                    cookie = "mac=${account.macAddress}; stb_lang=en; timezone=${account.timezone};",
+                    token = "Bearer ${account.token}",
+                    account.userAgent
+                ).await()
+                when (catchUp) {
+                    is Resource.Success -> {
+                        Log.d("CATCHUP STALKER", "CATCHUPDATA: ${catchUp.data}")
+                        helpViewModel.isPlayingCatchup = true
+                        helpViewModel.catchupEpgData = clickedEpgData
+                        helpViewModel.currentFocusedTvAccount = account
+                        helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+                        helpViewModel.channelFromSearchContainer = true
+                        helpViewModel.globalSearchCatchupUrl = catchUp.data?.removePrefix("ffmpeg")?.trim() ?: ""
+                        (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
+                    }
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            this@GlobalSearchFragment.requireActivity(),
+                            "Error fetching Catchup Link!\n${catchUp.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        binding.recyclerItems.requestFocus()
+                    }
+                }
+            }
+        }
+    }
+
 
     private val onSearchHistoryClickListener = GlobalSearchHistoryAdapter.OnClickListener {
         if (it.isNotEmpty()) {
@@ -980,12 +1142,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             when (item.itemId) {
                 R.id.mark_play -> {
                     wasItemClicked = true
-                    playProgram()
+                    playChannel(tvchannelPos)
                     true
                 }
                 R.id.mark_replay -> {
                     wasItemClicked = true
-                    replayProgram()
+                    replayProgram(tvchannelPos, program)
                     true
                 }
                 R.id.mark_remember -> {
@@ -1003,14 +1165,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             }
         }
         popup.show()
-    }
-
-    private fun playProgram() {
-
-    }
-
-    private fun replayProgram() {
-
     }
 
     private fun checkReminder(epg: EpgDataOB, tvChannelPos: ChannelPositions) {
@@ -1070,26 +1224,18 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-
-        if (selectedGlobalSearchCategory == GlobalSearchMainCategory.MOVIES) {
-            // keine Aktion nötig
-        } else {
-            onCategorySelected(GlobalSearchMainCategory.MOVIES)
-        }
-    }
-
     override fun onDestroyView() {
         super.onDestroyView()
         parentFragmentManager.removeOnBackStackChangedListener(backStackListener)
+        _binding = null  // 👉 View wird hier freigegeben
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        playlistAdapter.submitList(listOf())
+        playlistAdapter.submitList(emptyList())
         helpViewModel.resetGlobalSearchData()
         helpViewModel.selectedGlobalSearchCategory = null
-        _binding = null
+        // kein _binding = null hier!
     }
+
 }

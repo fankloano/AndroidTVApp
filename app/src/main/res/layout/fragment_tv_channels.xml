@@ -693,7 +693,7 @@
             android:id="@+id/relLayout_seekbar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="37dp"
+            android:layout_marginTop="30dp"
             android:layout_marginEnd="10dp"
             android:layout_marginBottom="5dp"
             android:gravity="center_vertical"
@@ -708,7 +708,7 @@
                 android:id="@+id/tv_currentTimeCatchup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="15dp"
+                android:layout_marginStart="6dp"
                 android:layout_weight="0.05"
                 android:paddingStart="8dp"
                 android:textColor="@color/light_grey"
@@ -717,7 +717,7 @@
             <androidx.media3.ui.DefaultTimeBar
                 android:id="@+id/seekBar"
                 android:layout_width="0dp"
-                android:layout_height="2.5dp"
+                android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="6dp"
                 android:layout_marginEnd="8dp"
@@ -725,14 +725,14 @@
                 android:layout_weight="0.9"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                app:bar_height="2.5dp"
                 app:buffered_color="#736E6E"
+                app:scrubber_color="@color/light_blue_darker"
                 app:played_color="@color/light_blue"
-                app:scrubber_color="#015864"
-                app:scrubber_disabled_size="6dp"
-                app:scrubber_dragged_size="16dp"
+                app:unplayed_color="@color/light_mid_grey"
                 app:scrubber_enabled_size="12dp"
-                app:unplayed_color="@color/light_mid_grey" />
+                app:scrubber_dragged_size="16dp"
+                app:scrubber_disabled_size="6dp"
+                app:bar_height="2.5dp" />
 
             <TextView
                 android:id="@+id/tv_totalTimeCatchup"

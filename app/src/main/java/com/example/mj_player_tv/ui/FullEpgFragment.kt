@@ -344,7 +344,6 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                                     tvChannel,
                                     tvCategory!!
                                 )
-                                Log.d("CATCHUP XTREAM", "NOT EXTERN: ${epgData.name}")
                                 when (thisEpg) {
                                     is Resource.Success -> {
                                         if (thisEpg.data != null) {

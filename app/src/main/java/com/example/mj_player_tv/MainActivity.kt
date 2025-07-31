@@ -172,17 +172,20 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             }
         }
 
-        activityMainBinding.btnSearch.setOnClickListener {
+        activityMainBinding.btnSearch.setOnClickListener { it ->
             toggleActivateOnMenu(it)
             toggleVisibilityOfMainContainer(true)
+            supportFragmentManager.findFragmentByTag("GlobalSearch")?.let {
+                supportFragmentManager.beginTransaction().remove(it).commitNowAllowingStateLoss()
+            }
             val transaction = supportFragmentManager.beginTransaction()
-            transaction.replace(R.id.overlayContainer, GlobalSearchFragment())
-            transaction.addToBackStack(null)
+            transaction.replace(R.id.overlayContainer, GlobalSearchFragment(), "GlobalSearch")
+            transaction.addToBackStack("GlobalSearchFragment")
             transaction.commit()
             closeMenu()
             val mainFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
             if (mainFragment is TvChannelsFragment) {
-                mainFragment.stopPlayer()
+                mainFragment.clearPlayingChannel()
             }
             lastOpenedFragment = Constants.FRAGMENT_SEARCH
         }
@@ -650,6 +653,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
         if (containerFragment is TvChannelsFragment) {
 
         } else {
+            makeNavHostInvisible()
             closeMenu()
             hideMenu()
             resetNavHostFragment()
@@ -660,6 +664,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             lastOpenedFragment = Constants.FRAGMENT_TV
             changeFragment(TvChannelsFragment())
         }
+    }
+
+    private fun makeNavHostInvisible() {
+        activityMainBinding.navHostFragment.visibility = View.INVISIBLE
+    }
+
+    fun makeNavHostVisible() {
+        activityMainBinding.navHostFragment.visibility = View.VISIBLE
     }
 
     private fun toggleSelectedMenu(view: View) {

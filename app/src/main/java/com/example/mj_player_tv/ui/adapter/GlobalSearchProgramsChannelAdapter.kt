@@ -40,6 +40,12 @@ class GlobalSearchProgramsChannelAdapter(
                 val image = tvchannel.logo
                 val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
 
+                binding.ivCatchup.visibility = if (tvchannel.enable_tv_archive == 1) {
+                    View.VISIBLE
+                } else {
+                    View.INVISIBLE
+                }
+
                 if (tvchannel.account.target!!.useEpgLogos) {
                     if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvchannel.alwaysUsesExternalEpg)) {
                         ivtvChannel.visibility = View.VISIBLE
@@ -70,6 +76,9 @@ class GlobalSearchProgramsChannelAdapter(
                 binding.cardviewTvchannel.setOnKeyListener { _, keyCode, event ->
                     if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                         fragment.focusToPlaylist()
+                        return@setOnKeyListener true
+                    }
+                    if ((keyCode == KeyEvent.KEYCODE_DPAD_LEFT) && event.action == KeyEvent.ACTION_DOWN) {
                         return@setOnKeyListener true
                     }
                     if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {

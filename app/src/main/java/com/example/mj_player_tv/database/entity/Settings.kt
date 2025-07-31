@@ -32,6 +32,6 @@ data class Settings(
     var playMoviesWithVlc: Boolean = false,
     var sortMoviesBy: String? = "added",
     var sortSeriesBy: String? = "added",
-    var globalSearchFilteredCategories: Boolean = false,
+    var globalSearchFilteredCategories: Boolean = true,
     var tvReminderTime: Long = 10L
 )

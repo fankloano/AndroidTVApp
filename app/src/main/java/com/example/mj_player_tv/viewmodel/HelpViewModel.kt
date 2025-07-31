@@ -311,6 +311,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var isLoadingMovieCategory: String? = null
 
+    var globalSearchCatchupUrl = ""
+
     var currentFocusedMovie: MovieOB? = null
 
     var currentFocusedSerie: SeriesOB? = null
@@ -634,11 +636,13 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         seriesAccountsWithCategoriesLiveData.postValue(combined)
     }
 
-    private val _closeOverlayFragment = MutableLiveData<Unit>()
-    val closeOverlayFragment: LiveData<Unit> = _closeOverlayFragment
-
-    fun closeOverlayFragment() {
-        _closeOverlayFragment.value = Unit
+    fun checkCategoryActivated(tvcategory: TvCategoryOB) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (!tvcategory.favorite) {
+                tvcategory.favorite = true
+                tvCatBox.put(tvcategory)
+            }
+        }
     }
 
     fun checkForUpdates() {
@@ -1687,9 +1691,15 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 matchingChannels.addAll(builder.build().find().mapNotNull { it.idByAccountData }.distinct())
             }
 
-            val matchingChannelPositions = tvChanPosBox.query(
-                ChannelPositions_.channel.oneOf(matchingChannels.toTypedArray())
-            ).build().find()
+            val matchingChannelPositions = if (!showFilteredCategories) {
+                tvChanPosBox.query(
+                    ChannelPositions_.channel.oneOf(matchingChannels.toTypedArray())
+                ).build().find()
+            } else {
+                tvChanPosBox.query(
+                    ChannelPositions_.channel.oneOf(matchingChannels.toTypedArray())
+                ).build().find().filter { it.tvcategory.target?.favorite == true }
+            }
 
             if (matchingChannelPositions.isNotEmpty()) {
 

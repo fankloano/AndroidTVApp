@@ -141,7 +141,18 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private val maxRetries = 5
     private var tokenRefreshAttempted = false
 
-    private var catchupDuration = 0L
+    private var isSpooling = false
+    private var spoolPosition = 0L
+    private var spoolRunnable: Runnable? = null
+    private val spoolHandler = Handler(Looper.getMainLooper())
+    private var incrementChangeDelay: Long = 2000L
+
+    private var increment = 1000L
+    private var maxIncrement = 16000L
+
+    private var lastIncrementUpdate = 0L
+
+    private var catchupDuration: Long? = 0L
 
     private var focusedChannelFirstEpgIdByAccountdata: String = ""
 
@@ -749,84 +760,97 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
         binding.seekBar.setOnFocusChangeListener { seekbar, hasFocus ->
             if (hasFocus) {
+                handler.postDelayed(hideHudRunnable, 8000)
                 binding.seekBar.setUnplayedColor(resources.getColor(R.color.white))
+                binding.seekBar.setPlayedColor(resources.getColor(R.color.light_blue))
+                binding.seekBar.setScrubberColor(resources.getColor(R.color.light_blue))
             } else {
                 binding.seekBar.setUnplayedColor(resources.getColor(R.color.light_mid_grey))
+                binding.seekBar.setPlayedColor(resources.getColor(R.color.light_blue_darker))
+                binding.seekBar.setScrubberColor(resources.getColor(R.color.light_blue_darker))
             }
         }
 
-        val spoolHandler = Handler(Looper.getMainLooper())
-        var isSpoolingFast = false
-        var spoolRunnable: Runnable? = null
+        // === Variablen ===
 
         binding.seekBar.setOnKeyListener { _, keyCode, event ->
             when (keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    if (event.action == KeyEvent.ACTION_DOWN) {
-                        isSpoolingFast = true
-                        spoolRunnable = object : Runnable {
-                            override fun run() {
-                                if (isSpoolingFast) {
-                                    val newPosition =
-                                        (player?.currentPosition?.minus(10000))?.coerceAtLeast(0)
-                                            ?: 0
-                                    player?.seekTo(newPosition)
+                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    val isForward = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
+                    var increment = 10000L // 60 Sekunden Schritte
+                    val maxPosition = player?.duration ?: 0
 
-                                    // Wiederholen nach 100ms
-                                    spoolHandler.postDelayed(this, 100)
+                    when (event.action) {
+                        KeyEvent.ACTION_DOWN -> {
+                            if (isSpooling) return@setOnKeyListener true // Verhindere doppelte ACTION_DOWN-Ereignisse
+
+                            handler.removeCallbacks(hideHudRunnable)
+                            isSpooling = true
+
+                            // Initiale Position setzen
+                            spoolPosition = player?.currentPosition ?: 0
+
+                            // Vorherige Callbacks entfernen (wenn vorhanden)
+                            spoolHandler.removeCallbacksAndMessages(null)
+
+                            spoolRunnable = object : Runnable {
+                                override fun run() {
+                                    if (isSpooling) {
+                                        // Simuliertes Spulen durch Änderung des SeekBar-Werts
+                                        spoolPosition = if (isForward) {
+                                            (spoolPosition + increment).coerceAtMost(maxPosition)
+                                        } else {
+                                            (spoolPosition - increment).coerceAtLeast(0)
+                                        }
+
+                                        binding.seekBar.setPosition(spoolPosition)
+                                        binding.tvCurrentTimeCatchup.text = formatTime(spoolPosition)
+                                        spoolHandler.postDelayed({
+                                            increment = (increment + 10000L).coerceAtMost(maxIncrement)
+                                        }, incrementChangeDelay)
+                                        // Wiederhole den Vorgang alle 100ms für eine weichere Animation
+                                        spoolHandler.postDelayed(this, 10)
+                                    }
                                 }
                             }
+                            spoolHandler.post(spoolRunnable!!)
+                            return@setOnKeyListener true
                         }
-                        spoolHandler.post(spoolRunnable!!)
-                        return@setOnKeyListener true
-                    } else if (event.action == KeyEvent.ACTION_UP) {
-                        isSpoolingFast = false
-                        spoolHandler.removeCallbacks(spoolRunnable!!)
-                        updateSeekbarUI()
-                        return@setOnKeyListener true
+
+                        KeyEvent.ACTION_UP -> {
+                            isSpooling = false
+                            spoolHandler.removeCallbacksAndMessages(null)
+
+                            // Nach dem Spulen zur neuen Position springen
+                            player?.seekTo(spoolPosition)
+
+                            // UI aktualisieren
+                            updateSeekbarUI()
+                            handler.postDelayed(hideHudRunnable, 8000)
+                            return@setOnKeyListener true
+                        }
                     }
                 }
-
-                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    if (event.action == KeyEvent.ACTION_DOWN) {
-                        isSpoolingFast = true
-                        spoolRunnable = object : Runnable {
-                            override fun run() {
-                                if (isSpoolingFast) {
-                                    val newPosition =
-                                        (player?.currentPosition?.plus(10000))?.coerceAtMost(
-                                            catchupDuration ?: 0
-                                        ) ?: 0
-                                    player?.seekTo(newPosition)
-
-                                    // Wiederholen nach 100ms
-                                    spoolHandler.postDelayed(this, 100)
-                                }
-                            }
-                        }
-                        spoolHandler.post(spoolRunnable!!)
-                        return@setOnKeyListener true
-                    } else if (event.action == KeyEvent.ACTION_UP) {
-                        isSpoolingFast = false
-                        spoolHandler.removeCallbacks(spoolRunnable!!)
-                        updateSeekbarUI()
-                        return@setOnKeyListener true
-                    }
-                }
-
                 KeyEvent.KEYCODE_BACK -> {
-                    hideHudContainer()
+                    if (event.action == KeyEvent.ACTION_DOWN) {
+                        hideHudContainer()
+                        return@setOnKeyListener  true
+                    }
                 }
-
-                else -> return@setOnKeyListener false
             }
             false
+        }
+    }
+    fun calculateMaxIncrement(durationMs: Long): Long {
+        return when {
+            durationMs <= 15 * 60 * 1000L -> 16_000L   // bis 15 Min → max 15 Sek
+            durationMs <= 60 * 60 * 1000L -> 60_000L   // bis 60 Min → max 60 Sek
+            else -> 120_000L                           // länger → max 2 Min
         }
     }
 
     // Aktualisiere UI nach dem Spulen
     fun updateSeekbarUI() {
-        binding.seekBar.requestFocus()
         binding.tvCurrentTimeCatchup.text = formatTime(player?.currentPosition ?: 0)
     }
 
@@ -964,6 +988,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 val clickedAccountPosition = tvAccountCategoryAdapter.currentList.indexOf(clickedAccount)
                 // Scroll zu Account, falls notwendig
                 binding.rvLayoutTvAccountsMenu.scrollToPosition(clickedAccountPosition)
+                thisList.forEachIndexed { index, item ->
+                    when (item) {
+                        is AccountTvCategory.Account -> {
+                            Log.d("CLICKEDFROMGLOBALSEARCH", "POS $index -> ACCOUNT: ${item.name} (ID: ${item.id})")
+                        }
+                        is AccountTvCategory.TvCategory -> {
+                            Log.d("CLICKEDFROMGLOBALSEARCH", "POS $index -> CATEGORY: ${item.name} (ID: ${item.id} (AccountID: ${item.parentId})")
+                        }
+                    }
+                }
+
 
                 // WICHTIG: Stelle sicher, dass die Kategorie darunter aufgebaut wird
                 if (position + 1 < thisList.size &&
@@ -980,6 +1015,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 if (isFirstOpen) {
                     val focusedCategoryId = helpViewModel.currentFocusedTvCategory?.id ?: 0L
                     if (focusedCategoryId != 0L) {
+                        Log.d("CLICKEDFROMGLOBALSEARCH", "FOCUSEDCATEGORYID: $focusedCategoryId")
+
                         val categoryPosition = thisList.indexOfFirst {
                             it is AccountTvCategory.TvCategory && it.id == focusedCategoryId
                         }
@@ -995,7 +1032,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                     helpViewModel.currentFocusedChannPosition?.let {
                                         changingPlayingChannel(it)
                                     }
-                                    setVideoViewFullScreen()
                                     helpViewModel.currentFocusedTvCategory?.let {
                                         showChannelList(it.id)
                                     }
@@ -1290,9 +1326,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             }
                             firstOpenTvCategory = false
                             if (helpViewModel.wasTvSectionOpened || helpViewModel.channelFromSearchContainer) {
-                                if (helpViewModel.channelFromSearchContainer) {
-                                    helpViewModel.channelFromSearchContainer = false
-                                }
                                 val lastChannel = tvChannelsAdapter?.currentList?.firstOrNull { it.catAndChannelAccount == helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount }
                                 if (lastChannel != null) {
                                     withContext(Dispatchers.Main) {
@@ -1316,6 +1349,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                     }
                                 }
                                 helpViewModel.wasTvSectionOpened = false
+                                if (helpViewModel.channelFromSearchContainer) {
+                                    withContext(Dispatchers.Main) {
+                                        helpViewModel.channelFromSearchContainer = false
+                                        setVideoViewFullScreen()
+                                        (requireActivity() as? MainActivity)?.makeNavHostVisible()
+                                    }
+                                }
                             }
                         }
                         withContext(Dispatchers.Main) {
@@ -2175,18 +2215,33 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         showProgressBar()
         channelLoadJob?.cancel()
         channelLoadJob = viewLifecycleOwner.lifecycleScope.launch {
-            val channel = channelPos.tvchannel.target
-            val channelAccount = channel.account.target
-            if (channelAccount.isStalker) {
-                getChannelLinkData(channel.cmd, channel.playlistId!!, channelPos)
-            } else if (channelAccount.isXtream) {
-                if (channelAccount.xtreamUseDefaultType) {
-                    val url = "${channelAccount.stalkerUrl}/live/${channelAccount.username}/${channelAccount.macAddress}/${channel.channelId}.ts"
+            if (helpViewModel.channelFromSearchContainer && helpViewModel.isPlayingCatchup) {
+                val url = helpViewModel.globalSearchCatchupUrl
+                if (url.isNotEmpty()) {
+                    binding.seekBar.setPosition(0L)
                     switchChannel(url)
+                    helpViewModel.globalSearchCatchupUrl = ""
                 } else {
-                    val url = "${channelAccount.stalkerUrl}/live/${channelAccount.username}/${channelAccount.macAddress}/${channel.channelId}.${channelAccount.xtreamOtherStreamType}"
+                    Toast.makeText(this@TvChannelsFragment.requireActivity(), "Can't play catchup program!", Toast.LENGTH_SHORT).show()
+                    delay(1000)
+                    setVideoViewNotFullScreen()
+                }
+            } else {
+                val channel = channelPos.tvchannel.target
+                val channelAccount = channel.account.target
+                if (channelAccount.isStalker) {
+                    getChannelLinkData(channel.cmd, channel.playlistId!!, channelPos)
+                } else if (channelAccount.isXtream) {
+                    if (channelAccount.xtreamUseDefaultType) {
+                        val url =
+                            "${channelAccount.stalkerUrl}/live/${channelAccount.username}/${channelAccount.macAddress}/${channel.channelId}.ts"
+                        switchChannel(url)
+                    } else {
+                        val url =
+                            "${channelAccount.stalkerUrl}/live/${channelAccount.username}/${channelAccount.macAddress}/${channel.channelId}.${channelAccount.xtreamOtherStreamType}"
 
-                    switchChannel(url)
+                        switchChannel(url)
+                    }
                 }
             }
         }
@@ -2280,7 +2335,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     fun showEpgPreview(tvChannel: TvChannelOB) {
-        if (binding.relLayoutEpg.isInvisible && !helpViewModel.isTvFullScreen) {
+        if (binding.relLayoutEpg.isInvisible && !helpViewModel.isTvFullScreen && !helpViewModel.channelFromSearchContainer) {
             binding.relLayoutEpg.visibility = VISIBLE
         }
         tvChannel.account.target.epgsources.reset()
@@ -2828,8 +2883,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         if (helpViewModel.channelFromSearchContainer) {
             getFirstAndLastEpgForChannel()
             isFirstPlayingChannel = true
-            helpViewModel.closeOverlayFragment()
-            setVideoViewFullScreen()
         }
         // Qualität und Audio-Infos ermitteln
     }
@@ -3035,9 +3088,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         val start = helpViewModel.catchupEpgData?.startTimestamp ?: 0L
                         val end = helpViewModel.catchupEpgData?.stopTimestamp ?: 0L
                         val duration = (end - start) * 1000
-                        catchupDuration = duration
+                        val exoduration = player?.duration ?: duration
+                        Log.d("CATCHUP NOCHMAL", "DAUER: $duration EXO: $exoduration")
+                        catchupDuration = exoduration
                         binding.tvTotalTimeCatchup.text = formatTime(duration)
-                        binding.seekBar.setDuration(duration)
+                        binding.seekBar.setDuration(exoduration)
                         startPeriodicExoPlayerUpdate()
                     }
                 }
@@ -3045,8 +3100,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     showProgressBar()
                 }
                 Player.STATE_IDLE -> {
+                    Log.d("CATCHUP NOCHMAL", "IDLE")
                 }
                 Player.STATE_ENDED -> {
+                    Log.d("CATCHUP NOCHMAL", "ENDED")
                     helpViewModel.isCurrentlyPlayingTv = false
                     switchChannel(helpViewModel.currentlyPlayingUrl)
                     if (helpViewModel.isPlayingCatchup) {
@@ -3559,6 +3616,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         // Handler & Player-Listener entfernen
         errorHandler.removeCallbacksAndMessages(null)
         handler.removeCallbacks(hideHudRunnable)
+        isSpooling = false
+        spoolHandler.removeCallbacksAndMessages(null)
+        spoolRunnable = null
         player?.removeListener(handlePlaybackStateListener)
         player?.removeListener(playerErrorListener)
         player?.removeAnalyticsListener(analyticsListener)
