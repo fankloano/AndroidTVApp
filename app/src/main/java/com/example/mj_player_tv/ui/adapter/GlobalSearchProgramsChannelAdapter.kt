@@ -21,6 +21,7 @@ import com.example.mj_player_tv.viewmodel.HelpViewModel
 @UnstableApi
 class GlobalSearchProgramsChannelAdapter(
     private val onChannelFocused: (ChannelPositions) -> Unit,
+    private val onRightClicked: (Unit) -> Unit,
     private val fragment: GlobalSearchFragment
 ) : ListAdapter<ChannelPositions, GlobalSearchProgramsChannelAdapter.ViewHolder>(
     MANAGE_TVCHANNELS_COMPERATOR) {
@@ -86,6 +87,10 @@ class GlobalSearchProgramsChannelAdapter(
                             fragment.focusToPlaylist()
                             return@setOnKeyListener true
                         }
+                    }
+                    if ((keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) && event.action == KeyEvent.ACTION_DOWN) {
+                        onRightClicked.invoke(Unit)
+                        return@setOnKeyListener true
                     }
                     return@setOnKeyListener false
                 }

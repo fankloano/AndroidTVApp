@@ -316,19 +316,25 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             return@setOnKeyListener false
         }
 
-        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
-            if (!seriesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            } else {
-                binding.rvHistorySeries.requestFocus()
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                if (!seriesAdapter?.currentList.isNullOrEmpty()) {
+                    binding.recyclerItems.requestFocus()
+                } else {
+                    binding.rvHistorySeries.requestFocus()
+                }
+                seriesViewModel.clearFocusToSeries()
             }
         }
 
-        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
-            if (!moviesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            } else {
-                binding.rvHistoryMovies.requestFocus()
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                if (!moviesAdapter?.currentList.isNullOrEmpty()) {
+                    binding.recyclerItems.requestFocus()
+                } else {
+                    binding.rvHistoryMovies.requestFocus()
+                }
+                moviesViewModel.clearFocusToMovies()
             }
         }
     }

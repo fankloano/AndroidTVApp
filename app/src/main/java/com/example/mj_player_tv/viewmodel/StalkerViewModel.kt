@@ -2531,7 +2531,7 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                         )
                         when (newresponse) {
                             is Resource.Success -> {
-                                val newmovies = response.data.js.data.map { movieData ->
+                                val newmovies = newresponse.data.js.data.map { movieData ->
                                     val idByAccountData = "${movieData.id}_${account.id}"
                                     currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, account)
                                 }
@@ -2984,7 +2984,7 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                 if (totalPages > 1) {
                     val pagesToCheck = createSequentialList(2, totalPages)
                     for (page in pagesToCheck) {
-                        val newresponse = stalkerRepository.searchMoviesByCategory(
+                        val newresponse = stalkerRepository.searchSeriesByCategory(
                             account.stalkerUrl,
                             "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
                             "Bearer ${account.token}",
@@ -2995,7 +2995,7 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                         )
                         when (newresponse) {
                             is Resource.Success -> {
-                                val newseries = response.data.js.data.map { seriesData ->
+                                val newseries = newresponse.data.js.data.map { seriesData ->
                                     val idByAccountData = "${seriesData.id}_${account.id}"
                                     currentSeriesMap[idByAccountData] ?: convertToSeriesOB(seriesData, account)
                                 }
@@ -3014,6 +3014,8 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
             }
         }
     }
+
+
 
     private fun convertToSeriesOB(seriesData: com.example.mj_player_tv.network.model.stalker.series.SeriesData, account: Accounts): SeriesOB {
         return SeriesOB(

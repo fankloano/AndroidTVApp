@@ -49,26 +49,25 @@
                    android:layout_height="wrap_content"
                     android:orientation="horizontal">
 
-          <TextView
-              android:id="@+id/tv_StartTime"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              tools:text="08:20"
-              android:textColor="#A6A5A5"
-              android:textSize="12sp"
-              app:layout_constraintTop_toTopOf="parent"
-              app:layout_constraintStart_toStartOf="parent"/>
+                  <TextView
+                      android:id="@+id/tv_StartTime"
+                      android:layout_width="wrap_content"
+                      android:layout_height="wrap_content"
+                      tools:text="08:20"
+                      android:textColor="#A6A5A5"
+                      android:textSize="12sp"
+                      app:layout_constraintTop_toTopOf="parent"
+                      app:layout_constraintStart_toStartOf="parent"/>
 
-     <TextView
-         android:id="@+id/tv_EndTime"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         tools:text=" - 08:20"
-         android:textColor="#A6A5A5"
-         android:textSize="12sp"
-         android:layout_toEndOf="@id/tv_StartTime"/>
+                 <TextView
+                     android:id="@+id/tv_EndTime"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     tools:text=" - 08:20"
+                     android:textColor="#A6A5A5"
+                     android:textSize="12sp" />
 
-                    </LinearLayout>
+               </LinearLayout>
 
      <TextView
          android:id="@+id/tv_Program"
@@ -80,8 +79,7 @@
          android:scrollHorizontally="true"
          android:ellipsize="marquee"
          android:maxLines="1"
-         android:marqueeRepeatLimit="marquee_forever"
-         android:layout_below="@id/tv_StartTime"/>
+         android:marqueeRepeatLimit="marquee_forever" />
 
      <TextView
          android:id="@+id/tv_SubTitleProgram"
@@ -93,8 +91,7 @@
          android:textSize="12sp"
          android:maxLines="1"
          android:ellipsize="marquee"
-         android:marqueeRepeatLimit="marquee_forever"
-         android:layout_below="@id/tv_Program"/>
+         android:marqueeRepeatLimit="marquee_forever" />
 
           </LinearLayout>
 

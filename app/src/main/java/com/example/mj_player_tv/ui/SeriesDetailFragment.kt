@@ -574,12 +574,18 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             true
         }
 
-        seriesViewModel.updateSeriesDetail.observe(viewLifecycleOwner) {
-            updateEpisodeSeasonSeries()
+        seriesViewModel.updateSeriesDetail.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                updateEpisodeSeasonSeries()
+                seriesViewModel.clearUpdateSeriesDetail()
+            }
         }
 
-        seriesViewModel.focusRequest.observe(viewLifecycleOwner) {
-            setFocusToNextEpisodeAndSeason()
+        seriesViewModel.focusRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                setFocusToNextEpisodeAndSeason()
+                seriesViewModel.clearFocusOnNextEpisode()
+            }
         }
     }
 

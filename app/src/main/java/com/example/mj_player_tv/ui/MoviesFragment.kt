@@ -357,12 +357,18 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             false
         }
 
-        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) {
-            updateSingleMovie()
+        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                updateSingleMovie()
+                moviesViewModel.clearFocusOnMovieRV()
+            }
         }
 
-        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
-            setFocusToMovies()
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                setFocusToMovies()
+                moviesViewModel.clearFocusToMovies()
+            }
         }
     }
 

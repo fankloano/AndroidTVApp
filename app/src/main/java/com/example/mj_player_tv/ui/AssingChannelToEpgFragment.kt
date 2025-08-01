@@ -50,7 +50,7 @@ import kotlin.system.exitProcess
 
 
 @UnstableApi
-class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_epg), View.OnFocusChangeListener {
+class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_epg) {
 
     private var _binding: FragmentAssignChannelToEpgBinding? = null
 
@@ -97,13 +97,6 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        binding.rvEpgList.onFocusChangeListener = this
-
-        binding.btnSearch.onFocusChangeListener = this
-        binding.btnEpglist.onFocusChangeListener = this
-        binding.btnCancelEpg.onFocusChangeListener = this
-        binding.editTextSearch.onFocusChangeListener = this
 
 
         if (helpViewModel.currentAssignEpgChannel != null && helpViewModel.currentFocusedTvAccount != null) {
@@ -483,16 +476,6 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
         }
     }
 
-    override fun onFocusChange(p0: View?, hasFocus: Boolean) {
-        // Hier wird aufgerufen, wenn sich der Fokus auf einem Menüpunkt ändert
-        if (hasFocus) {
-            // Aktualisiere die visuelle Hervorhebung basierend auf dem aktuellen Fokus
-            if (view != null) {
-
-            }
-        }
-    }
-
     private val onClickListener = EpgChannelListAdapter.OnClickListener { epgChannel, _, isChecked ->
         if (isChecked) {
             if (helpViewModel.currentAssignEpgChannel != null) {
@@ -627,16 +610,18 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
         levenshteinDistance: LevenshteinDistance
     ): EpgSourceChannel? {
         var bestMatch: EpgSourceChannel? = null
-        var minDistance = tvChannelName.length
+        var minDistance = Int.MAX_VALUE
 
         for (channel in channels) {
-            val distance = levenshteinDistance.apply(tvChannelName.lowercase(), channel.name.lowercase())
-            if (distance < minDistance) {
-                minDistance = distance
+            val bestDisplayNameMatch = channel.display_name.minOfOrNull { displayName ->
+                levenshteinDistance.apply(tvChannelName.lowercase(), displayName.lowercase())
+            } ?: continue
+
+            if (bestDisplayNameMatch < minDistance) {
+                minDistance = bestDisplayNameMatch
                 bestMatch = channel
             }
         }
-
         return bestMatch
     }
 
@@ -676,11 +661,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
         if (bestMatchedChannel != null) {
             val position = epgChannelListAdapter.currentList.indexOfFirst { it.chEpgId == bestMatchedChannel?.chEpgId }
             if (position != -1) {
-                binding.rvEpgList.setSelectedPosition(position, object : ViewHolderTask() {
-                    override fun execute(viewHolder: RecyclerView.ViewHolder) {
-                        viewHolder.itemView.requestFocus()
-                    }
-                })
+                binding.rvEpgList.setSelectedPosition(position)
             }
         }
     }
@@ -691,8 +672,6 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             map { async { action(it) } }.awaitAll()
         }
     }
-
-
 
     fun setFocusToRightMenu() {
         binding.btnEpglist.requestFocus()

@@ -18,6 +18,8 @@ import android.widget.EditText
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
@@ -187,7 +189,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
         binding.editTextSearch.setOnKeyListener { v, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
-                closeFragment()
+                goToMainMenu()
                 return@setOnKeyListener true
             }
             if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
@@ -258,18 +260,18 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
         binding.editTextSearch.setOnFocusChangeListener { _, hasFocus ->
            if (hasFocus) {
-               binding.ivSettings.visibility = View.VISIBLE
+               binding.relLayoutSettings.visibility = View.VISIBLE
                binding.backgroundDarker.visibility = View.VISIBLE
            }
         }
 
-        binding.ivSettings.setOnClickListener {
+        binding.relLayoutSettings.setOnClickListener {
             currentfilterOption = helpViewModel.settings?.globalSearchFilteredCategories
             binding.linLayoutSearchoptionsMenu.visibility = View.VISIBLE
             binding.relLayoutFiltersearch.requestFocus()
         }
 
-        binding.ivSettings.setOnKeyListener { _, keyCode, event ->
+        binding.relLayoutSettings.setOnKeyListener { _, keyCode, event ->
             if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 binding.editTextSearch.requestFocus()
                 return@setOnKeyListener true
@@ -399,6 +401,16 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     // **Nur einmal setzen**
                     isFirstOpenGlobalSearch = false
                 }
+                val newPlaylists = when (selectedGlobalSearchCategory) {
+                    GlobalSearchMainCategory.TV -> channelsByAccount?.keys?.toList()
+                    GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys?.toList()
+                    GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys?.toList()
+                    GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
+                    else -> null
+                }
+                if (newPlaylists != playlistAdapter.currentList) {
+                    playlistAdapter.submitList(newPlaylists)
+                }
             }
         }
 
@@ -425,6 +437,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     if (hasResults) {
                         binding.tvNodatafound.visibility = View.GONE
                     } else {
+                        showSearchBarHideArrow()
                         binding.tvNodatafound.visibility = View.VISIBLE
                     }
                 }
@@ -456,6 +469,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     return@setOnKeyListener true
                 }
             }
+            if ((keyCode) == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                showSearchBarHideArrow()
+                return@setOnKeyListener true
+            }
             return@setOnKeyListener false
         }
 
@@ -482,6 +499,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     binding.tvCatMovies.requestFocus()
                     return@setOnKeyListener true
                 }
+            }
+            if ((keyCode) == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                showSearchBarHideArrow()
+                return@setOnKeyListener true
             }
             return@setOnKeyListener false
         }
@@ -510,6 +531,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     return@setOnKeyListener true
                 }
             }
+            if ((keyCode) == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                showSearchBarHideArrow()
+                return@setOnKeyListener true
+            }
             return@setOnKeyListener false
         }
 
@@ -536,15 +561,25 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     return@setOnKeyListener true
                 }
             }
+            if ((keyCode) == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                showSearchBarHideArrow()
+                return@setOnKeyListener true
+            }
             return@setOnKeyListener false
         }
 
-        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
-            binding.recyclerItems.requestFocus()
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                binding.recyclerItems.requestFocus()
+                seriesViewModel.clearFocusToSeries()
+            }
         }
 
-        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) {
-            binding.recyclerItems.requestFocus()
+        moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                binding.recyclerItems.requestFocus()
+                moviesViewModel.clearFocusToMovies()
+            }
         }
     }
 
@@ -618,6 +653,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     fun focusToSearchBar() {
+        if (binding.recyclerSearchhistory.isInvisible) {
+            binding.recyclerSearchhistory.visibility = View.VISIBLE
+        }
         binding.editTextSearch.requestFocus()
     }
 
@@ -651,7 +689,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private fun hideSearchBarShowArrow() {
         binding.recyclerSearchhistory.visibility = View.GONE
         binding.progressBar.visibility = View.INVISIBLE
-        binding.ivSettings.visibility = View.GONE
+        binding.relLayoutSettings.visibility = View.GONE
         binding.backgroundDarker.visibility = View.GONE
         binding.relLayoutSearchMovie.visibility = View.GONE
         binding.ivShowSearch.visibility = View.VISIBLE
@@ -675,7 +713,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     private fun focusSettings() {
-        binding.ivSettings.requestFocus()
+        binding.relLayoutSettings.requestFocus()
     }
 
 
@@ -1208,6 +1246,14 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
+    fun goToMainMenu() {
+        if (binding.recyclerSearchhistory.isVisible) {
+            binding.recyclerSearchhistory.visibility = View.INVISIBLE
+        }
+        (requireActivity() as? MainActivity)?.openMenu()
+        (requireActivity() as? MainActivity)?.lastSelectFocus()
+    }
+
     fun closeFragment() {
         playlistAdapter.submitList(listOf())
         helpViewModel.resetGlobalSearchData()
@@ -1234,8 +1280,15 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         super.onDestroy()
         playlistAdapter.submitList(emptyList())
         helpViewModel.resetGlobalSearchData()
+        helpViewModel.cancelGlobalSearchJob()
         helpViewModel.selectedGlobalSearchCategory = null
         // kein _binding = null hier!
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        // Speicher knapp: abbrechen, aufräumen etc.
+        helpViewModel.cancelGlobalSearchJob()
     }
 
 }

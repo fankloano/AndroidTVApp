@@ -46,9 +46,6 @@ class TvChannelsAdapter(
     MANAGE_TVCHANNELS_COMPERATOR) {
 
     private val fragmentRef = WeakReference(fragment)
-    private val handler = Handler(Looper.getMainLooper())
-
-    private var progressUpdater: Runnable? = null
 
     private var longPressRunnable: Runnable? = null
 
@@ -73,7 +70,8 @@ class TvChannelsAdapter(
     var thisList: MutableList<ChannelPositions> = mutableListOf()
 
     inner class ViewHolder(val binding: RvItemTvchannelsBinding) : RecyclerView.ViewHolder(binding.root) {
-
+        private val handler = Handler(Looper.getMainLooper())
+        private var progressUpdater: Runnable? = null
         fun bind(tvchannelPos: ChannelPositions) {
             binding.apply {
                 val tvchannel = tvchannelPos.tvchannel.target
@@ -179,6 +177,7 @@ class TvChannelsAdapter(
                     // Verarbeite die gefilterte EpgData-Liste nach Bedarf und binde sie an die UI
                     // Hier ist ein Beispiel, wie du die Informationen in die UI einbinden könntest:
                     withContext(Dispatchers.Main) {
+
                         if (currentProgram != null) {
 
                             val currentStartTime = formatUnixTimestampToTime(currentProgram.startTimestamp!!, timeOffSet)
@@ -201,7 +200,10 @@ class TvChannelsAdapter(
                             val progress =
                                 ((currentTimeMillis - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
                             progressBar.progress = progress
-                            progressUpdater?.let { handler.removeCallbacks(it) }
+                            progressUpdater?.let {
+                                handler.removeCallbacks(it)
+                                progressUpdater = null
+                            }
                             progressUpdater = object : Runnable {
                                 override fun run() {
                                     val currentTimeRun = System.currentTimeMillis() / 1000
@@ -213,15 +215,18 @@ class TvChannelsAdapter(
                                                 ?.showEpgPreview(tvchannel)
                                         }
                                     } else {
+                                        val currentProgress = progressBar.progress
                                         val altProgress =
                                             ((currentTimeRun - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
                                         progressBar.progress = altProgress
+                                        if (currentProgress != altProgress) {
+                                            notifyItemChanged(bindingAdapterPosition)
+                                        }
                                     }
                                     handler.postDelayed(this, 10000)
                                 }
                             }
                             handler.post(progressUpdater!!)
-
 
                             if (nextEpgData != null) {
                                 tvNextProgram.text = nextEpgData.name
@@ -246,7 +251,10 @@ class TvChannelsAdapter(
                                 val nextStartTme = formatUnixTimestampToTime(nextEpgData.startTimestamp!!, timeOffSet)
 
                                 tvCurrentEndTime.text = " - ${nextStartTme}"
-                                progressUpdater?.let { handler.removeCallbacks(it) }
+                                progressUpdater?.let {
+                                    handler.removeCallbacks(it)
+                                    progressUpdater = null
+                                }
                                 progressUpdater = object : Runnable {
                                     override fun run() {
                                         if (currentTimeMillis >= (nextEpgData.startTimestamp!! + timeOffSetSeconds)) {
@@ -721,10 +729,6 @@ class TvChannelsAdapter(
 
     fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {
         return (timeOffset * 3600).toLong()
-    }
-
-    fun stopRunnable() {
-        progressUpdater?.let { handler.removeCallbacks(it) }
     }
 
     fun moveItemUp(position: Int) {

@@ -89,7 +89,6 @@ class MoviesAdapter(private val onClickListener: MoviesAdapter.OnClickListener, 
             holder.binding.tvMovies.isSelected = hasFocus
             if (hasFocus) {
                 fragment.updateUi(movie)
-            } else {
             }
         }
         holder.binding.cardviewTvchannel.setOnClickListener {

@@ -27,6 +27,7 @@ import java.util.Locale
 class GlobalSearchEpgListAdapter(
     private val onEpgFocused: (EpgDataOB) -> Unit,
     private val onEpgClicked: (EpgDataOB, View) -> Unit,
+    private val onRighClicked: (Unit) -> Unit,
     private val helpViewModel: HelpViewModel,
     private val fragment: GlobalSearchFragment) : ListAdapter<EpgDataOB, GlobalSearchEpgListAdapter.ViewHolder>(
     FULLEPG_COMPERATOR) {
@@ -56,6 +57,9 @@ class GlobalSearchEpgListAdapter(
                 binding.tvSubTitleProgram.visibility = View.VISIBLE
                 binding.tvSubTitleProgram.text = epgData.sub_title
             }
+
+            binding.tvDivided.visibility = View.VISIBLE
+            binding.tvDate.visibility = View.VISIBLE
             binding.tvDate.text = epgData.datum
 
             binding.ivReminder.visibility = if (epgData.isRemembered) {
@@ -83,6 +87,17 @@ class GlobalSearchEpgListAdapter(
                     if (bindingAdapterPosition == 0) {
                         fragment.focusToPlaylist()
                         return@setOnKeyListener true
+                    }
+                }
+                if ((keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) && event.action == KeyEvent.ACTION_DOWN) {
+                    onRighClicked.invoke(Unit)
+                    return@setOnKeyListener true
+                }
+                if ((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) && event.action == KeyEvent.ACTION_DOWN) {
+                    if (bindingAdapterPosition + 1 == itemCount) {
+                        return@setOnKeyListener true
+                    } else {
+                        return@setOnKeyListener false
                     }
                 }
                 return@setOnKeyListener false

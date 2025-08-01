@@ -264,6 +264,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     hideMenu()
                     containerFragment.focusToLast()
                 }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
+                }
                 return@setOnKeyListener true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
@@ -318,6 +326,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                         hideMenu()
                         containerFragment.focusToLast()
                     }
+                    val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                    if (searchFragment is GlobalSearchFragment) {
+                        toggleActivateOnMenu(activityMainBinding.btnSearch)
+                        toggleVisibilityOfMainContainer(true)
+                        closeMenu()
+                        hideMenu()
+                        searchFragment.focusToSearchBar()
+                    }
                     return@setOnKeyListener true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
@@ -348,6 +364,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     closeMenu()
                     hideMenu()
                     containerFragment.focusToLast()
+                }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
                 }
                 return@setOnKeyListener true
             }
@@ -395,6 +419,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     closeMenu()
                     hideMenu()
                     containerFragment.focusToLast()
+                }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
                 }
                 return@setOnKeyListener true
             }
@@ -446,6 +478,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     closeMenu()
                     hideMenu()
                     containerFragment.focusToLast()
+                }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
                 }
                 return@setOnKeyListener true
             }
@@ -509,6 +549,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     hideMenu()
                     containerFragment.focusToLast()
                 }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
+                }
                 return@setOnKeyListener true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
@@ -547,6 +595,14 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                     closeMenu()
                     hideMenu()
                     containerFragment.focusToLast()
+                }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
                 }
                 return@setOnKeyListener true
             }

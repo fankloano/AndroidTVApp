@@ -357,19 +357,25 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
             false
         }
 
-        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) {
-            updateSingleSerie()
+        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                updateSingleSerie()
+                seriesViewModel.clearUpdateSerieInRV()
+            }
         }
 
-        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) {
-            binding.overlayLayout.visibility = View.GONE
-            val account = helpViewModel.currentSeriesAccount
-            if (account != null) {
-                if (account.isXtream) {
-                    binding.rvLayoutSeries.requestFocus()
-                } else {
-                    binding.rvLayoutStalkerSeries.requestFocus()
+        seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                binding.overlayLayout.visibility = View.GONE
+                val account = helpViewModel.currentSeriesAccount
+                if (account != null) {
+                    if (account.isXtream) {
+                        binding.rvLayoutSeries.requestFocus()
+                    } else {
+                        binding.rvLayoutStalkerSeries.requestFocus()
+                    }
                 }
+                seriesViewModel.clearFocusToSeries()
             }
         }
 

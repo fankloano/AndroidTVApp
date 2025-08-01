@@ -1831,60 +1831,60 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         if (helpViewModel.currentFocusedSerie != null && helpViewModel.currentFocusedEpisode != null && helpViewModel.currentFocusedSeason != null) {
             Log.d("PLAYING NUMBERS", "SEASON: ${helpViewModel.currentFocusedSeason?.seasonNumber} EPISODE: ${helpViewModel.currentFocusedEpisode?.episodeNumber} FROM SEASON ${helpViewModel.currentFocusedEpisode?.seasonNumber}")
             viewLifecycleOwner.lifecycleScope.launch {
-                val accountData = withContext(Dispatchers.IO) {
-                    accountBox.get(helpViewModel.currentFocusedSerie!!.accountId!!)
-                }
-                if (accountData.isStalker) {
-                    val stalkerUrl = accountData.stalkerUrl
-                    val macAddress = accountData.macAddress
-                    val userAgent = accountData.userAgent
-                    val token = accountData.token
-                    val timeZone = accountData.timezone
-                    if (!helpViewModel.currentFocusedEpisode!!.episodeCmd.isNullOrEmpty()) {
-                        val response = stalkerViewModel.getSeriesLink(
-                            stalkerUrl,
-                            helpViewModel.currentFocusedEpisode!!.episodeCmd!!.removePrefix("ffmpeg ").trim(),
-                            helpViewModel.currentFocusedEpisode!!.episodeNumber.toString(),
-                            cookie = "mac=${macAddress}; stb_lang=en; timezone=$timeZone;",
-                            token = "Bearer $token",
-                            userAgent
-                        ).await()
-                        when (response) {
-                            is Resource.Error -> {
-                                binding.seriesPlayingError.text = response.message
-                                binding.seriesPlayingError.visibility = View.VISIBLE
-                            }
+                val accountData = helpViewModel.currentSeriesAccount
+                if (accountData != null) {
+                    if (accountData.isStalker) {
+                        val stalkerUrl = accountData.stalkerUrl
+                        val macAddress = accountData.macAddress
+                        val userAgent = accountData.userAgent
+                        val token = accountData.token
+                        val timeZone = accountData.timezone
+                        if (!helpViewModel.currentFocusedEpisode!!.episodeCmd.isNullOrEmpty()) {
+                            val response = stalkerViewModel.getSeriesLink(
+                                stalkerUrl,
+                                helpViewModel.currentFocusedEpisode!!.episodeCmd!!.removePrefix("ffmpeg ").trim(),
+                                helpViewModel.currentFocusedEpisode!!.episodeNumber.toString(),
+                                cookie = "mac=${macAddress}; stb_lang=en; timezone=$timeZone;",
+                                token = "Bearer $token",
+                                userAgent
+                            ).await()
+                            when (response) {
+                                is Resource.Error -> {
+                                    binding.seriesPlayingError.text = response.message
+                                    binding.seriesPlayingError.visibility = View.VISIBLE
+                                }
 
-                            is Resource.Success -> {
-                                val playToken =
-                                    response.data.toString().removePrefix("ffmpeg ").trim()
-                                try {
-                                    hideProgressBar()
-                                    if (playWithVlc) {
-                                        initializePlayer(playToken)
-                                    } else {
-                                        initializeExoPlayer(playToken)
+                                is Resource.Success -> {
+                                    val playToken =
+                                        response.data.toString().removePrefix("ffmpeg ").trim()
+                                    try {
+                                        hideProgressBar()
+                                        if (playWithVlc) {
+                                            initializePlayer(playToken)
+                                        } else {
+                                            initializeExoPlayer(playToken)
+                                        }
+                                    } catch (e: IllegalArgumentException) {
+                                        // handle the exception, for example:
+                                        Toast.makeText(
+                                            requireContext(),
+                                            "Unable to play the episode: ${
+                                                (e.cause?.cause?.cause?.message?.removePrefix("Received "))
+                                            }",
+                                            Toast.LENGTH_SHORT
+                                        )
+                                            .show()
                                     }
-                                } catch (e: IllegalArgumentException) {
-                                    // handle the exception, for example:
-                                    Toast.makeText(
-                                        requireContext(),
-                                        "Unable to play the episode: ${
-                                            (e.cause?.cause?.cause?.message?.removePrefix("Received "))
-                                        }",
-                                        Toast.LENGTH_SHORT
-                                    )
-                                        .show()
                                 }
                             }
                         }
-                    }
-                } else {
-                    val url = "${accountData.stalkerUrl}/series/${accountData.username}/${accountData.macAddress}/${helpViewModel.currentFocusedEpisode!!.episodeCmd}.${helpViewModel.currentFocusedEpisode!!.containerExtension}"
-                    if (playWithVlc) {
-                        initializePlayer(url)
                     } else {
-                        initializeExoPlayer(url)
+                        val url = "${accountData.stalkerUrl}/series/${accountData.username}/${accountData.macAddress}/${helpViewModel.currentFocusedEpisode!!.episodeCmd}.${helpViewModel.currentFocusedEpisode!!.containerExtension}"
+                        if (playWithVlc) {
+                            initializePlayer(url)
+                        } else {
+                            initializeExoPlayer(url)
+                        }
                     }
                 }
             }

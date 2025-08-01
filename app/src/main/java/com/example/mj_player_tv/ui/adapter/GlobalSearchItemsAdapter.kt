@@ -2,11 +2,13 @@ package com.example.mj_player_tv.ui.adapter
 
 import android.content.Intent
 import android.net.Uri
+import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.media3.common.util.UnstableApi
@@ -25,7 +27,9 @@ import com.example.mj_player_tv.databinding.RvItemGlobalsearchProgramsBinding
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchTvchannelBinding
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchmoviesBinding
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchseriesBinding
+import com.example.mj_player_tv.ui.FullEpgFragment
 import com.example.mj_player_tv.ui.GlobalSearchFragment
+import com.example.mj_player_tv.ui.TvChannelsFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import io.objectbox.Box
 
@@ -255,11 +259,14 @@ class GlobalSearchItemsAdapter(
             channelAdapter = GlobalSearchProgramsChannelAdapter (
                 onChannelFocused = { selectedChannel ->
                     val epgs= programMap[selectedChannel] ?: emptyList()
-                    epgAdapter.submitList(epgs)
+                    epgAdapter.submitList(epgs.sortedBy { it.startTimestamp })
                     binding.tvSelectedChannel.text = selectedChannel.tvchannel.target.showingName
                     binding.tvSelectedTvCategory.text = "in ${selectedChannel.tvcategory.target.showingName}"
                     updateDetail(epgs.firstOrNull())
                     currentChannel = selectedChannel
+                },
+                onRightClicked = {
+                    focusToEpglist()
                 },
                 fragment
             )
@@ -276,6 +283,9 @@ class GlobalSearchItemsAdapter(
                 onEpgClicked = { clickedEpg, thisview ->
                     showProgramPopup(clickedEpg, currentChannel ?: item.programs.first().first, thisview)
                 },
+                onRighClicked = {
+                    checkForDescrTextViewLenght()
+                },
                 helpViewModel = helpViewModel,
                 fragment// ✅ Übergib hier das ViewModel
             )
@@ -288,8 +298,95 @@ class GlobalSearchItemsAdapter(
 
             epgAdapter.submitList(initialEpgs)
             binding.tvSelectedChannel.text = firstChannel?.tvchannel?.target?.showingName.orEmpty()
-            binding.tvSelectedTvCategory.text = firstChannel?.tvcategory?.target?.showingName.orEmpty()
+            binding.tvSelectedTvCategory.text = "in ${firstChannel?.tvcategory?.target?.showingName.orEmpty()}"
             updateDetail(initialEpgs.firstOrNull())
+
+            binding.tvDetailepgDescription.post {
+                val layout = binding.tvDetailepgDescription.layout
+                if (layout != null) {
+                    val isTextTruncated = layout.height - binding.tvDetailepgDescription.height > 0
+                    if (isTextTruncated) {
+                        binding.tvDetailepgDescription.isVerticalScrollBarEnabled = true
+                        binding.tvDetailepgDescription.movementMethod = ScrollingMovementMethod()
+                        binding.gradientView.visibility = View.VISIBLE
+                        binding.ivMoretext.visibility = View.VISIBLE
+                    } else {
+                        binding.tvDetailepgDescription.isVerticalScrollBarEnabled = false
+                        binding.tvDetailepgDescription.movementMethod = null
+                        binding.tvDetailepgDescription.scrollTo(0, 0) // Zurück zur Ausgangsposition
+                        binding.gradientView.visibility = View.GONE
+                        binding.ivMoretext.visibility = View.GONE
+                    }
+                }
+            }
+            binding.tvDetailepgDescription.setOnKeyListener { _, keyCode, event ->
+                when (event.action) {
+                    KeyEvent.ACTION_DOWN -> {
+                        val layout = binding.tvDetailepgDescription.layout
+
+                        // Überprüfen, ob der Text abgeschnitten ist (abgeschnitten, wenn die letzte Zeile mehr als die Höhe des TextViews hinausgeht)
+                        val isTextTruncated = layout.height - binding.tvDetailepgDescription.height > 0
+
+                        // Wenn der Text abgeschnitten ist, Scrollen zulassen
+                        if (isTextTruncated) {
+
+                            when (keyCode) {
+                                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                                    binding.tvDetailepgDescription.scrollTo(0, 0)
+                                    binding.gradientView.visibility = View.VISIBLE
+                                    binding.ivMoretext.visibility = View.VISIBLE
+                                    binding.recyclerEpglist.requestFocus()
+                                    return@setOnKeyListener true
+                                }
+                                KeyEvent.KEYCODE_BACK -> {
+                                    binding.tvDetailepgDescription.scrollTo(0, 0)
+                                    binding.gradientView.visibility = View.VISIBLE
+                                    binding.ivMoretext.visibility = View.VISIBLE
+                                    binding.recyclerEpglist.requestFocus()
+                                    return@setOnKeyListener true
+                                }
+                                KeyEvent.KEYCODE_DPAD_UP -> {
+                                    // Scroll nach oben
+                                    val newScrollY = (binding.tvDetailepgDescription.scrollY - 50).coerceAtLeast(0)
+                                    binding.tvDetailepgDescription.scrollTo(0, newScrollY)
+                                    return@setOnKeyListener true // Verhindern, dass der Rest ausgeführt wird
+                                }
+                                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                                    // Berechne den maximalen Scrollbereich
+                                    val maxScrollY = binding.tvDetailepgDescription.layout.height - binding.tvDetailepgDescription.height
+                                    val newScrollY = (binding.tvDetailepgDescription.scrollY + 50).coerceAtMost(maxScrollY + (2 * binding.tvDetailepgDescription.lineHeight))  // 2 Zeilen Puffer
+                                    binding.tvDetailepgDescription.scrollTo(0, newScrollY)
+                                    return@setOnKeyListener true
+                                }
+                                else -> return@setOnKeyListener false // Falls keine relevante Taste gedrückt wird
+                            }
+                        } else {
+                            return@setOnKeyListener true
+                        }
+                    }
+
+                    else -> {false}
+                }
+            }
+
+            binding.tvDetailepgDescription.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    val animation = AnimationUtils.loadAnimation(binding.tvDetailepgDescription.context, R.anim.blinked_border)
+                    binding.descriptionborder.visibility = View.VISIBLE
+                    binding.descriptionborder.startAnimation(animation)
+                } else {
+                    binding.descriptionborder.visibility = View.GONE
+                    binding.descriptionborder.clearAnimation()
+                }
+            }
+        }
+
+        private fun focusToEpglist() {
+            if (!epgAdapter.currentList.isNullOrEmpty()) {
+                binding.recyclerEpglist.requestFocus()
+            } else {
+                return
+            }
         }
 
         private fun updateDetail(epg: EpgDataOB?) {
@@ -299,10 +396,36 @@ class GlobalSearchItemsAdapter(
                 binding.tvDetailepgDescription.text = ""
                 return
             }
-
             binding.tvDetailepgName.text = epg.name
             binding.tvDetailepgSubtitle.text = epg.sub_title ?: ""
-            binding.tvDetailepgDescription.text = epg.descr ?: ""
+            binding.tvDetailepgSubtitle.visibility = if (epg.sub_title.isEmpty()) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+            binding.tvDetailepgDescription.text = if (epg.descr.isNotEmpty()) {
+                epg.descr
+            } else {
+                "No description available"
+            }
+        }
+
+        private fun checkForDescrTextViewLenght() {
+            binding.tvDetailepgDescription.post {
+                val canScroll = binding.tvDetailepgDescription.layout?.let { layout ->
+                    val scrollRange = layout.height
+                    val actualHeight = binding.tvDetailepgDescription.height
+                    scrollRange > actualHeight
+                } ?: false
+
+                if (canScroll) {
+                    binding.gradientView.visibility = View.GONE
+                    binding.ivMoretext.visibility = View.GONE
+                    binding.tvDetailepgDescription.requestFocus()
+                } else {
+                    binding.recyclerEpglist.requestFocus()
+                }
+            }
         }
 
         private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View) {

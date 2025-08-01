@@ -60,19 +60,16 @@
         android:id="@+id/tvSeries"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/ivMovies"
+        android:layout_below="@id/ivSeries"
         android:layout_gravity="bottom"
         android:fontFamily="sans-serif-smallcaps"
         android:gravity="center"
+        android:duplicateParentState="true"
         tools:text="Malnazidos"
         android:background="@drawable/background_focused_vod"
         android:textColor="@color/white"
         android:textSize="10dp"
         android:padding="2dp"
-        android:typeface="monospace"
-        android:singleLine="true"
-        android:scrollHorizontally="true"
-        android:ellipsize="marquee"
-        android:marqueeRepeatLimit="marquee_forever"/>
+        android:typeface="monospace" />
 
 </androidx.cardview.widget.CardView>

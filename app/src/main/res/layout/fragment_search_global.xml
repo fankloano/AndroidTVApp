@@ -3,37 +3,40 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="?attr/backgroundDark"
+    android:background="?attr/backgroundDarkDark"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Fixierte Suchleiste -->
     <View
         android:id="@+id/focusBlocker"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:focusable="true"
-        android:focusableInTouchMode="true" />
+        android:focusableInTouchMode="true"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="-1dp" />
 
-    <!-- Fixierte Suchleiste -->
     <RelativeLayout
         android:id="@+id/relLayout_searchMovie"
         android:layout_width="0dp"
         android:layout_height="60dp"
         android:padding="5dp"
-        android:background="?attr/backgroundDark"
+        android:background="?attr/backgroundMain"
         app:layout_constraintTop_toTopOf="parent"
+        android:paddingStart="20dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.92">
+        app:layout_constraintEnd_toStartOf="@id/relLayout_settings">
 
         <EditText
             android:id="@+id/editText_search"
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_centerVertical="true"
-            android:background="?attr/backgroundLight"
             android:hint="@string/search_for"
             android:textSize="18sp"
             android:textColor="@color/white"
             android:imeOptions="actionDone"
+            android:backgroundTint="@color/light_blue"
             android:inputType="text"
             android:paddingStart="15dp"
             android:paddingEnd="15dp"
@@ -43,22 +46,27 @@
     </RelativeLayout>
 
     <RelativeLayout
+        android:id="@+id/relLayout_settings"
         android:layout_width="0dp"
         android:layout_height="60dp"
+        android:background="@drawable/background_globalsearch_settings"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.08"
         app:layout_constraintTop_toTopOf="parent">
 
-    <ImageView
-        android:id="@+id/iv_settings"
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:padding="10dp"
-        android:layout_centerInParent="true"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:background="@drawable/background_player_aspectratio"
-        android:src="@drawable/selector_globalsearch_settings"/>
+        <ImageView
+            android:id="@+id/iv_settings"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintWidth_percent="0.08"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_margin="10dp"
+            android:layout_centerInParent="true"
+            android:duplicateParentState="true"
+            android:src="@drawable/selector_globalsearch_settings"/>
 
     </RelativeLayout>
 
@@ -204,7 +212,7 @@
         android:id="@+id/recycler_searchhistory"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="?attr/backgroundLight"
+        android:background="?attr/backgroundMain"
         tools:listitem="@layout/rv_item_globalsearch_history"
         app:spanCount="3"
         android:orientation="vertical"

@@ -330,6 +330,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         val nextChannelPosition =
                             tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex + 1)
                         if (nextChannelPosition != null) {
+                            isFirstPlayingChannel = true
                             changingPlayingChannel(nextChannelPosition)
                         }
                     }
@@ -342,6 +343,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         val previousChannelPosition =
                             tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex - 1)
                         if (previousChannelPosition != null) {
+                            isFirstPlayingChannel = true
                             changingPlayingChannel(previousChannelPosition)
                         }
                     }
@@ -770,8 +772,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.seekBar.setScrubberColor(resources.getColor(R.color.light_blue_darker))
             }
         }
-
-        // === Variablen ===
 
         binding.seekBar.setOnKeyListener { _, keyCode, event ->
             when (keyCode) {
@@ -3446,6 +3446,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     assignEpgChannelContainer.checkNewChannel()
                 }
             }
+        } else {
+            Toast.makeText(this@TvChannelsFragment.requireActivity(), "All channels assigned!", Toast.LENGTH_SHORT).show()
+            return
         }
     }
 
@@ -3594,7 +3597,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         super.onDestroyView()
         // UI-Referenzen aufheben, um Memory Leaks zu vermeiden
         binding.tvShowFullEpg.setOnClickListener(null)
-        tvChannelsAdapter?.stopRunnable()
         binding.rvLayoutTvChannels.setOnClickListener(null)
         binding.rvLayoutTvChannels.setOnLongClickListener(null)
         binding.rvLayoutTvChannels.adapter = null

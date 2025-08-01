@@ -1553,6 +1553,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     fun resetGlobalSearchData() {
         _searchResults.value = emptyList()
+        _isSearching.value = false
     }
 
     private val _isSearching = MutableStateFlow(false)
@@ -1560,11 +1561,17 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     private var globalSearchJob: Job? = null
 
+    fun cancelGlobalSearchJob() {
+        globalSearchJob?.cancel()
+        _isSearching.value = false
+    }
+
     var hasSearched = false
 
     fun makeGlobalSearch(showFilteredCategories: Boolean, searchString: String) {
         globalSearchJob?.cancel()
         globalSearchJob = viewModelScope.launch {
+            Log.d("GLOBALSEARCHFOR", "$showFilteredCategories")
             _isSearching.value = true
             withContext(Dispatchers.IO) {
 
@@ -1623,41 +1630,50 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
         // Starte parallele Tasks für Programme, Filme und Serien
         coroutineScope {
-            val moviesJob = async { getMoviesForPlaylist(playlist, searchString, currentMoviesMap) }
-            val seriesJob = async { getSeriesForPlaylist(playlist, searchString, currentSeriesMap) }
-
-            val movies = moviesJob.await()
-
-            if (movies.isNotEmpty()) {
-                val filtered = if (showFilteredCategories) {
-                    val favCats = movieCatBox.query(MovieCategoryOB_.favorite.equal(true)).build().find()
-                    movies.filter { it.relatedMovieCategoryId in favCats.map { it.movieCatId } }
-                } else movies
-
-                if (filtered.isNotEmpty()) {
-                    _searchResults.update { it + GlobalSearchItem.Movies(playlist, filtered) }
+            val moviesJob = async {
+                if (showFilteredCategories) {
+                    val favMovieCats = movieCatBox.query(MovieCategoryOB_.favorite.equal(true)).build().find()
+                    val allMovies = mutableListOf<MovieOB>()
+                    for (cat in favMovieCats) {
+                        val moviesForCat = when {
+                            playlist.isStalker -> searchStalkerMoviesByCategory(playlist, cat.movieCatId, searchString, currentMoviesMap).await()
+                            playlist.isXtream -> searchXtreamMoviesByCategory(playlist, cat.movieCatId, searchString, currentMoviesMap).await()
+                            else -> emptyList()
+                        }
+                        allMovies.addAll(moviesForCat)
+                    }
+                    allMovies
+                } else {
+                    getMoviesForPlaylist(playlist, searchString, emptyMap())
                 }
             }
-            else {
-                Log.d("GS CHECKER", "get movies OK: ${playlist.name} = EMPTY")
+
+            val seriesJob = async {
+                if (showFilteredCategories) {
+                    val favSeriesCats = seriesCatBox.query(SeriesCategoryOB_.favorite.equal(true)).build().find()
+                    val allSeries = mutableListOf<SeriesOB>()
+                    for (cat in favSeriesCats) {
+                        val seriesForCat = when {
+                            playlist.isStalker -> searchStalkerSeriesByCategory(playlist, cat.seriesCatId, searchString, currentSeriesMap).await()
+                            playlist.isXtream -> searchXtreamSeriesByCategory(playlist, cat.seriesCatId, searchString, currentSeriesMap).await()
+                            else -> emptyList()
+                        }
+                        allSeries.addAll(seriesForCat)
+                    }
+                    allSeries
+                } else {
+                    getSeriesForPlaylist(playlist, searchString, emptyMap())
+                }
+            }
+
+            val movies = moviesJob.await()
+            if (movies.isNotEmpty()) {
+                _searchResults.update { it + GlobalSearchItem.Movies(playlist, movies) }
             }
 
             val series = seriesJob.await()
-
             if (series.isNotEmpty()) {
-                val filtered = if (showFilteredCategories) {
-                    val favCats = seriesCatBox.query(SeriesCategoryOB_.favorite.equal(true)).build().find()
-                    series.filter { it.relatedSeriesCategoryId in favCats.map { it.seriesCatId } }
-                } else series
-
-                if (filtered.isNotEmpty()) {
-                    _searchResults.update { it + GlobalSearchItem.Series(playlist, filtered) }
-                } else {
-
-                }
-            }
-            else {
-                Log.d("GS CHECKER", "get series OK: ${playlist.name} = EMPTY")
+                _searchResults.update { it + GlobalSearchItem.Series(playlist, series) }
             }
         }
     }
@@ -1735,7 +1751,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             }
         }
     }
-
 
     private suspend fun getMoviesForPlaylist(
         playlist: Accounts,
@@ -1822,6 +1837,130 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             else -> emptyList()
         }
     }
+
+    fun searchStalkerMoviesByCategory(
+        account: Accounts,
+        categoryId: String,
+        searchTerm: String,
+        currentMoviesMap: Map<String, MovieOB>
+    ): Deferred<Set<MovieOB>> = viewModelScope.async{
+        val response = stalkerRepository.searchMoviesByCategory(
+            account.stalkerUrl,
+            "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
+            "Bearer ${account.token}",
+            categoryId,
+            1,
+            account.userAgent,
+            searchTerm
+        )
+        when (response) {
+            is Resource.Success -> {
+                val searchMoviesList: MutableSet<MovieOB> = mutableSetOf()
+
+                val maxItemsPerPage =  response.data.js.max_page_items
+                val totalItems = response.data.js.total_items
+                val totalPages = ceil(totalItems.toDouble() / maxItemsPerPage.toDouble()).toInt()
+                val movies = response.data.js.data.map { movieData ->
+                    val idByAccountData = "${movieData.id}_${account.id}"
+                    currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, account)
+                }
+                searchMoviesList.addAll(movies)
+                if (totalPages > 1) {
+                    val pagesToCheck = createSequentialList(2, totalPages)
+                    for (page in pagesToCheck) {
+                        val newresponse = stalkerRepository.searchMoviesByCategory(
+                            account.stalkerUrl,
+                            "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
+                            "Bearer ${account.token}",
+                            categoryId,
+                            page,
+                            account.userAgent,
+                            searchTerm
+                        )
+                        when (newresponse) {
+                            is Resource.Success -> {
+                                val newmovies = newresponse.data.js.data.map { movieData ->
+                                    val idByAccountData = "${movieData.id}_${account.id}"
+                                    currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, account)
+                                }
+                                searchMoviesList.addAll(newmovies)
+                            }
+                            is Resource.Error -> {
+
+                            }
+                        }
+                    }
+                }
+                searchMoviesList
+            }
+            is Resource.Error -> {
+                emptySet()
+            }
+        }
+    }
+
+    fun searchXtreamMoviesByCategory(
+        account: Accounts,
+        movieCategoryId: String,
+        searchString: String,
+        currentMoviesMap: Map<String, MovieOB>
+    ): Deferred<List<MovieOB>> = viewModelScope.async {
+        val response = xtreamRepository.getXtreamMoviesByCategory(
+            account.stalkerUrl,
+            account.username,
+            account.macAddress,
+            account.userAgent,
+            movieCategoryId
+        )
+        when (response) {
+            is Resource.Success -> {
+                if (response.data.isNotEmpty()) {
+                    val movies = response.data.filter { it.name?.contains(searchString, ignoreCase = true) == true }.map { movieData ->
+                        val idByAccountData = "${movieData.stream_id}_${account.id}"
+                        currentMoviesMap[idByAccountData] ?: MovieOB(
+                            id = 0,
+                            idByAccountData = "${movieData.stream_id}_${account.id}",
+                            movieId = movieData.stream_id.toString(),
+                            relatedMovieCategoryId = movieData.category_id ?: "",
+                            accountName = account.name,
+                            accountId = account.id, // Setze dies auf null oder einen entsprechenden Wert
+                            movieName = movieData.name,
+                            movieCmd = "",
+                            movieTime = null,
+                            movieYear = movieData.year ?: "",
+                            rate = "",
+                            rating_imdb = movieData.rating,
+                            screenshot_uri = movieData.stream_icon,
+                            genres_str = "",
+                            actors = "",
+                            added = movieData.added,
+                            age = "",
+                            description = "",
+                            director = movieData.director,
+                            tmdb_id = "",
+                            o_name = "",
+                            currentPosition = 0L, // Platzhalter für aktuelle Position
+                            isFavorite = false,
+                            isCompletelyWatched = false,
+                            isPartlyWatched = false,
+                            percentagePlayed = 0.0,
+                            xtreamExtension = movieData.container_extension ?: ""
+                        )
+                    }
+                    movies.ifEmpty {
+                        emptyList()
+                    }
+                } else {
+                    emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+                emptyList()
+            }
+        }
+    }
+
 
     private suspend fun getSeriesForPlaylist(
         playlist: Accounts,
@@ -1915,6 +2054,136 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 }
             }
             else -> emptyList()
+        }
+    }
+
+    fun searchStalkerSeriesByCategory(
+        account: Accounts,
+        categoryId: String,
+        searchTerm: String,
+        currentSeriesMap: Map<String, SeriesOB>
+    ): Deferred<Set<SeriesOB>> = viewModelScope.async{
+        val response = stalkerRepository.searchSeriesByCategory(
+            account.stalkerUrl,
+            "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
+            "Bearer ${account.token}",
+            categoryId,
+            1,
+            account.userAgent,
+            searchTerm
+        )
+        when (response) {
+            is Resource.Success -> {
+                val searchSeriesList: MutableSet<SeriesOB> = mutableSetOf()
+
+                val maxItemsPerPage =  response.data.js.max_page_items
+                val totalItems = response.data.js.total_items
+                val totalPages = ceil(totalItems.toDouble() / maxItemsPerPage.toDouble()).toInt()
+                val series = response.data.js.data.map { seriesData ->
+                    val idByAccountData = "${seriesData.id}_${account.id}"
+                    currentSeriesMap[idByAccountData] ?: convertToSeriesOB(seriesData, account)
+                }
+                searchSeriesList.addAll(series)
+                if (totalPages > 1) {
+                    val pagesToCheck = createSequentialList(2, totalPages)
+                    for (page in pagesToCheck) {
+                        val newresponse = stalkerRepository.searchSeriesByCategory(
+                            account.stalkerUrl,
+                            "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
+                            "Bearer ${account.token}",
+                            categoryId,
+                            page,
+                            account.userAgent,
+                            searchTerm
+                        )
+                        when (newresponse) {
+                            is Resource.Success -> {
+                                val newseries = newresponse.data.js.data.map { seriesData ->
+                                    val idByAccountData = "${seriesData.id}_${account.id}"
+                                    currentSeriesMap[idByAccountData] ?: convertToSeriesOB(seriesData, account)
+                                }
+                                searchSeriesList.addAll(newseries)
+                            }
+                            is Resource.Error -> {
+
+                            }
+                        }
+                    }
+                }
+                searchSeriesList
+            }
+            is Resource.Error -> {
+                emptySet()
+            }
+        }
+    }
+
+    fun searchXtreamSeriesByCategory(
+        account: Accounts,
+        serieCategoryId: String,
+        searchString: String,
+        currentSeriesMap: Map<String, SeriesOB>
+    ): Deferred<List<SeriesOB>> = viewModelScope.async {
+        val response = xtreamRepository.getXtreamSeriesByCategory(
+            account.stalkerUrl,
+            account.username,
+            account.macAddress,
+            account.userAgent,
+            serieCategoryId
+        )
+
+        when (response) {
+            is Resource.Success -> {
+                Log.d("XTREAM INFO", "$serieCategoryId == ${response.data.size}")
+                if (response.data.isNotEmpty()) {
+
+                    val serien = response.data.filter { it.name?.contains(searchString, ignoreCase = true) == true }.map { seriesData ->
+                        val idByAccountData = "${seriesData.series_id}_${account.id}"
+
+                        // Falls Serie in der DB existiert, verwende die Originalinstanz
+                        currentSeriesMap[idByAccountData] ?: SeriesOB(
+                            idByAccountData = idByAccountData,
+                            seriesId = seriesData.series_id.toString(),
+                            relatedSeriesCategoryId = seriesData.category_id,
+                            accountName = account.name,
+                            accountId = account.id,
+                            seriesName = seriesData.name ?: "",
+                            seriesCmd = "",
+                            seriesTime = seriesData.episode_run_time?.toIntOrNull() ?: 0,
+                            seriesYear = seriesData.year,
+                            rate = "",
+                            rating_imdb = seriesData.rating,
+                            screenshot_uri = seriesData.cover,
+                            genres_str = seriesData.genre,
+                            actors = seriesData.cast,
+                            added = seriesData.last_modified,
+                            age = "",
+                            description = seriesData.plot,
+                            director = seriesData.director,
+                            tmdb_id = seriesData.tmdb,
+                            o_name = "",
+                            currentPosition = 0L, // Platzhalter für aktuelle Position
+                            isFavorite = false,
+                            isCompletelyWatched = false,
+                            isPartlyWatched = false,
+                            seriesPercentagePlayed = 0.0,
+                            totalSeasons = 0,
+                            totalEpisodes = 0
+                        )
+                    }
+                    serien.ifEmpty {
+                        emptyList()
+                    }
+                } else {
+                    Log.d("XTREAM INFO", "$serieCategoryId == EMPTY")
+                    emptyList()
+                }
+            }
+
+            is Resource.Error -> {
+                Log.d("XTREAM INFO", "$serieCategoryId == ERROR")
+                emptyList()
+            }
         }
     }
 

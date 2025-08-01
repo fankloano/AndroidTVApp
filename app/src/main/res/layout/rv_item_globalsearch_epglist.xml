@@ -4,132 +4,142 @@
     android:layout_width="match_parent"
     android:layout_height="80dp"
     android:gravity="center_vertical"
-    android:orientation="vertical"
     android:focusable="true"
     android:background="@drawable/selector_epgfull_background"
     android:focusableInTouchMode="true"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
-          <com.google.android.material.imageview.ShapeableImageView
-              android:layout_width="150dp"
-              android:layout_height="80dp"
-              android:id="@+id/iv_tvshow_poster"
-              android:layout_alignParentEnd="true"
-              android:alpha="0.3"
-              android:layout_margin="1dp"
-              app:shapeAppearanceOverlay="@style/roundedImageViewBottomRight"
-              android:visibility="gone"
-              android:duplicateParentState="true"
-              tools:src="@drawable/skybundesliga"
-              android:foreground="@drawable/selector_epgfull_gradient"
-              android:scaleType="centerCrop"/>
+    <com.google.android.material.imageview.ShapeableImageView
+        android:layout_width="170dp"
+        android:layout_height="80dp"
+        android:id="@+id/iv_tvshow_poster"
+        android:layout_alignParentEnd="true"
+        android:alpha="0.3"
+        android:layout_margin="1dp"
+        app:shapeAppearanceOverlay="@style/roundedImageViewBottomRight"
+        android:foreground="@drawable/selector_epgfull_gradient"
+        tools:src="@drawable/skybundesliga"
+        android:duplicateParentState="true"
+        android:scaleType="centerCrop"/>
 
-          <View
-              android:id="@+id/view_fullepg"
-              android:layout_width="170dp"
-              android:layout_height="80dp"
-              android:layout_alignParentEnd="true"
-              android:visibility="gone"
-              android:layout_margin="1.5dp"
-              android:duplicateParentState="true"
-              android:background="@drawable/selector_epgfull_gradient"/>
+    <View
+        android:id="@+id/view_fullepg"
+        android:layout_width="170dp"
+        android:layout_height="80dp"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="1.5dp"
+        android:visibility="gone"
+        android:duplicateParentState="true"
+        android:background="@drawable/selector_epgfull_gradient"/>
 
-    <ImageView
-        android:id="@+id/iv_reminder"
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_StartTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="08:20"
+                android:textColor="#A6A5A5"
+                android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"/>
+
+            <TextView
+                android:id="@+id/tv_EndTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text=" - 08:20"
+                android:textColor="#A6A5A5"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/tv_divided"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:text="|"
+                android:textColor="#A6A5A5"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tv_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                tools:text="24/07/2025"
+                android:textColor="#A6A5A5"
+                android:textSize="12sp" />
+
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_Program"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Es war einmal in Amerika"
+            android:textColor="?attr/textMainColor"
+            android:textSize="14sp"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+        <TextView
+            android:id="@+id/tv_SubTitleProgram"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Es war einmal in Amerika"
+            android:visibility="gone"
+            android:textColor="?attr/textColorLight"
+            android:textSize="12sp"
+            android:maxLines="1"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_alarm"
-        android:visibility="gone"
         android:layout_alignParentEnd="true"
-        android:padding="5dp"/>
+        android:layout_marginEnd="5dp"
+        android:layout_alignParentTop="true">
 
-          <LinearLayout
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-               android:gravity="center_vertical"
-              android:layout_marginStart="5dp"
-              android:orientation="vertical">
+        <ImageView
+            android:id="@+id/iv_reminder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_alarm"
+            android:padding="5dp"/>
 
-               <LinearLayout
-                   android:layout_width="wrap_content"
-                   android:layout_height="wrap_content"
-                   android:orientation="horizontal">
+        <ImageView
+            android:id="@+id/iv_play_tv"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/selector_play_tv_fullepg"
+            android:padding="5dp"/>
 
-                    <TextView
-                        android:id="@+id/tv_StartTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text="08:20"
-                        android:textColor="#A6A5A5"
-                        android:textSize="12sp"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintStart_toStartOf="parent"/>
-
-                    <TextView
-                        android:id="@+id/tv_EndTime"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text=" - 08:20"
-                        android:textColor="#A6A5A5"
-                        android:textSize="12sp"/>
-
-                    <TextView
-                        android:id="@+id/tv_Date"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        tools:text="26.03.2025"
-                        android:layout_marginStart="20dp"
-                        android:textColor="#7C7B7B"
-                        android:textSize="12sp"/>
-
-     </LinearLayout>
-
-     <TextView
-         android:id="@+id/tv_Program"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         tools:text="Es war einmal in Amerika"
-         android:textColor="?attr/textMainColor"
-         android:textSize="14sp"
-         android:scrollHorizontally="true"
-         android:ellipsize="marquee"
-         android:maxLines="1"
-         android:marqueeRepeatLimit="marquee_forever"
-         android:layout_below="@id/tv_StartTime"/>
-
-     <TextView
-         android:id="@+id/tv_SubTitleProgram"
-         android:layout_width="wrap_content"
-         android:layout_height="wrap_content"
-         tools:text="Es war einmal in Amerika"
-         android:visibility="gone"
-         android:textColor="?attr/textColorLight"
-         android:textSize="12sp"
-         android:maxLines="1"
-         android:ellipsize="marquee"
-         android:marqueeRepeatLimit="marquee_forever"
-         android:layout_below="@id/tv_Program"/>
-
-          </LinearLayout>
-
-
-          <ImageView
-              android:id="@+id/iv_play_tv"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:layout_marginTop="8dp"
-              android:layout_marginEnd="12dp"
-              android:layout_alignParentEnd="true"
-              android:layout_alignParentTop="true"
-              android:visibility="gone"
-              android:src="@drawable/selector_play_tv_fullepg"/>
+    </LinearLayout>
 
     <View
         android:id="@+id/overlay_full"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#A0232526"
+        android:background="@drawable/background_overlay_globalsearch_epglist"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 

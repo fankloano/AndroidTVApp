@@ -25,6 +25,7 @@
                     android:background="#D02E3035"
                     android:src="@drawable/ic_favorite_vod"
                     android:layout_gravity="start"
+                    android:layout_margin="1.5dp"
                     android:tint="@color/yellow"
                     android:visibility="invisible"/>
 

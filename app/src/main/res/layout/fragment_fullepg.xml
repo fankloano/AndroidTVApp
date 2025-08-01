@@ -76,12 +76,21 @@
         app:layout_constraintEnd_toEndOf="@id/channel_info"
         app:layout_constraintTop_toBottomOf="@id/channel_info"/>
 
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/backgroundDark"
+        app:layout_constraintTop_toBottomOf="@id/channel_info"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintWidth_percent="0.11"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
 
     <com.rubensousa.dpadrecyclerview.DpadRecyclerView
         android:id="@+id/tablayout_epg"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="15dp"
         android:background="?attr/backgroundDark"
         app:layout_constraintTop_toBottomOf="@id/divider"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -107,7 +116,7 @@
         android:id="@+id/rv_fullepg"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="15dp"
         android:layout_marginBottom="5dp"
         android:layout_marginStart="5dp"
         android:layout_marginEnd="5dp"
@@ -442,7 +451,6 @@
             app:layout_constraintTop_toTopOf="@id/tv_description"
             app:layout_constraintStart_toStartOf="@id/tv_description"
             app:layout_constraintEnd_toEndOf="@id/tv_description" />
-
 
         <ImageView
             android:id="@+id/iv_moretext"

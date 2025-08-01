@@ -467,8 +467,11 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
             }
         }
 
-        moviesViewModel.focusRequest.observe(viewLifecycleOwner) {
-            updateAndFocusPlayButton()
+        moviesViewModel.focusRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                updateAndFocusPlayButton()
+                moviesViewModel.clearFocusOnPlayMovie()
+            }
         }
     }
 

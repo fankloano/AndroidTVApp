@@ -9,7 +9,7 @@
                 android:centerColor="?attr/transparentColor"
                 android:endColor="?attr/transparentColor"
                 android:type="linear" />
-            <corners android:bottomRightRadius="24dp"/>
+            <corners android:bottomRightRadius="12dp"/>
         </shape>
     </item>
 
@@ -21,7 +21,7 @@
                 android:centerColor="?attr/transparentColor"
                 android:endColor="?attr/transparentColor"
                 android:type="linear" />
-            <corners android:bottomRightRadius="24dp"/>
+            <corners android:bottomRightRadius="12dp"/>
         </shape>
     </item>
 

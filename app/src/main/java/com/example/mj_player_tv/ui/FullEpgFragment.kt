@@ -777,7 +777,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             addItemDecoration(
                 DpadLinearSpacingDecoration.create(
                     itemSpacing = 10,
-                    edgeSpacing = 10,
+                    edgeSpacing = 0,
                     perpendicularEdgeSpacing = 5
                 )
             )
@@ -797,7 +797,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             addItemDecoration(
                 DpadLinearSpacingDecoration.create(
                     itemSpacing = 10,
-                    edgeSpacing = 10,
+                    edgeSpacing = 0,
                     perpendicularEdgeSpacing = 5
                 )
             )
@@ -949,6 +949,8 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             helpViewModel.currentFocusedChannPosition
         }
         if (helpViewModel.currentEpgTab != datum && tvChannel != null && tvChannelPos != null) {
+            stalkerViewModel.epgLoadJob?.cancel()
+            binding.progressBar.visibility = View.INVISIBLE
             val today = getTodayFormatted()
             val timeOffSet = tvChannel.epgTimeOffSet ?: tvChannelPos.tvcategory.target?.epgTimeOffSet ?: helpViewModel.currentFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
             val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
@@ -1033,6 +1035,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                         helpViewModel.currentFocusedTvAccount
                     }
                     if (account != null && account.epgsources.any { it.isPlaylistEpg }) {
+                        binding.relLayoutDetailEpg.visibility = View.INVISIBLE
                         stalkerViewModel.epgLoadJob?.cancel()
                         stalkerViewModel.fetchEpgDataForDay = true
                         binding.loadepgProgressBar.visibility = View.VISIBLE
@@ -1295,6 +1298,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
         if (helpViewModel.currentFocusedChannPosition != null) {
             Log.d("FOCUSEDFULLEPGDATA", "$epgData")
             binding.detailepgcontainerview.visibility = View.VISIBLE
+            binding.relLayoutDetailEpg.visibility = View.VISIBLE
             val timeOffSet = helpViewModel.currentFocusedChannel?.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: helpViewModel.currentFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
             val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
             val startTime = formatUnixTimestampToTime(epgData.startTimestamp ?: 0, timeOffSet)
