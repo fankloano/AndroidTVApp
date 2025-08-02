@@ -2314,6 +2314,7 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
         super.onDestroy()
         stopDatabaseRunnable()
         stopPeriodicExoPlayerUpdate()
+        helpViewModel.movieFullScreenOpened = false
         if (playWithVlc) {
             org.videolan.libvlc.Dialog.setCallbacks(libVLC, null)
             vlcDialogCallbacks = null
