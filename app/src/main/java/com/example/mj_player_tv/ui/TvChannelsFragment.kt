@@ -282,6 +282,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             }
         }
 
+        var pendingDirection: Int = 0
+
         binding.videoView.setOnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                 if (helpViewModel.isTvFullScreen) {
@@ -323,30 +325,36 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.videoView.requestFocus()
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
                 if (!helpViewModel.isPlayingCatchup) {
-                    val totalChannels = (tvChannelsAdapter?.currentList?.size?.minus(1)) ?: 0
-                    val currentPlayingChannelIndex =
-                        tvChannelsAdapter?.currentList?.indexOf(helpViewModel.currentPlayingChannelPosition)
-                    if (currentPlayingChannelIndex != null && currentPlayingChannelIndex < totalChannels) {
-                        val nextChannelPosition =
-                            tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex + 1)
-                        if (nextChannelPosition != null) {
-                            isFirstPlayingChannel = true
-                            changingPlayingChannel(nextChannelPosition)
-                        }
-                    }
+                    pendingDirection += 1
+                    return@setOnKeyListener true
                 }
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP && event.action == KeyEvent.ACTION_DOWN) {
                 if (!helpViewModel.isPlayingCatchup) {
-                    val currentPlayingChannelIndex =
-                        tvChannelsAdapter?.currentList?.indexOf(helpViewModel.currentPlayingChannelPosition)
-                    if (currentPlayingChannelIndex != null && currentPlayingChannelIndex > 0) {
-                        val previousChannelPosition =
-                            tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex - 1)
-                        if (previousChannelPosition != null) {
-                            isFirstPlayingChannel = true
-                            changingPlayingChannel(previousChannelPosition)
+                    pendingDirection -= 1
+                    return@setOnKeyListener true
+                }
+            } else if ((keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) && event.action == KeyEvent.ACTION_UP) {
+                if (!helpViewModel.isPlayingCatchup) {
+                    pendingDirection.let { direction ->
+                        val list = tvChannelsAdapter?.currentList
+                        if (list.isNullOrEmpty()) return@setOnKeyListener true
+
+                        val currentIndex = list.indexOf(helpViewModel.currentPlayingChannelPosition)
+                        val targetIndex = when {
+                            currentIndex == -1 -> 0 // fallback falls current nicht gefunden wird
+                            currentIndex + direction < 0 -> 0 // unterhalb der Liste -> ersten nehmen
+                            currentIndex + direction >= list.size -> list.size - 1 // über Liste -> letzten nehmen
+                            else -> currentIndex + direction
                         }
+                        val channel = list.getOrNull(targetIndex)
+                        channel?.let {
+                            isFirstPlayingChannel = true
+                            changingPlayingChannel(it)
+                        }
+
+                        pendingDirection = 0
                     }
+                    return@setOnKeyListener true
                 }
             } else {
                 // Ignoriere alle anderen Tastenereignisse während des Vollbildmodus

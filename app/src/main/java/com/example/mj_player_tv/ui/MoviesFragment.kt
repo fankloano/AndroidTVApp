@@ -1,7 +1,6 @@
 package com.example.mj_player_tv.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -28,7 +27,6 @@ import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.MovieCategoryOB
 import com.example.mj_player_tv.database.entity.MovieOB
 import com.example.mj_player_tv.database.help.AccountMovieCategory
-import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.databinding.FragmentMoviesBinding
 import com.example.mj_player_tv.ui.adapter.MovieAccountCategoryAdapter
 import com.example.mj_player_tv.ui.adapter.MoviesAdapter
@@ -49,7 +47,6 @@ import io.objectbox.Box
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlin.math.exp
 
 @UnstableApi
 class MoviesFragment : Fragment(R.layout.fragment_movies) {
@@ -360,7 +357,7 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
         moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
                 updateSingleMovie()
-                moviesViewModel.clearFocusOnMovieRV()
+                moviesViewModel.clearUpdateOnMovieRV()
             }
         }
 
@@ -398,6 +395,8 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                     perpendicularItemSpacing = 14
                 )
             )
+            setFocusOutAllowed(true, false)
+            setFocusOutSideAllowed(true, false)
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
         }
@@ -421,6 +420,8 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             ParentAlignment(offset = 0, fraction = 0f)
             ParentAlignment(edge = ParentAlignment.Edge.NONE)
             setFocusableDirection(FocusableDirection.CONTINUOUS)
+            setFocusOutAllowed(true, false)
+            setFocusOutSideAllowed(true, false)
             setSmoothFocusChangesEnabled(false)
         }
     }

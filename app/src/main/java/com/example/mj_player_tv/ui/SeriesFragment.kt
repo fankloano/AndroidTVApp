@@ -624,6 +624,8 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 )
             )
             setFocusableDirection(FocusableDirection.CONTINUOUS)
+            setFocusOutAllowed(true, false)
+            setFocusOutSideAllowed(true, false)
             setSmoothFocusChangesEnabled(false)
         }
     }
@@ -641,12 +643,17 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 )
             )
             setFocusableDirection(FocusableDirection.CONTINUOUS)
+            setFocusOutAllowed(true, false)
+            setFocusOutSideAllowed(true, false)
             setSmoothFocusChangesEnabled(false)
         }
     }
 
     private val onStalkerSeriesClickListener = StalkerSeriesAdapter.OnClickListener { serie ->
         viewLifecycleOwner.lifecycleScope.launch {
+            if (serie.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+                seriesViewModel.openedSameSeries = true
+            }
             helpViewModel.currentFocusedSerie = serie
             helpViewModel.currentSeriesImage = if (!serie.backdropPath.isNullOrEmpty()) {
                 serie.backdropPath

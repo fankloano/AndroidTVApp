@@ -79,7 +79,8 @@ class GlobalSearchPlaylistAdapter(private val helpViewModel: HelpViewModel, priv
                 oldItem.id == newItem.id
 
             override fun areContentsTheSame(oldItem: Accounts, newItem: Accounts) =
-                oldItem == newItem
+                oldItem == newItem &&
+                        oldItem.id == newItem.id
         }
     }
 }

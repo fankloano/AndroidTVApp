@@ -25,7 +25,7 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
         _updateMovieRVRequest.value = Unit
     }
 
-    fun clearFocusOnMovieRV() {
+    fun clearUpdateOnMovieRV() {
         _updateMovieRVRequest.value = null
     }
 

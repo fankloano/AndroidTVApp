@@ -1066,10 +1066,7 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
     }
 
     private fun updateMovieInRV(movie: MovieOB) {
-        val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (mainFragment is MoviesFragment) {
-            mainFragment.updatePlayingMovie(movie)
-        }
+        moviesViewModel.requestUpdateMovieInRV()
     }
 
     private fun initializeExoPlayer(url: String) {
@@ -1079,6 +1076,7 @@ class PlayMovieFragment : Fragment(R.layout.fragment_play_movie) {
             .setRenderersFactory(
                 DefaultRenderersFactory(requireContext())
                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                    .setEnableDecoderFallback(true)
             )
             .build()
         currentMovieUrl = url

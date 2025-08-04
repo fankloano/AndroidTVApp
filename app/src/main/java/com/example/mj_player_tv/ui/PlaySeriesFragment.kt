@@ -1177,7 +1177,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
 
 
-    private fun updateSeriesInRV(serie: SeriesOB) {
+    private fun updateSeriesInRV() {
         seriesViewModel.requestUpdateSerieInRV()
     }
 
@@ -1642,7 +1642,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                                         (1000 * 60)
                                     ))?.toInt()
                                 }
-                                helpViewModel.currentFocusedSerie?.let { updateSeriesInRV(it) }
+                                helpViewModel.currentFocusedSerie?.let { updateSeriesInRV() }
                                 val formattedMaxDuration = formatTime(totalDuration)
                                 binding.tvTotalTime.text = formattedMaxDuration
                                 binding.seekBar.setDuration(totalDuration)
@@ -2293,7 +2293,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
         updateCache()
 
-        updateSeriesInRV(serie)
+        updateSeriesInRV()
     }
 
 

@@ -178,6 +178,9 @@ class SearchSeriesByCategoryFragment : Fragment(R.layout.fragment_search_series_
         val account = serie.accountId?.let {
             accountBox.get(it)
         }
+        if (serie.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+            seriesViewModel.openedSameSeries = true
+        }
         if (account != null) {
             if (account.isXtream) {
                 viewLifecycleOwner.lifecycleScope.launch {

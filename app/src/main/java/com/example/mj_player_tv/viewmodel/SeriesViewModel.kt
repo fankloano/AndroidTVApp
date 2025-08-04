@@ -10,6 +10,8 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
 
     var changeEpisodeInfoUi = false
 
+    var openedSameSeries = false
+
     private val _focusRequest = MutableLiveData<Unit?>()
     val focusRequest: LiveData<Unit?> = _focusRequest
 

@@ -173,7 +173,10 @@ class GlobalSearchItemsAdapter(
 
                 val image = movie.screenshot_uri
                 if (!image.isNullOrEmpty()) {
+                    Log.d("GLOBIMOVIEBILDI", "${movie.movieName} = $image")
                     ivMovies.load(image)
+                } else {
+                    Log.d("GLOBIMOVIEBILDI", "${movie.movieName} ||| NO IMAGE")
                 }
 
                 binding.tvIsFavorite.visibility = if (movie.isFavorite) View.VISIBLE else View.INVISIBLE
@@ -552,23 +555,27 @@ class GlobalSearchItemsAdapter(
 
     class DiffCallback : DiffUtil.ItemCallback<GlobalSearchDisplayItem>() {
         override fun areItemsTheSame(oldItem: GlobalSearchDisplayItem, newItem: GlobalSearchDisplayItem): Boolean {
-            return when {
-                oldItem is GlobalSearchDisplayItem.ChannelItem && newItem is GlobalSearchDisplayItem.ChannelItem -> oldItem.channel.id == newItem.channel.id
-                oldItem is GlobalSearchDisplayItem.MovieItem && newItem is GlobalSearchDisplayItem.MovieItem -> oldItem.movie.id == newItem.movie.id
-                oldItem is GlobalSearchDisplayItem.SeriesItem && newItem is GlobalSearchDisplayItem.SeriesItem -> oldItem.series.id == newItem.series.id
+            val result = when {
+                oldItem is GlobalSearchDisplayItem.ChannelItem && newItem is GlobalSearchDisplayItem.ChannelItem ->
+                    oldItem.channel.catAndChannelAccount == newItem.channel.catAndChannelAccount
+                oldItem is GlobalSearchDisplayItem.MovieItem && newItem is GlobalSearchDisplayItem.MovieItem ->
+                    oldItem.movie.idByAccountData == newItem.movie.idByAccountData
+                oldItem is GlobalSearchDisplayItem.SeriesItem && newItem is GlobalSearchDisplayItem.SeriesItem ->
+                    oldItem.series.idByAccountData == newItem.series.idByAccountData
                 oldItem is GlobalSearchDisplayItem.ProgramItem && newItem is GlobalSearchDisplayItem.ProgramItem -> {
-                    // Vergleiche z. B. die Liste der Kanal-IDs
                     val oldIds = oldItem.programs.map { it.first.id }
                     val newIds = newItem.programs.map { it.first.id }
                     oldIds == newIds
                 }
-
                 else -> false
             }
+            return result
         }
 
         override fun areContentsTheSame(oldItem: GlobalSearchDisplayItem, newItem: GlobalSearchDisplayItem): Boolean {
-            return oldItem == newItem
+            val result = oldItem == newItem
+            return result
         }
     }
+
 }

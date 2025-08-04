@@ -351,6 +351,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 ).mapValues { it.value.flatten() }
                 binding.tvCatMovies.visibility =
                     if (moviesByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
+                val moviesVisible = if (moviesByAccount?.values?.flatten().isNullOrEmpty()) false else true
+                Log.d("MOVIEVISIBLE OR NOT", "MOVIES: $moviesVisible FOR SIZE: ${moviesByAccount?.values?.flatten()?.size}")
                 val seriesResults = results.filterIsInstance<GlobalSearchItem.Series>()
                 seriesByAccount = seriesResults.groupBy(
                     keySelector = { it.account },
@@ -383,10 +385,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
                     // 👉 Playlists setzen
                     val initialPlaylists = firstMap.keys.toList()
-                    playlistAdapter.submitList(initialPlaylists)
+                    playlistAdapter.submitList(initialPlaylists.sortedBy { it.name })
 
-                    // 👉 Items laden
-                    updateItemList(firstAccount)
 
                     // 👉 Fokus-Setzen verzögert nach UI-Update
                     binding.root.post {
@@ -402,14 +402,28 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     isFirstOpenGlobalSearch = false
                 }
                 val newPlaylists = when (selectedGlobalSearchCategory) {
-                    GlobalSearchMainCategory.TV -> channelsByAccount?.keys?.toList()
-                    GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys?.toList()
-                    GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys?.toList()
-                    GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
+                    GlobalSearchMainCategory.TV -> channelsByAccount?.keys
+                    GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys
+                    GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys
+                    GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys
                     else -> null
                 }
-                if (newPlaylists != playlistAdapter.currentList) {
-                    playlistAdapter.submitList(newPlaylists)
+                if ((newPlaylists?.sortedBy { it.name }
+                        ?: emptyList()) != playlistAdapter.currentList) {
+                    newPlaylists?.forEach {
+                        Log.d("PLAYLIST FOR ACCOUNTS",
+                           "UPDATE: ${selectedGlobalSearchCategory?.name} = ${it.name}"
+                        )
+                    }
+                    playlistAdapter.submitList(newPlaylists?.sortedBy { it.name })
+                }
+                selectedAccount?.let { account ->
+                    selectedGlobalSearchCategory?.let {
+                        val items = getDisplayableItemsFor(account, it)  // Neue Items vom aktuellen Account & Kategorie
+// Liste an Adapter übergeben (am besten als Kopie, da Adapter intern immutable Liste erwartet)
+                        globalSearchItemAdapter.submitList(items)
+
+                    }
                 }
             }
         }
@@ -581,6 +595,26 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 moviesViewModel.clearFocusToMovies()
             }
         }
+
+        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                val thisSerie = globalSearchItemAdapter.currentList.firstOrNull { it is GlobalSearchDisplayItem.SeriesItem && it.series.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData }
+                val position = globalSearchItemAdapter.currentList.indexOf(thisSerie)
+                globalSearchItemAdapter.notifyItemChanged(position)
+                Log.d("UPDATEGLOBALSEARCHITEM", "SERIE: $position")
+                seriesViewModel.clearUpdateSerieInRV()
+            }
+        }
+
+        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                val thisMovie = globalSearchItemAdapter.currentList.firstOrNull { it is GlobalSearchDisplayItem.MovieItem && it.movie.idByAccountData == helpViewModel.currentFocusedMovie?.idByAccountData }
+                val position = globalSearchItemAdapter.currentList.indexOf(thisMovie)
+                globalSearchItemAdapter.notifyItemChanged(position)
+                Log.d("UPDATEGLOBALSEARCHITEM", "MOVIE: $position")
+                moviesViewModel.clearUpdateOnMovieRV()
+            }
+        }
     }
 
     private fun getDisplayableItemsFor(account: Accounts, category: GlobalSearchMainCategory): List<GlobalSearchDisplayItem> {
@@ -593,7 +627,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     listOf(GlobalSearchDisplayItem.ProgramItem(programs))
                 } ?: emptyList()
             }
-
         }
     }
 
@@ -617,6 +650,14 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             playlistAdapter.notifyItemChanged(oldPosition)
             playlistAdapter.notifyItemChanged(newPosition)
             val items = getDisplayableItemsFor(account, selectedGlobalSearchCategory!!)
+            items.forEach {
+                if (it is GlobalSearchDisplayItem.MovieItem) {
+                    Log.d(
+                        "ITEMS FOR ACCOUNT ${selectedGlobalSearchCategory?.name}",
+                        "${account.name} = ${it.movie.movieName}"
+                    )
+                }
+            }
             globalSearchItemAdapter.submitList(items)
         }
     }
@@ -637,7 +678,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
         }
 
-        playlistAdapter.submitList(accounts)
+        playlistAdapter.submitList(accounts?.sortedBy { it.name })
         helpViewModel.selectedGlobalSearchAccount = accounts?.firstOrNull()
         selectedAccount = accounts?.firstOrNull()
         selectedAccount?.let { updateItemList(it) }
@@ -657,18 +698,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             binding.recyclerSearchhistory.visibility = View.VISIBLE
         }
         binding.editTextSearch.requestFocus()
-    }
-
-    fun updatePlaylistsForSelectedCategory() {
-        val accounts = when (selectedGlobalSearchCategory) {
-            GlobalSearchMainCategory.TV -> channelsByAccount?.keys?.toList()
-            GlobalSearchMainCategory.MOVIES -> moviesByAccount?.keys?.toList()
-            GlobalSearchMainCategory.SERIES -> seriesByAccount?.keys?.toList()
-            GlobalSearchMainCategory.PROGRAMS -> programsByAccount?.keys?.toList()
-            null -> TODO()
-        }
-
-        playlistAdapter.submitList(accounts)
     }
 
     private fun showSearchHistory() {
@@ -792,6 +821,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 }
                 is GlobalSearchDisplayItem.SeriesItem -> {
                     if (selectedAccount != null) {
+                        if (clickedItem.series.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+                            seriesViewModel.openedSameSeries = true
+                        }
                         if (selectedAccount!!.isXtream) {
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val seasons =
@@ -845,6 +877,8 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         binding.recyclerItems.apply {
             adapter = globalSearchItemAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
+            setFocusOutAllowed(true, false)
+            setFocusOutSideAllowed(false, false)
             setSmoothFocusChangesEnabled(false)
         }
     }

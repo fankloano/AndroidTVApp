@@ -1554,6 +1554,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     fun resetGlobalSearchData() {
         _searchResults.value = emptyList()
         _isSearching.value = false
+        hasSearched = false
     }
 
     private val _isSearching = MutableStateFlow(false)
@@ -1630,13 +1631,13 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
         // Starte parallele Tasks für Programme, Filme und Serien
         coroutineScope {
-            val moviesJob = async {
-                if (showFilteredCategories) {
+            launch {
+                val movies = if (showFilteredCategories) {
                     val favMovieCats = movieCatBox.query(MovieCategoryOB_.favorite.equal(true)).build().find()
                     val allMovies = mutableListOf<MovieOB>()
                     for (cat in favMovieCats) {
                         val moviesForCat = when {
-                            playlist.isStalker -> searchStalkerMoviesByCategory(playlist, cat.movieCatId, searchString, currentMoviesMap).await()
+                            playlist.isStalker -> searchStalkerMoviesByCategory(playlist, cat.movieCatId, searchString, currentMoviesMap)
                             playlist.isXtream -> searchXtreamMoviesByCategory(playlist, cat.movieCatId, searchString, currentMoviesMap).await()
                             else -> emptyList()
                         }
@@ -1644,12 +1645,17 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                     }
                     allMovies
                 } else {
-                    getMoviesForPlaylist(playlist, searchString, emptyMap())
+                    getMoviesForPlaylist(playlist, searchString, currentMoviesMap)
+                }
+                if (movies.isNotEmpty()) {
+                    _searchResults.update { current ->
+                        mergeMoviesForAccount(current, playlist, movies)
+                    }
                 }
             }
 
-            val seriesJob = async {
-                if (showFilteredCategories) {
+            launch {
+                val series = if (showFilteredCategories) {
                     val favSeriesCats = seriesCatBox.query(SeriesCategoryOB_.favorite.equal(true)).build().find()
                     val allSeries = mutableListOf<SeriesOB>()
                     for (cat in favSeriesCats) {
@@ -1662,18 +1668,11 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                     }
                     allSeries
                 } else {
-                    getSeriesForPlaylist(playlist, searchString, emptyMap())
+                    getSeriesForPlaylist(playlist, searchString, currentSeriesMap)
                 }
-            }
-
-            val movies = moviesJob.await()
-            if (movies.isNotEmpty()) {
-                _searchResults.update { it + GlobalSearchItem.Movies(playlist, movies) }
-            }
-
-            val series = seriesJob.await()
-            if (series.isNotEmpty()) {
-                _searchResults.update { it + GlobalSearchItem.Series(playlist, series) }
+                if (series.isNotEmpty()) {
+                    _searchResults.update { it + GlobalSearchItem.Series(playlist, series) }
+                }
             }
         }
     }
@@ -1783,6 +1782,9 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 }
             }
             playlist.isStalker -> {
+                currentMoviesMap.forEach { s, movieOB ->
+                    Log.d("gs moviemap", "MAP ALL: ${movieOB.movieName} === ${movieOB.idByAccountData}")
+                }
                 val response = stalkerRepository.searchMoviesByCategory(
                     playlist.stalkerUrl,
                     "mac=${playlist.macAddress}; stb_lang=de; timezone=${playlist.timezone};",
@@ -1800,9 +1802,14 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                         val totalPages = ceil(totalItems.toDouble() / maxItemsPerPage.toDouble()).toInt()
                         val stalkermovies = response.data.js.data.map { movieData ->
                             val idByAccountData = "${movieData.id}_${playlist.id}"
+                            Log.d("gs moviemap", "ACCOUNT: ${playlist.name} PAGE: 1 = ${movieData.name} === $idByAccountData")
                             currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, playlist)
                         }
                         searchMoviesList.addAll(stalkermovies)
+                        _searchResults.update { current ->
+                            val others = current.filterNot { it is GlobalSearchItem.Movies && it.account == playlist }
+                            others + GlobalSearchItem.Movies(playlist, searchMoviesList.toList())
+                        }
                         if (totalPages > 1) {
                             val pagesToCheck = createSequentialList(2, totalPages)
                             for (page in pagesToCheck) {
@@ -1819,9 +1826,19 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                                     is Resource.Success -> {
                                         val newmovies = newresponse.data.js.data.map { movieData ->
                                             val idByAccountData = "${movieData.id}_${playlist.id}"
+                                            Log.d("gs moviemap", "ACCOUNT: ${playlist.name} PAGE: $page = ${movieData.name} === $idByAccountData")
+
                                             currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, playlist)
                                         }
-                                        searchMoviesList.addAll(newmovies)
+                                        val uniqueNewMovies = newmovies.filter { newMovie ->
+                                            searchMoviesList.none { it.idByAccountData == newMovie.idByAccountData }
+                                        }
+                                        searchMoviesList.addAll(uniqueNewMovies)
+                                        _searchResults.update { current ->
+                                            // Alle alten Movies von diesem Account rausfiltern
+                                            val others = current.filterNot { it is GlobalSearchItem.Movies && it.account == playlist }
+                                            others + GlobalSearchItem.Movies(playlist, searchMoviesList.toList())
+                                        }
                                     }
                                     is Resource.Error -> {
 
@@ -1838,12 +1855,12 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    fun searchStalkerMoviesByCategory(
+    suspend fun searchStalkerMoviesByCategory(
         account: Accounts,
         categoryId: String,
         searchTerm: String,
         currentMoviesMap: Map<String, MovieOB>
-    ): Deferred<Set<MovieOB>> = viewModelScope.async{
+    ): Set<MovieOB> {
         val response = stalkerRepository.searchMoviesByCategory(
             account.stalkerUrl,
             "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
@@ -1853,10 +1870,12 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             account.userAgent,
             searchTerm
         )
-        when (response) {
+        return when (response) {
             is Resource.Success -> {
                 val searchMoviesList: MutableSet<MovieOB> = mutableSetOf()
-
+                currentMoviesMap.forEach { s, movieOB ->
+                    Log.d("gs moviemap", "MAP: ${movieOB.movieName} === ${movieOB.idByAccountData}")
+                }
                 val maxItemsPerPage =  response.data.js.max_page_items
                 val totalItems = response.data.js.total_items
                 val totalPages = ceil(totalItems.toDouble() / maxItemsPerPage.toDouble()).toInt()
@@ -1865,6 +1884,10 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                     currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, account)
                 }
                 searchMoviesList.addAll(movies)
+                _searchResults.update { current ->
+                    mergeMoviesForAccount(current, account, movies)
+                }
+
                 if (totalPages > 1) {
                     val pagesToCheck = createSequentialList(2, totalPages)
                     for (page in pagesToCheck) {
@@ -1880,10 +1903,19 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                         when (newresponse) {
                             is Resource.Success -> {
                                 val newmovies = newresponse.data.js.data.map { movieData ->
+
                                     val idByAccountData = "${movieData.id}_${account.id}"
+                                    Log.d("gs moviemap", "NEW: ${movieData.name} === $idByAccountData")
+
                                     currentMoviesMap[idByAccountData] ?: convertToMovie(movieData, account)
                                 }
-                                searchMoviesList.addAll(newmovies)
+                                val uniqueNewMovies = newmovies.filter { newMovie ->
+                                    searchMoviesList.none { it.idByAccountData == newMovie.idByAccountData }
+                                }
+                                searchMoviesList.addAll(uniqueNewMovies)
+                                _searchResults.update { current ->
+                                    mergeMoviesForAccount(current, account, movies)
+                                }
                             }
                             is Resource.Error -> {
 
@@ -1898,6 +1930,24 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             }
         }
     }
+
+    private fun mergeMoviesForAccount(
+        current: List<GlobalSearchItem>,
+        account: Accounts,
+        newMovies: List<MovieOB>
+    ): List<GlobalSearchItem> {
+        val updated = current.map {
+            if (it is GlobalSearchItem.Movies && it.account == account) {
+                val merged = (it.movies + newMovies).distinctBy { movie -> movie.idByAccountData }
+                GlobalSearchItem.Movies(account, merged)
+            } else it
+        }
+
+        return if (updated.none { it is GlobalSearchItem.Movies && it.account == account }) {
+            updated + GlobalSearchItem.Movies(account, newMovies)
+        } else updated
+    }
+
 
     fun searchXtreamMoviesByCategory(
         account: Accounts,

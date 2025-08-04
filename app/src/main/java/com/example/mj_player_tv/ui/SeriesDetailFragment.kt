@@ -119,10 +119,14 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
         binding.constSeries.requestFocus()
         if (helpViewModel.currentFocusedSerie != null) {
+            Log.d("SERIESDETAILTEST", "SERIE: ${helpViewModel.currentFocusedSerie?.seriesName} SERIESID: ${helpViewModel.currentFocusedSerie?.idByAccountData}")
             currentAccount = helpViewModel.currentSeriesAccount
             if (currentAccount != null) {
                 if (currentAccount!!.isXtream) {
                     if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {
+                        helpViewModel.focusedSeasons?.forEach {
+                            Log.d("SERIESDETAILTEST", "SERIE: ${it.serie.target.seriesName} SERIESID: ${it.seriesIdByAccount} SEASON(XTREAM): ${it.seasonNumber}")
+                        }
                         binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
                         seasonsAdapter.submitList(helpViewModel.focusedSeasons)
                         binding.rvLayoutSeriesSeasons.post {
@@ -160,10 +164,14 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                 } else {
                     if (stalkerViewModel.seriesCache.containsKey(helpViewModel.currentFocusedSerie?.idByAccountData)) {
                         if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {
+                            helpViewModel.focusedSeasons?.forEach {
+                                Log.d("SERIESDETAILTEST", "CACHED SERIE: ${it.serie.target.seriesName} SERIESID: ${it.seriesIdByAccount} SEASON(STALKER): ${it.seasonNumber}")
+                            }
                             binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
                             seasonsAdapter.submitList(helpViewModel.focusedSeasons)
                             binding.rvLayoutSeriesSeasons.post {
                                 if (helpViewModel.currentFocusedSerie?.lastWatchedSeason != 0) {
+                                    Log.d("CHECK STALKER LOADING", "8")
                                     val lastSeason =
                                         helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason }
                                     val lastSeasonPosition =
@@ -172,18 +180,24 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                         lastSeasonPosition
                                     )
                                     if (lastSeason != null) {
+                                        Log.d("CHECK STALKER LOADING", "9")
                                         showEpisodesForSeason(lastSeason)
                                     } else {
                                         if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
+                                            Log.d("CHECK STALKER LOADING", "10")
                                             showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
                                         } else {
+                                            Log.d("CHECK STALKER LOADING", "11")
                                             noDataReceived()
                                         }
                                     }
                                 } else {
+                                    Log.d("CHECK STALKER LOADING", "12")
                                     if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
+                                        Log.d("CHECK STALKER LOADING", "13")
                                         showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
                                     } else {
+                                        Log.d("CHECK STALKER LOADING", "14")
                                         noDataReceived()
                                     }
                                 }
@@ -192,6 +206,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                 showDetailUi(it)
                             }
                         } else {
+                            Log.d("SERIESDETAILTEST", "CACHED SERIE: ${helpViewModel.currentFocusedSerie?.seriesName} SERIESID: ${helpViewModel.currentFocusedSerie?.idByAccountData} SEASON(STALKER): NO SEASONS")
                             noDataReceived()
                         }
                     } else {
@@ -199,6 +214,9 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                             if (seasons.isNotEmpty() && isFirstOpen) {
                                 helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
                                     .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
+                                helpViewModel.focusedSeasons?.forEach {
+                                    Log.d("SERIESDETAILTEST", "NOT CACHED SERIE: ${it.serie.target.seriesName} SERIESID: ${it.seriesIdByAccount} SEASON(STALKER): ${it.seasonNumber}")
+                                }
                                 helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
                                 binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
                                 seasonsAdapter.submitList(helpViewModel.focusedSeasons)
@@ -241,10 +259,16 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                 if (seasons.isEmpty() && isFirstOpen) {
                                     lifecycleScope.launch {
                                         delay(2000) // z. B. 400ms warten
-                                        val latestSeasons = stalkerViewModel.seriesDetailData.value
+                                        val latestSeasons = stalkerViewModel.seriesDetailData.value?.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                            .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE })?.toMutableList()
                                         if (latestSeasons.isNullOrEmpty()) {
+                                            Log.d("SERIESDETAILTEST", "NOT CACHED SERIE: ${helpViewModel.currentFocusedSerie?.seriesName} SERIESID: ${helpViewModel.currentFocusedSerie?.idByAccountData} SEASON(STALKER): NO SEASONS")
+
                                             noDataReceived()
                                             Log.d("CHECK STALKER LOADING", "6")
+                                        } else {
+                                            Log.d("CHECK STALKER LOADING", "7")
+                                            seasonsAdapter.submitList(latestSeasons)
                                         }
                                     }
                                 }
@@ -1391,7 +1415,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
     }
 
     fun showEpisodesForSeason(season: SeasonsOB) {
-        if (season.seriesSeasonIdByAccountData == helpViewModel.currentFocusedSeason?.seriesSeasonIdByAccountData && !changedSeason) return
+        if (season.seriesSeasonIdByAccountData == helpViewModel.currentFocusedSeason?.seriesSeasonIdByAccountData && !changedSeason && !seriesViewModel.openedSameSeries) return
         val oldPosition = seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
         val newPosition = seasonsAdapter.currentList.indexOf(season)
         helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seriesSeasonIdByAccountData == season.seriesSeasonIdByAccountData }
@@ -1522,7 +1546,10 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
     }
 
     fun showFocusedEpisodeInfos(episode: EpisodesOB) {
-        if (helpViewModel.currentFocusedEpisode != episode || seriesViewModel.changeEpisodeInfoUi) {
+        if (helpViewModel.currentFocusedEpisode != episode || seriesViewModel.changeEpisodeInfoUi || seriesViewModel.openedSameSeries) {
+            if (seriesViewModel.openedSameSeries) {
+                seriesViewModel.openedSameSeries = false
+            }
             seriesViewModel.changeEpisodeInfoUi = false
             helpViewModel.currentFocusedEpisode = helpViewModel.focusedEpisodes?.firstOrNull { it.seriesSeasonEpisodeIdByAccountData == episode.seriesSeasonEpisodeIdByAccountData }
             binding.tvEpisodedescription.text = episode.episodeDescription?.ifEmpty {

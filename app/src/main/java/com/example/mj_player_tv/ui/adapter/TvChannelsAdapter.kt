@@ -209,7 +209,7 @@ class TvChannelsAdapter(
                                     val currentTimeRun = System.currentTimeMillis() / 1000
                                     if (currentTimeRun >= (currentProgram.stopTimestamp!! + timeOffSetSeconds)) {
                                         notifyItemChanged(bindingAdapterPosition)
-                                        fragment.checkSingleChannelEpg(tvchannelPos)
+                                        fragmentRef.get()?.takeIf { it.isAdded && it.view != null }?.checkSingleChannelEpg(tvchannelPos)
                                         if (helpViewModel.currentFocusedChannPosition?.catAndChannelAccount == tvchannelPos.catAndChannelAccount) {
                                             fragmentRef.get()?.takeIf { it.isAdded }
                                                 ?.showEpgPreview(tvchannel)
@@ -591,6 +591,11 @@ class TvChannelsAdapter(
             longPressRunnable?.let { longPressHandler.removeCallbacks(it) }
             longPressRunnable = null
         }
+    }
+
+    override fun onViewRecycled(holder: ViewHolder) {
+        holder.cleanup()
+        super.onViewRecycled(holder)
     }
 
     override fun onViewDetachedFromWindow(holder: ViewHolder) {
