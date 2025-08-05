@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
@@ -53,13 +54,25 @@ import java.security.Key
 import androidx.core.view.isVisible
 import androidx.core.view.isGone
 import androidx.core.view.isNotEmpty
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
+import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
+import com.example.mj_player_tv.database.entity.EpgSource
+import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
+import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.database.help.WatchlistDisplayItem
+import com.example.mj_player_tv.database.help.WatchlistItem
+import com.example.mj_player_tv.database.help.WatchlistMainCategory
+import com.example.mj_player_tv.ui.adapter.WatchlistItemsAdapter
 import com.example.mj_player_tv.viewmodel.MoviesViewModel
 import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.SeriesViewModel
 import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
+import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -72,23 +85,28 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
     private val binding get() = _binding!!
 
-    private var playlistAdapter: WatchlistPlaylistAdapter? = null
+    private lateinit var playlistAdapter: WatchlistPlaylistAdapter
+    private lateinit var watchlistItemsAdapter: WatchlistItemsAdapter
+    private lateinit var watchlistProgramsAdapter: WatchListProgrammeAdapter
+
     private var moviesAdapter: WatchListMoviesAdapter? = null
     private var seriesAdapter: WatchlistSeriesAdapter? = null
-    private var programmesAdapter: WatchListProgrammeAdapter? = null
 
-    private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
-    private val movieBox = ObjectBox.store.boxFor(MovieOB::class.java)
-    private val seriesBox = ObjectBox.store.boxFor(SeriesOB::class.java)
-    private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
+    private var moviesByAccount: Map<Accounts, List<MovieOB>>? = null
 
-    private var wasItemClicked = false
+    private var seriesByAccount: Map<Accounts, List<SeriesOB>>? = null
 
-    private var moviesList: MutableList<MovieOB>? = null
+    private var programsByAccount: Map<Accounts, List<Programme>>? = null
 
-    private var seriesList: MutableList<SeriesOB>? = null
+    private val epgSourceBox = ObjectBox.store.boxFor(EpgSource::class.java)
 
-    private var programmeList: MutableList<Programme>? = null
+    private var selectedWatchlistCategory: WatchlistMainCategory? = null
+
+    private var lastLoadedCategory: WatchlistMainCategory? = null
+
+    private var selectedAccount: Accounts? = null
+
+    private var isFirstOpenWatchlist = true
 
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
         StalkerViewModelFactory(
@@ -133,116 +151,155 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+
+        helpViewModel.fetchWatchListData()
         preparePlaylistRecyclerView()
-        prepareProgrammesRecyclerView()
+        prepareItemsRecyclerView()
+        prepareProgramsRecyclerview()
 
         parentFragmentManager.addOnBackStackChangedListener(backStackListener)
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val movieQuery = movieBox.query(MovieOB_.isFavorite.equal(true)).build()
-            moviesList = movieQuery.find()
-            movieQuery.close()
-            if (!moviesList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.loadingprogressBar.isVisible) {
-                        binding.loadingprogressBar.visibility = View.GONE
+        viewLifecycleOwner.lifecycleScope.launch {
+            helpViewModel.watchlistResults.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { results ->
+
+                val movieResults = results.filterIsInstance<WatchlistItem.Movies>()
+                moviesByAccount = movieResults.groupBy(
+                    keySelector = { it.account },
+                    valueTransform = { it.movies }
+                ).mapValues { it.value.flatten() }
+
+                val seriesResults = results.filterIsInstance<WatchlistItem.Series>()
+                seriesByAccount = seriesResults.groupBy(
+                    keySelector = { it.account },
+                    valueTransform = { it.series }
+                ).mapValues { it.value.flatten() }
+
+                val programsResults = results.filterIsInstance<WatchlistItem.Programs>()
+                programsByAccount = programsResults.groupBy(
+                    keySelector = { it.account },
+                    valueTransform = { it.programs }
+                ).mapValues { it.value.flatten() }
+
+                if (isFirstOpenWatchlist) {
+                    val (firstCategory, firstMap) = listOf(
+                        WatchlistMainCategory.MOVIES to moviesByAccount,
+                        WatchlistMainCategory.SERIES to seriesByAccount,
+                        WatchlistMainCategory.PROGRAMS to programsByAccount
+                    ).firstOrNull { it.second?.isNotEmpty() == true }
+                        ?: return@collectLatest // keine Ergebnisse
+
+                    val firstAccount = firstMap?.keys?.minByOrNull { it.name } ?: return@collectLatest
+
+                    helpViewModel.selectedWatchlistCategory = firstCategory
+                    selectedWatchlistCategory = firstCategory
+                    helpViewModel.selectedWatchlistAccount = firstAccount
+                    selectedAccount = firstAccount
+
+                    val initialPlaylists = firstMap.keys.toList().sortedBy { it.name }
+                    playlistAdapter.submitList(initialPlaylists)
+
+                    // 👉 Rufe updateMovieUI() direkt nach dem Laden der Movies auf
+
+                    when (firstCategory) {
+                        WatchlistMainCategory.MOVIES -> {
+                            binding.constraintVod.visibility = View.VISIBLE
+                            val firstMovie = moviesByAccount?.get(firstAccount)?.firstOrNull()
+                            firstMovie?.let {
+                                updateMovieUi(it)
+                            }
+                        }
+                        WatchlistMainCategory.SERIES -> {
+                            binding.constraintVod.visibility = View.VISIBLE
+                            val firstSerie = seriesByAccount?.get(firstAccount)?.firstOrNull()
+                            firstSerie?.let {
+                                updateSeriesUi(it)
+                            }
+                        }
+                        WatchlistMainCategory.PROGRAMS -> {
+                            binding.constraintProgramme.visibility = View.VISIBLE
+                            val firstProgram = programsByAccount?.get(firstAccount)?.firstOrNull()
+                            firstProgram?.let {
+                                setProgramDetails(firstProgram)
+                                binding.recyclerProgramme.requestFocus()
+                            }
+                        }
                     }
-                    prepareMoviesRecyclerView()
-                    binding.rvWatchlistMovies.isSelected = true
-                    binding.rvWatchlistSeries.isSelected = false
-                    binding.rvWatchlistProgramme.isSelected = false
-                    binding.rvWatchlistMovies.requestFocus()
-                    showMoviePlaylistsRecyclerview(moviesList!!)
+                    if (firstCategory == WatchlistMainCategory.MOVIES) {
+                        val firstMovie = moviesByAccount?.get(firstAccount)?.firstOrNull()
+                        firstMovie?.let {
+                            updateMovieUi(it)
+                        }
+                    }
+
+                    binding.root.post {
+                        when (firstCategory) {
+                            WatchlistMainCategory.MOVIES -> {
+                                binding.rvWatchlistMovies.requestFocus()
+                            }
+                            WatchlistMainCategory.SERIES -> binding.rvWatchlistSeries.requestFocus()
+                            WatchlistMainCategory.PROGRAMS -> binding.rvWatchlistProgramme.requestFocus()
+                        }
+                    }
+                    isFirstOpenWatchlist = false
                 }
-            }
-            val seriesQuery = seriesBox.query(SeriesOB_.isFavorite.equal(true)).build()
-            seriesList = seriesQuery.find()
-            seriesQuery.close()
-            if (!seriesList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                if (binding.loadingprogressBar.isVisible) {
-                    binding.loadingprogressBar.visibility = View.GONE
-                }
-                if (moviesList.isNullOrEmpty()) {
-                    prepareSeriesRecyclerView()
-                    binding.rvWatchlistMovies.isSelected = false
-                    binding.rvWatchlistSeries.isSelected = true
-                    binding.rvWatchlistProgramme.isSelected = false
-                    binding.rvWatchlistSeries.requestFocus()
-                    showSeriesPlaylistsRecyclerview(seriesList!!)
+
+                selectedAccount?.let { account ->
+                    selectedWatchlistCategory?.let { cat ->
+                        val items = getDisplayableItemsFor(account, cat)
+                        when (cat) {
+                            WatchlistMainCategory.PROGRAMS -> {
+                                val programItems = items.filterIsInstance<WatchlistDisplayItem.ProgramItem>()
+                                watchlistProgramsAdapter.submitList(programItems)
+                            } else -> {
+                                watchlistItemsAdapter.submitList(items)
+                            }
+                        }
                     }
-                }
-            }
-            programmeList = programmeBox.all
-            if (!programmeList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.loadingprogressBar.isVisible) {
-                        binding.loadingprogressBar.visibility = View.GONE
-                    }
-                    if (moviesList.isNullOrEmpty() && seriesList.isNullOrEmpty()) {
-                        binding.rvWatchlistMovies.isSelected = false
-                        binding.rvWatchlistSeries.isSelected = false
-                        binding.rvWatchlistProgramme.isSelected = true
-                        binding.rvWatchlistProgramme.requestFocus()
-                        showProgrammePlaylistsRecyclerview(programmeList!!)
-                    }
-                }
-            }
-            if (moviesList.isNullOrEmpty() && seriesList.isNullOrEmpty() && programmeList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.loadingprogressBar.isVisible) {
-                        binding.loadingprogressBar.visibility = View.GONE
-                    }
-                    binding.rvWatchlistMovies.isSelected = true
-                    binding.rvWatchlistSeries.isSelected = false
-                    binding.rvWatchlistMovies.isSelected = false
-                    binding.rvWatchlistMovies.requestFocus()
-                    binding.tvNodatafound.visibility = View.VISIBLE
                 }
             }
         }
 
-        binding.rvWatchlistMovies.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelectmovies.isSelected = hasFocus
-            if (hasFocus ) {
-                Log.d("SERIEDETAILWATCHLIST", "FOKUS FILME")
-                helpViewModel.currentWatchListSeriesAccount = null
-                helpViewModel.currentFocusedSerie = null
-                resetSeriesDetailsUi()
-                if (binding.relLayoutProgramdescr.isVisible) {
-                    binding.relLayoutProgramdescr.visibility = View.GONE
-                }
-                if (binding.recyclerProgramme.isVisible) {
-                    binding.recyclerProgramme.visibility = View.GONE
-                    binding.recyclerItems.visibility = View.VISIBLE
-                }
-                binding.rvWatchlistMovies.isSelected = true
-                binding.rvWatchlistProgramme.isSelected = false
-                binding.rvWatchlistSeries.isSelected = false
-                if (!helpViewModel.isWatchlistContainerOpened && helpViewModel.currentSelectedWatchlist != "MOVIE") {
-                    if (binding.tvNodatafound.isVisible) {
-                        binding.tvNodatafound.visibility = View.INVISIBLE
+        viewLifecycleOwner.lifecycleScope.launch {
+            helpViewModel.watchlistSearching.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { searching ->
+                if (searching) {
+                    // Zeige z.B. ProgressBar, lade Spinner etc.
+                    binding.tvNodatafound.visibility = View.GONE
+                    binding.loadingprogressBar.visibility = View.VISIBLE
+                } else {
+                    if (!helpViewModel.hasFetchedWatchlist) {
+                        // Noch keine Suche gestartet -> kein "No Data" anzeigen
+                        binding.tvNodatafound.visibility = View.GONE
+                        return@collectLatest
                     }
-                    helpViewModel.currentSelectedWatchlist = "MOVIE"
-                    if (!moviesList.isNullOrEmpty()) {
-                        playlistAdapter?.submitList(null)
-                        prepareMoviesRecyclerView()
-                        showMoviePlaylistsRecyclerview(moviesList!!)
+
+                    // Verberge ProgressBar, zeige UI mit Ergebnissen
+                    binding.loadingprogressBar.visibility = View.GONE
+                    val hasResults = !(moviesByAccount?.values?.flatten().isNullOrEmpty()
+                            && seriesByAccount?.values?.flatten().isNullOrEmpty()
+                            && programsByAccount?.values?.flatten().isNullOrEmpty())
+
+                    if (hasResults) {
+                        binding.tvNodatafound.visibility = View.GONE
                     } else {
-                        if (moviesList.isNullOrEmpty()) {
-                            binding.recyclerPlaylists.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
-                            binding.recyclerItems.visibility = View.INVISIBLE
-                        }
+                        binding.tvNodatafound.visibility = View.VISIBLE
                     }
                 }
-                helpViewModel.currentSelectedWatchlist = "MOVIE"
+            }
+        }
+
+
+        binding.rvWatchlistMovies.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.rvWatchlistMovies.isSelected = true
+                binding.rvWatchlistSeries.isSelected = false
+                binding.rvWatchlistProgramme.isSelected = false
+                onCategorySelected(WatchlistMainCategory.MOVIES)
             }
         }
 
         binding.rvWatchlistMovies.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                if (binding.recyclerPlaylists.isVisible) {
+                if (playlistAdapter.currentList.isNotEmpty()) {
                     binding.recyclerPlaylists.requestFocus()
                 } else {
                     binding.rvWatchlistMovies.requestFocus()
@@ -261,49 +318,20 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
 
         binding.rvWatchlistSeries.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelectseries.isSelected = hasFocus
             if (hasFocus) {
-                Log.d("SERIEDETAILWATCHLIST", "FOKUS SERIEN")
-                helpViewModel.currentWatchListMovieAccount = null
-                helpViewModel.currentFocusedMovie = null
-                helpViewModel.currentWatchListProgrammeAccount = null
-                resetMovieDetailsUi()
-                resetProgramDetails()
-                if (binding.relLayoutProgramdescr.isVisible) {
-                    binding.relLayoutProgramdescr.visibility = View.GONE
-                }
-                binding.recyclerProgramme.visibility = View.INVISIBLE
-                binding.recyclerItems.visibility = View.VISIBLE
                 binding.rvWatchlistMovies.isSelected = false
-                binding.rvWatchlistProgramme.isSelected = false
                 binding.rvWatchlistSeries.isSelected = true
-                if (!helpViewModel.isWatchlistContainerOpened && helpViewModel.currentSelectedWatchlist != "SERIE") {
-                    if (binding.tvNodatafound.isVisible) {
-                        binding.tvNodatafound.visibility = View.INVISIBLE
-                    }
-                    helpViewModel.currentSelectedWatchlist = "SERIE"
-                    if (!seriesList.isNullOrEmpty()) {
-                        playlistAdapter?.submitList(null)
-                        prepareSeriesRecyclerView()
-                        showSeriesPlaylistsRecyclerview(seriesList!!)
-                    } else {
-                        if (seriesList.isNullOrEmpty()) {
-                            binding.recyclerPlaylists.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
-                            binding.recyclerItems.visibility = View.INVISIBLE
-                        }
-                    }
-                }
-                helpViewModel.currentSelectedWatchlist = "SERIE"
+                binding.rvWatchlistProgramme.isSelected = false
+                onCategorySelected(WatchlistMainCategory.SERIES)
             }
         }
 
         binding.rvWatchlistSeries.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                if (binding.recyclerPlaylists.isVisible) {
+                if (playlistAdapter.currentList.isNotEmpty()) {
                     binding.recyclerPlaylists.requestFocus()
                 } else {
-                    binding.rvWatchlistSeries.requestFocus()
+                    binding.rvWatchlistMovies.requestFocus()
                 }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
@@ -319,45 +347,20 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
 
         binding.rvWatchlistProgramme.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelectprogramme.isSelected = hasFocus
             if (hasFocus) {
-                Log.d("SERIEDETAILWATCHLIST", "FOKUS PROGRAMME")
-
-                seriesDetailJob?.cancel()
-                resetSeriesDetailsUi()
-                helpViewModel.currentWatchListSeriesAccount = null
-                helpViewModel.currentFocusedSerie = null
-                if (!helpViewModel.isWatchlistContainerOpened && helpViewModel.currentSelectedWatchlist != "PROGRAMME") {
-                    binding.recyclerItems.visibility = View.INVISIBLE
-                    binding.recyclerProgramme.visibility = View.VISIBLE
-                    binding.rvWatchlistMovies.isSelected = false
-                    binding.rvWatchlistSeries.isSelected = false
-                    binding.rvWatchlistProgramme.isSelected = true
-                    if (!programmeList.isNullOrEmpty()) {
-                        if (binding.tvNodatafound.isVisible) {
-                            binding.tvNodatafound.visibility = View.INVISIBLE
-                        }
-                        playlistAdapter?.submitList(null)
-                        helpViewModel.currentSelectedWatchlist = "PROGRAMME"
-                        showProgrammePlaylistsRecyclerview(programmeList!!)
-                    } else {
-                        if (programmeList.isNullOrEmpty()) {
-                            binding.recyclerPlaylists.visibility = View.INVISIBLE
-                            binding.recyclerProgramme.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
-                        }
-                    }
-                }
-                helpViewModel.currentSelectedWatchlist = "PROGRAMME"
+                binding.rvWatchlistMovies.isSelected = false
+                binding.rvWatchlistSeries.isSelected = false
+                binding.rvWatchlistProgramme.isSelected = true
+                onCategorySelected(WatchlistMainCategory.PROGRAMS)
             }
         }
 
         binding.rvWatchlistProgramme.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                if (binding.recyclerPlaylists.isVisible) {
+                if (playlistAdapter.currentList.isNotEmpty()) {
                     binding.recyclerPlaylists.requestFocus()
                 } else {
-                    binding.rvWatchlistProgramme.requestFocus()
+                    binding.rvWatchlistMovies.requestFocus()
                 }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
@@ -374,7 +377,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
         seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
-                if (!seriesAdapter?.currentList.isNullOrEmpty()) {
+                if (watchlistItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
                     binding.rvWatchlistSeries.requestFocus()
@@ -385,7 +388,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
         moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
-                if (!moviesAdapter?.currentList.isNullOrEmpty()) {
+                if (watchlistItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
                     binding.rvWatchlistMovies.requestFocus()
@@ -394,195 +397,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             }
         }
 
-    }
-
-    private fun showMoviePlaylistsRecyclerview(movies: MutableList<MovieOB>) {
-        if (movies.isNotEmpty()) {
-            val uniqueAccounts = movies
-                .mapNotNull { it.movieAccount.target }
-                .distinctBy { it.id }.sortedBy { it.name }
-            if (uniqueAccounts.isNotEmpty()) {
-                helpViewModel.currentSelectedWatchlist = "MOVIE"
-                playlistAdapter?.submitList(uniqueAccounts)
-                binding.recyclerPlaylists.post {
-                    binding.recyclerPlaylists.setSelectedPosition(0)
-                    showFocusedPlaylistMovies(uniqueAccounts.first())
-                }
-            } else {
-                return
-            }
-        }
-    }
-
-    private fun showSeriesPlaylistsRecyclerview(series: List<SeriesOB>) {
-        if (series.isNotEmpty()) {
-            val uniqueAccounts = series
-                .mapNotNull { it.seriesAccount.target }
-                .distinctBy { it.id }.sortedBy { it.name }
-            if (uniqueAccounts.isNotEmpty()) {
-                helpViewModel.currentSelectedWatchlist = "SERIE"
-                playlistAdapter?.submitList(uniqueAccounts)
-                binding.recyclerPlaylists.post {
-                    binding.recyclerPlaylists.setSelectedPosition(0)
-                    showFocusedPlaylistSeries(uniqueAccounts.first())
-                }
-            } else {
-                Log.d("WL SERIE", "LEER")
-            }
-        }
-    }
-
-    private fun showProgrammePlaylistsRecyclerview(programmes: List<Programme>) {
-        if (programmes.isNotEmpty()) {
-            val uniqueAccounts = programmes
-                .mapNotNull { it.tvchannels.target.account.target }
-                .distinctBy { it.id }.sortedBy { it.name }
-            if (uniqueAccounts.isNotEmpty()) {
-                helpViewModel.currentSelectedWatchlist = "PROGRAMME"
-                playlistAdapter?.submitList(uniqueAccounts)
-                binding.recyclerPlaylists.post {
-                    binding.recyclerPlaylists.setSelectedPosition(0)
-                    showFocusedPlaylistProgrammes(uniqueAccounts.first())
-                }
-            } else {
-                Log.d("WL PROGRAMME", "LEER")
-            }
-        }
-    }
-
-    fun showFocusedPlaylistMovies(accounts: Accounts) {
-        if (helpViewModel.currentWatchListMovieAccount?.id != accounts.id) {
-            val oldPosition = playlistAdapter?.currentList?.indexOf(helpViewModel.currentWatchListMovieAccount)
-            val newPosition = playlistAdapter?.currentList?.indexOf(accounts)
-            helpViewModel.currentWatchListMovieAccount = accounts
-            if (oldPosition != null && oldPosition != -1) {
-                playlistAdapter?.notifyItemChanged(oldPosition)
-            }
-            if (newPosition != null) {
-                playlistAdapter?.notifyItemChanged(newPosition)
-            }
-            val filteredMovies = moviesList?.filter { it.movieAccount.target.id == accounts.id }
-            if (!filteredMovies.isNullOrEmpty()) {
-                if (binding.recyclerItems.adapter == seriesAdapter) {
-                    prepareMoviesRecyclerView()
-                }
-                binding.recyclerPlaylists.visibility = View.VISIBLE
-                val sortedMovies = filteredMovies.sortedBy { it.movieName }
-                moviesAdapter?.submitList(sortedMovies)
-                updateMovieUi(sortedMovies.first())
-
-            } else {
-                Toast.makeText(
-                    this@WatchListFragment.requireActivity(),
-                    "No movies found!",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-        }
-    }
-
-    fun showFocusedPlaylistSeries(accounts: Accounts) {
-        Log.d("SERIENWATCHLISTVERGLEICH", "VM: ${helpViewModel.currentWatchListSeriesAccount?.id} ACC: ${accounts.id}")
-        if (helpViewModel.currentWatchListSeriesAccount?.id != accounts.id) {
-            val oldPosition = playlistAdapter?.currentList?.indexOf(helpViewModel.currentWatchListSeriesAccount)
-            val newPosition = playlistAdapter?.currentList?.indexOf(accounts)
-            helpViewModel.currentWatchListSeriesAccount = accounts
-            if (oldPosition != null) {
-                playlistAdapter?.notifyItemChanged(oldPosition)
-            }
-            if (newPosition != null) {
-                playlistAdapter?.notifyItemChanged(newPosition)
-            }
-            val filteredSeries = seriesList?.filter { it.seriesAccount.target.id == accounts.id }
-            if (!filteredSeries.isNullOrEmpty()) {
-                if (binding.recyclerItems.adapter == moviesAdapter) {
-                    prepareSeriesRecyclerView()
-                }
-                binding.recyclerPlaylists.visibility = View.VISIBLE
-                val sortedSeries = filteredSeries.sortedBy { it.seriesName }
-                seriesAdapter?.submitList(sortedSeries)
-                updateSeriesUi(sortedSeries.first())
-            } else {
-                Toast.makeText(
-                    this@WatchListFragment.requireActivity(),
-                    "No series found!",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-        }
-    }
-
-    fun showFocusedPlaylistProgrammes(accounts: Accounts) {
-        if (helpViewModel.currentWatchListProgrammeAccount?.id != accounts.id) {
-            val oldPosition = playlistAdapter?.currentList?.indexOf(helpViewModel.currentWatchListProgrammeAccount)
-            val newPosition = playlistAdapter?.currentList?.indexOf(accounts)
-            helpViewModel.currentWatchListProgrammeAccount = accounts
-            if (oldPosition != null) {
-                playlistAdapter?.notifyItemChanged(oldPosition)
-            }
-            if (newPosition != null) {
-                playlistAdapter?.notifyItemChanged(newPosition)
-            }
-            val filteredProgramme = programmeList?.filter { it.tvchannels.target.account.target.id == accounts.id }
-            if (!filteredProgramme.isNullOrEmpty()) {
-                binding.recyclerPlaylists.visibility = View.VISIBLE
-                val sortedProgrammes = filteredProgramme.sortedBy { it.startTimeStamp }
-                programmesAdapter?.submitList(sortedProgrammes)
-            } else {
-                Toast.makeText(
-                    this@WatchListFragment.requireActivity(),
-                    "No programmes found!",
-                    Toast.LENGTH_SHORT
-                ).show()
-                return
-            }
-        }
-    }
-
-    fun focusToMovieOrSerie() {
-        if (helpViewModel.currentSelectedWatchlist == "MOVIE") {
-            binding.rvWatchlistMovies.requestFocus()
-        } else if (helpViewModel.currentSelectedWatchlist == "SERIE") {
-            binding.rvWatchlistSeries.requestFocus()
-        } else if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
-            binding.rvWatchlistProgramme.requestFocus()
-        } else {
-            return
-        }
-    }
-
-    fun focusToMovieOrSerieFromDetail() {
-        if (helpViewModel.currentSelectedWatchlist == "MOVIE") {
-            if (binding.recyclerItems.isVisible && !moviesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            } else {
-                binding.rvWatchlistMovies.requestFocus()
-            }
-        } else if (helpViewModel.currentSelectedWatchlist == "SERIE") {
-            if (binding.recyclerItems.isVisible && !seriesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            } else {
-                binding.rvWatchlistSeries.requestFocus()
-            }
-        } else if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
-            if (binding.recyclerProgramme.isVisible && !programmesAdapter?.currentList.isNullOrEmpty()) {
-                binding.recyclerItems.requestFocus()
-            } else {
-                binding.rvWatchlistProgramme.requestFocus()
-            }
-        } else {
-            return
-        }
-    }
-
-    fun focusToRecyclerview() {
-        if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
-            binding.recyclerProgramme.requestFocus()
-        } else {
-            binding.recyclerItems.requestFocus()
-        }
     }
 
     fun focusToPlaylist() {
@@ -599,100 +413,101 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
     }
 
-    private fun prepareMoviesRecyclerView() {
-        moviesAdapter = WatchListMoviesAdapter(onMovieClickListener, this, helpViewModel)
+    private fun prepareItemsRecyclerView() {
+        watchlistItemsAdapter = WatchlistItemsAdapter(helpViewModel, this, epgSourceBox) { clickedItem ->
+            when (clickedItem) {
+                is WatchlistDisplayItem.MovieItem -> {
+                    if (selectedAccount != null) {
+                        if (selectedAccount!!.isXtream) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(clickedItem.movie, selectedAccount!!)
+                                helpViewModel.currentFocusedMovie = xtreamMovie
+                                helpViewModel.currentMovieAccount = selectedAccount
+                                openMovieDetailFragment()
+                            }
+                        } else if (selectedAccount!!.isStalker) {
+                            helpViewModel.currentMovieAccount = selectedAccount
+                            helpViewModel.currentFocusedMovie = clickedItem.movie
+                            openMovieDetailFragment()
+                        }
+                    }
+                }
+                is WatchlistDisplayItem.SeriesItem -> {
+                    if (selectedAccount != null) {
+                        if (selectedAccount!!.isXtream) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                val seasons =
+                                    xtreamViewModel.getXtreamSerieDetails(clickedItem.series, selectedAccount!!)
+                                clickedItem.series.totalSeasons = seasons.size
+                                helpViewModel.focusedSeasons =
+                                    seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE })
+                                        .toMutableList()
+                                helpViewModel.focusedEpisodes =
+                                    xtreamViewModel.episodesList.sortedWith(
+                                        compareBy(
+                                            { it.seasonNumber },
+                                            { it.episodeNumber })
+                                    ).toMutableList()
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        } else {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
+                                stalkerViewModel.getSeriesDetail(clickedItem.series, selectedAccount!!)
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
+                                    clickedItem.series.totalSeasons = seasons.size
+                                    helpViewModel.focusedSeasons =
+                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                            .thenBy {
+                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
+                                            }).toMutableList()
+                                    helpViewModel.focusedEpisodes =
+                                        stalkerViewModel.episodesList.sortedWith(
+                                            compareBy(
+                                                { it.seasonNumber },
+                                                { it.episodeNumber })
+                                        ).toMutableList()
+                                }
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        }
+                    }
+                }
+                is WatchlistDisplayItem.ProgramItem -> {
+                    return@WatchlistItemsAdapter
+                }
+            }
+        }
         binding.recyclerItems.apply {
-            adapter = moviesAdapter
+            adapter = watchlistItemsAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
         }
     }
 
-    private fun prepareSeriesRecyclerView() {
-        seriesAdapter = WatchlistSeriesAdapter(onSeriesClickListener, this, helpViewModel)
-        binding.recyclerItems.apply {
-            adapter = seriesAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-        }
-    }
-
-
-    private fun prepareProgrammesRecyclerView() {
-        binding.recyclerProgramme.visibility = View.VISIBLE
-        programmesAdapter = WatchListProgrammeAdapter(onProgrammeClickListener, this, helpViewModel)
+    private fun prepareProgramsRecyclerview() {
+        watchlistProgramsAdapter = WatchListProgrammeAdapter(onProgrammeClickListerner, this, helpViewModel)
         binding.recyclerProgramme.apply {
-            adapter = programmesAdapter
+            adapter = watchlistProgramsAdapter
+            setFocusOutAllowed(throughFront = false, throughBack = false)
+            setFocusOutSideAllowed(throughFront = true, throughBack = true)
             setSmoothFocusChangesEnabled(false)
-            addItemDecoration(
-                DpadLinearSpacingDecoration.create(
-                    perpendicularEdgeSpacing = 32,
-                    itemSpacing = 14,
-                    edgeSpacing = 16
+            addItemDecoration(DpadLinearSpacingDecoration.create(
+                    itemSpacing = 6,
+                    edgeSpacing = 10,
+                    perpendicularEdgeSpacing = 10
                 )
             )
         }
     }
 
-    private val onMovieClickListener = WatchListMoviesAdapter.OnClickListener { movie ->
-        helpViewModel.currentSelectedWatchlist = "MOVIE"
-        val account = movie.accountId?.let {
-            accountBox.get(it)
-        }
-        if (account != null) {
-            if (account.isXtream) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(movie, account)
-                    helpViewModel.currentFocusedMovie = xtreamMovie
-                    helpViewModel.currentMovieAccount = account
-                    openMovieDetailFragment()
-                }
-            } else {
-                helpViewModel.currentMovieAccount = account
-                helpViewModel.currentFocusedMovie = movie
-                openMovieDetailFragment()
-            }
-        }
-    }
+    private val onProgrammeClickListerner = WatchListProgrammeAdapter.OnClickListener {
 
-    private val onSeriesClickListener = WatchlistSeriesAdapter.OnClickListener { serie ->
-        helpViewModel.currentSelectedWatchlist = "SERIE"
-        val account = serie.accountId?.let {
-            accountBox.get(it)
-        }
-        if (account != null) {
-            if (account.isXtream) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val seasons =
-                        xtreamViewModel.getXtreamSerieDetails(serie, account)
-                    serie.totalSeasons = seasons.size
-                    helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                    helpViewModel.focusedEpisodes = xtreamViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    helpViewModel.currentFocusedSerie = serie
-                    helpViewModel.currentSeriesAccount = account
-                    openSeriesDetailFragment()
-                }
-            } else {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    stalkerViewModel.seriesDetailData.postValue(mutableListOf())
-                    stalkerViewModel.getSeriesDetail(serie, account)
-                    helpViewModel.currentFocusedSerie = serie
-                    stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                        serie.totalSeasons = seasons.size
-                        helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                            .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                        helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    }
-                    helpViewModel.currentSeriesAccount = account
-                    openSeriesDetailFragment()
-                }
-            }
-        }
-    }
-
-    private val onProgrammeClickListener = WatchListProgrammeAdapter.OnClickListener {
-        helpViewModel.currentSelectedWatchlist = "TV"
     }
 
     fun openMovieDetailFragment() {
@@ -712,6 +527,153 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         transaction.commit()
         binding.containerWatchlistVodInfo.visibility = View.VISIBLE
     }
+
+    fun updateItemList(account: Accounts) {
+        if (account == selectedAccount && selectedWatchlistCategory == lastLoadedCategory) {
+            return
+        }
+        if (selectedWatchlistCategory != null) {
+            when (selectedWatchlistCategory) {
+                WatchlistMainCategory.PROGRAMS -> {
+                    watchlistProgramsAdapter.submitList(null)
+
+                } else -> {
+                    watchlistItemsAdapter.submitList(null)
+                }
+            }
+            val oldPosition = playlistAdapter.currentList.indexOf(helpViewModel.selectedWatchlistAccount)
+            val newPosition = playlistAdapter.currentList.indexOf(account)
+            helpViewModel.selectedGlobalSearchAccount = account
+            selectedAccount = account
+            lastLoadedCategory = selectedWatchlistCategory
+            playlistAdapter.notifyItemChanged(oldPosition)
+            playlistAdapter.notifyItemChanged(newPosition)
+            val items = getDisplayableItemsFor(account, selectedWatchlistCategory!!)
+            if (items.isNotEmpty()) {
+                when (selectedWatchlistCategory) {
+                    WatchlistMainCategory.PROGRAMS -> {
+                        val programItems = items.filterIsInstance<WatchlistDisplayItem.ProgramItem>()
+                        watchlistProgramsAdapter.submitList(programItems)
+                        val firstProgram = programItems.firstOrNull()?.programs
+                        firstProgram?.let { setProgramDetails(it) }
+                    }
+                    WatchlistMainCategory.SERIES-> {
+                        watchlistItemsAdapter.submitList(items)
+                        val firstSeries = items
+                            .filterIsInstance<WatchlistDisplayItem.SeriesItem>()
+                            .firstOrNull()
+                            ?.series
+                        firstSeries?.let { updateSeriesUi(it) }
+                    }
+                    WatchlistMainCategory.MOVIES -> {
+                        watchlistItemsAdapter.submitList(items)
+                        val firstMovie = items
+                            .filterIsInstance<WatchlistDisplayItem.MovieItem>()
+                            .firstOrNull()
+                            ?.movie
+                        firstMovie?.let { updateMovieUi(it) }
+                    }
+                    null -> {}
+                }
+            }
+        }
+    }
+
+    private fun getDisplayableItemsFor(account: Accounts, category: WatchlistMainCategory): List<WatchlistDisplayItem> {
+        return when (category) {
+            WatchlistMainCategory.PROGRAMS -> programsByAccount?.get(account)?.map { WatchlistDisplayItem.ProgramItem(it) } ?: emptyList()
+            WatchlistMainCategory.MOVIES -> moviesByAccount?.get(account)?.map { WatchlistDisplayItem.MovieItem(it) } ?: emptyList()
+            WatchlistMainCategory.SERIES -> seriesByAccount?.get(account)?.map { WatchlistDisplayItem.SeriesItem(it) } ?: emptyList()
+        }
+    }
+
+    fun onCategorySelected(category: WatchlistMainCategory) {
+        if (selectedWatchlistCategory == category) {
+            // Kategorie ist schon aktiv → nichts tun
+            return
+        }
+        playlistAdapter.submitList(null)
+        watchlistItemsAdapter.submitList(null)
+        helpViewModel.selectedWatchlistCategory = category
+        selectedWatchlistCategory = category
+        val accounts = when (category) {
+            WatchlistMainCategory.MOVIES -> {
+                helpViewModel.currentFocusedMovie = null
+                resetSeriesDetailsUi()
+                binding.recyclerItems.setSpanCount(7)
+                moviesByAccount?.keys?.toList()
+            }
+            WatchlistMainCategory.SERIES -> {
+                helpViewModel.currentFocusedSerie = null
+                resetMovieDetailsUi()
+                resetProgramDetails()
+                hideProgramsLayout()
+                showVodLayout()
+                binding.relLayoutProgramdescr.visibility = View.GONE
+                binding.recyclerItems.setSpanCount(7)
+                seriesByAccount?.keys?.toList()
+            }
+            WatchlistMainCategory.PROGRAMS -> {
+                hideVodLayout()
+                showProgramsLayout()
+                resetSeriesDetailsUi()
+                binding.relLayoutProgramdescr.visibility = View.VISIBLE
+                binding.linLayoutMovieInfo.visibility = View.GONE
+                binding.recyclerItems.setSpanCount(1)
+                programsByAccount?.keys?.toList()
+            }
+        }?.sortedBy { it.name }
+
+        if (!accounts.isNullOrEmpty()) {
+            binding.tvNodatafound.visibility = View.INVISIBLE
+            playlistAdapter.submitList(accounts)
+            helpViewModel.selectedWatchlistAccount = accounts.firstOrNull()
+            selectedAccount = accounts.firstOrNull()
+            selectedAccount?.let { updateItemList(it) }
+        } else {
+            lastLoadedCategory = category
+            helpViewModel.selectedWatchlistAccount = null
+            selectedAccount = null
+            binding.tvNodatafound.visibility = View.VISIBLE
+        }
+    }
+
+    private fun hideVodLayout() {
+        binding.constraintVod.visibility = View.GONE
+    }
+
+    private fun showVodLayout() {
+        binding.constraintVod.visibility = View.VISIBLE
+    }
+
+    private fun hideProgramsLayout() {
+        binding.constraintProgramme.visibility = View.GONE
+    }
+
+    private fun showProgramsLayout() {
+        binding.constraintProgramme.visibility = View.VISIBLE
+    }
+
+
+    fun focusToItems() {
+        when (selectedWatchlistCategory) {
+            WatchlistMainCategory.PROGRAMS -> {
+                binding.recyclerProgramme.requestFocus()
+            } else -> {
+                binding.recyclerItems.requestFocus()
+            }
+        }
+    }
+    fun focusToTextView() {
+        when (selectedWatchlistCategory) {
+            WatchlistMainCategory.MOVIES -> binding.rvWatchlistMovies.requestFocus()
+            WatchlistMainCategory.SERIES -> binding.rvWatchlistSeries.requestFocus()
+            WatchlistMainCategory.PROGRAMS -> binding.rvWatchlistProgramme.requestFocus()
+            else -> {} // optional: nichts tun oder Default setzen
+        }
+    }
+
+
 
     fun updateMovieUi(movie: MovieOB) {
         if (helpViewModel.currentFocusedMovie?.idByAccountData != movie.idByAccountData) {
@@ -1024,18 +986,19 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         binding.tvDirectors.visibility = View.INVISIBLE
         binding.tvDirector.visibility = View.INVISIBLE
         binding.tvAge.visibility = View.INVISIBLE
+        binding.tvRemainingTime.visibility = View.INVISIBLE
     }
 
     private fun formatDuration(duration: Int, accountId: Long): String {
-        val currentAccount = accountBox.get(accountId)
+        val currentAccount = selectedAccount
 
         return when {
-            currentAccount.isStalker -> {  // Dauer kommt in MINUTEN
+            currentAccount?.isStalker == true -> {  // Dauer kommt in MINUTEN
                 val hours = duration / 60
                 val minutes = duration % 60
                 formatTime(hours, minutes)
             }
-            currentAccount.isXtream -> {   // Dauer kommt in SEKUNDEN
+            currentAccount?.isXtream == true -> {   // Dauer kommt in SEKUNDEN
                 val hours = duration / 3600
                 val minutes = (duration % 3600) / 60
                 formatTime(hours, minutes)
@@ -1404,94 +1367,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
     fun updateMovie(movie: MovieOB) {
         // Entferne Film
-        moviesList = moviesList?.filter { it.id != movie.id }?.toMutableList()
-        val oldMoviePosition = moviesList?.indexOf(movie)
-        // Neue Account-Liste berechnen
-        val uniqueAccounts = moviesList.orEmpty()
-            .mapNotNull { it.movieAccount.target }
-            .distinctBy { it.id }
-            .sortedBy { it.name }
 
-        playlistAdapter?.submitList(uniqueAccounts)
-
-        // Optional: Wenn aktuell ausgewählter Account keine Filme mehr hat
-        // → auf nächsten springen oder UI leer anzeigen
-
-        binding.recyclerPlaylists.post {
-            if (uniqueAccounts.isNotEmpty()) {
-                if (uniqueAccounts.contains(helpViewModel.currentWatchListMovieAccount)) {
-                    val position = uniqueAccounts.indexOf(helpViewModel.currentWatchListMovieAccount)
-                    binding.recyclerPlaylists.setSelectedPosition(position)
-                    val filteredMovies = moviesList?.filter { it.movieAccount.target.id == helpViewModel.currentWatchListMovieAccount!!.id }
-                    moviesAdapter?.submitList(filteredMovies)
-                    if (!filteredMovies.isNullOrEmpty()) {
-                        if (oldMoviePosition != null && oldMoviePosition > 0) {
-                            setMovieDetailsUi(filteredMovies[oldMoviePosition - 1])
-                        } else {
-                            setMovieDetailsUi(filteredMovies.first())
-                        }
-                    }
-                } else {
-                    binding.recyclerPlaylists.setSelectedPosition(0)
-                    val filteredMovies = moviesList?.filter { it.movieAccount.target.id == uniqueAccounts.first().id }?.sortedBy { it.movieName }
-                    moviesAdapter?.submitList(filteredMovies)
-                    if (!filteredMovies.isNullOrEmpty()) {
-                        setMovieDetailsUi(filteredMovies.first())
-                    }
-                }
-            } else {
-                // Keine Accounts mehr
-                binding.recyclerItems.visibility = View.INVISIBLE
-                resetMovieDetailsUi()
-                binding.tvNodatafound.visibility = View.VISIBLE
-            }
-        }
     }
 
     fun updateSerie(serie: SeriesOB) {
-        // Entferne Film
-        val oldSeriesPosition = seriesList?.indexOf(serie)
-        seriesList = seriesList?.filter { it.id != serie.id }?.toMutableList()
-        // Neue Account-Liste berechnen
-        val uniqueAccounts = seriesList.orEmpty()
-            .mapNotNull { it.seriesAccount.target }
-            .distinctBy { it.id }
-            .sortedBy { it.name }
+        // Entferne Serie
 
-        playlistAdapter?.submitList(uniqueAccounts)
-
-        // Optional: Wenn aktuell ausgewählter Account keine Filme mehr hat
-        // → auf nächsten springen oder UI leer anzeigen
-
-        binding.recyclerPlaylists.post {
-            if (uniqueAccounts.isNotEmpty()) {
-                if (uniqueAccounts.contains(helpViewModel.currentWatchListSeriesAccount)) {
-                    val position = uniqueAccounts.indexOf(helpViewModel.currentWatchListSeriesAccount)
-                    binding.recyclerPlaylists.setSelectedPosition(position)
-                    val filteredSeries = seriesList?.filter { it.seriesAccount.target.id == helpViewModel.currentWatchListSeriesAccount!!.id }
-                    seriesAdapter?.submitList(filteredSeries)
-                    if (!filteredSeries.isNullOrEmpty()) {
-                        if (oldSeriesPosition != null && oldSeriesPosition > 0) {
-                            setSeriesDetailsUi(filteredSeries[oldSeriesPosition - 1])
-                        } else {
-                            setSeriesDetailsUi(filteredSeries.first())
-                        }
-                    }
-                } else {
-                    binding.recyclerPlaylists.setSelectedPosition(0)
-                    val filteredSeries = seriesList?.filter { it.seriesAccount.target.id == uniqueAccounts.first().id }?.sortedBy { it.seriesName }
-                    seriesAdapter?.submitList(filteredSeries)
-                    if (!filteredSeries.isNullOrEmpty()) {
-                        setSeriesDetailsUi(filteredSeries.first())
-                    }
-                }
-            } else {
-                // Keine Accounts mehr
-                resetSeriesDetailsUi()
-                seriesAdapter?.submitList(emptyList())
-                binding.tvNodatafound.visibility = View.VISIBLE
-            }
-        }
     }
 
 
@@ -1509,14 +1390,11 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
     override fun onDestroy() {
         super.onDestroy()
-        helpViewModel.currentSelectedWatchlist = ""
-        helpViewModel.currentWatchListSeriesAccount = null
-        helpViewModel.currentWatchListMovieAccount = null
+        helpViewModel.selectedWatchlistCategory = null
+        helpViewModel.selectedWatchlistAccount = null
         helpViewModel.isWatchlistContainerOpened = false
-        moviesAdapter = null
-        seriesAdapter = null
-        playlistAdapter = null
         seriesDetailJob?.cancel()
+        helpViewModel.cancelWatchlistJob()
         _binding = null
     }
 }

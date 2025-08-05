@@ -10,6 +10,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.entity.Accounts
+import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.database.help.WatchlistMainCategory
 import com.example.mj_player_tv.databinding.RvItemGlobalsearchPlaylistBinding
 import com.example.mj_player_tv.databinding.RvItemWatchlistPlaylistBinding
 import com.example.mj_player_tv.ui.GlobalSearchFragment
@@ -27,12 +29,12 @@ class WatchlistPlaylistAdapter(private val helpViewModel: HelpViewModel, private
 
                 binding.constGsPl.setOnKeyListener { _, keyCode, event ->
                     if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
-                        fragment.focusToMovieOrSerie()
+                        fragment.focusToTextView()
                         return@setOnKeyListener true
                     }
 
                     if ((keyCode == KeyEvent.KEYCODE_DPAD_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_CENTER) && event.action == KeyEvent.ACTION_DOWN) {
-                        fragment.focusToRecyclerview()
+                        fragment.focusToItems()
                         return@setOnKeyListener true
                     }
                     return@setOnKeyListener false
@@ -54,27 +56,21 @@ class WatchlistPlaylistAdapter(private val helpViewModel: HelpViewModel, private
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val accountdata = getItem(position)!!
         holder.bind(accountdata)
-        if (helpViewModel.currentSelectedWatchlist == "MOVIE") {
-            holder.binding.constGsPl.isSelected =
-                helpViewModel.currentWatchListMovieAccount?.id == accountdata.id
-        } else if (helpViewModel.currentSelectedWatchlist == "SERIE") {
-            holder.binding.constGsPl.isSelected = helpViewModel.currentWatchListSeriesAccount?.id == accountdata.id
-        } else {
-            holder.binding.constGsPl.isSelected = helpViewModel.currentWatchListProgrammeAccount?.id == accountdata.id
+
+        when (helpViewModel.selectedWatchlistCategory) {
+            WatchlistMainCategory.MOVIES -> holder.binding.constGsPl.isSelected = accountdata.id == helpViewModel.selectedGlobalSearchAccount?.id
+            WatchlistMainCategory.SERIES -> holder.binding.constGsPl.isSelected = accountdata.id == helpViewModel.selectedGlobalSearchAccount?.id
+            WatchlistMainCategory.PROGRAMS -> holder.binding.constGsPl.isSelected = accountdata.id == helpViewModel.selectedGlobalSearchAccount?.id
+            else -> {} // optional: nichts tun oder Default setzen
         }
+
         holder.binding.constGsPl.setOnFocusChangeListener { _, hasFocus ->
-            holder.binding.tvPlaylistname.isSelected = hasFocus
-            Log.d("WATCHLISTMOVIE", "HAT FOKUS ${accountdata.name} = $hasFocus")
             if (hasFocus) {
-                if (helpViewModel.currentSelectedWatchlist == "MOVIE") {
-                    fragment.showFocusedPlaylistMovies(accountdata)
-                } else if (helpViewModel.currentSelectedWatchlist == "SERIE") {
-                    fragment.showFocusedPlaylistSeries(accountdata)
-                } else if (helpViewModel.currentSelectedWatchlist == "PROGRAMME") {
-                    fragment.showFocusedPlaylistProgrammes(accountdata)
-                } else {
-                        return@setOnFocusChangeListener
-                }
+                fragment.updateItemList(accountdata)
+                holder.binding.constGsPl.alpha = 1f
+            } else {
+                // Nur halbtransparent, wenn es auch nicht selected ist
+                holder.binding.constGsPl.alpha = if (accountdata.id == helpViewModel.selectedWatchlistAccount?.id) 1f else 0.6f
             }
         }
     }

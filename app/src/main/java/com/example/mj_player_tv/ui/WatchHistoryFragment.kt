@@ -240,7 +240,6 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             binding.tvSelectmovies.isSelected = hasFocus
             if (hasFocus ) {
                 if (!helpViewModel.isWatchHistoryContainerOpened) {
-                    helpViewModel.currentWatchListSeriesAccount = null
                     helpViewModel.currentFocusedSerie = null
                     binding.rvHistoryMovies.isSelected = true
                     binding.rvHistoryTvchannels.isSelected = false

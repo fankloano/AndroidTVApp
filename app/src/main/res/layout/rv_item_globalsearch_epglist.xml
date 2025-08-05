@@ -33,7 +33,6 @@
         android:duplicateParentState="true"
         android:background="@drawable/selector_epgfull_gradient"/>
 
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

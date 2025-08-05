@@ -18,6 +18,7 @@ import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.MovieOB
 import com.example.mj_player_tv.database.entity.Programme
 import com.example.mj_player_tv.database.help.Movie
+import com.example.mj_player_tv.database.help.WatchlistDisplayItem
 import com.example.mj_player_tv.databinding.RvItemMoviesBinding
 import com.example.mj_player_tv.databinding.RvItemWatchlistProgrammeBinding
 import com.example.mj_player_tv.ui.MoviesFragment
@@ -32,17 +33,17 @@ import java.util.Date
 import java.util.Locale
 
 @UnstableApi
-class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeAdapter.OnClickListener, private val fragment: WatchListFragment, private val helpViewModel: HelpViewModel) : ListAdapter<Programme, WatchListProgrammeAdapter.ViewHolder>(
+class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeAdapter.OnClickListener, private val fragment: WatchListFragment, private val helpViewModel: HelpViewModel) : ListAdapter<WatchlistDisplayItem.ProgramItem, WatchListProgrammeAdapter.ViewHolder>(
     MANAGE_MOVIECATEGORY_COMPERATOR) {
 
     var currentAccount: Accounts? = null
 
     inner class ViewHolder(val binding: RvItemWatchlistProgrammeBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(programm: Programme) {
+        fun bind(item: WatchlistDisplayItem.ProgramItem) {
             binding.apply {
-                val epgdata = programm.epgData.target
-                val tvChannel = programm.tvchannels.target
+                val epgdata = item.programs.epgData.target
+                val tvChannel = item.programs.tvchannels.target
                 val image = tvChannel.logo
                 val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
                 val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
@@ -153,37 +154,37 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
 
     @UnstableApi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val programm = getItem(position)!!
-        holder.bind(programm)
+        val item = getItem(position)!!
+        holder.bind(item)
         holder.binding.cardviewWlPr.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvProgram.isSelected = hasFocus
             holder.binding.tvSubTitleProgram.isSelected = hasFocus
             if (hasFocus) {
                 holder.binding.overlayFull.visibility = View.GONE
-                fragment.setProgramDetails(programm)
+                fragment.setProgramDetails(item.programs)
             } else {
                 holder.binding.overlayFull.visibility = View.VISIBLE
             }
         }
         holder.binding.cardviewWlPr.setOnClickListener {
-            onClickListener.onClick(programm)
+            onClickListener.onClick(item)
         }
     }
 
     companion object {
-        private val MANAGE_MOVIECATEGORY_COMPERATOR = object : DiffUtil.ItemCallback<Programme>() {
-            override fun areItemsTheSame(oldItem: Programme, newItem: Programme) =
-                oldItem.epgForCh == newItem.epgForCh
+        private val MANAGE_MOVIECATEGORY_COMPERATOR = object : DiffUtil.ItemCallback<WatchlistDisplayItem.ProgramItem>() {
+            override fun areItemsTheSame(oldItem: WatchlistDisplayItem.ProgramItem, newItem: WatchlistDisplayItem.ProgramItem) =
+                oldItem.programs.epgForCh == newItem.programs.epgForCh
 
 
             @SuppressLint("DiffUtilEquals")
-            override fun areContentsTheSame(oldItem: Programme, newItem: Programme) =
-                oldItem.epgForCh == newItem.epgForCh
+            override fun areContentsTheSame(oldItem: WatchlistDisplayItem.ProgramItem, newItem: WatchlistDisplayItem.ProgramItem) =
+                newItem.programs.epgForCh == newItem.programs.epgForCh
         }
     }
 
-    class OnClickListener(val clickListener: (programm: Programme) -> Unit) {
-        fun onClick(programm: Programme) = clickListener(programm)
+    class OnClickListener(val clickListener: (programm: WatchlistDisplayItem.ProgramItem) -> Unit) {
+        fun onClick(programm: WatchlistDisplayItem.ProgramItem) = clickListener(programm)
     }
 
 }
