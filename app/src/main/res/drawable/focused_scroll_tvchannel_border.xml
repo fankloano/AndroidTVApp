@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Schatteneffekt von links nach rechts -->
+    <item>
+        <shape>
+            <solid android:color="?attr/backgroundDark" />
+            <corners
+                android:bottomRightRadius="0dp"
+                android:bottomLeftRadius="12dp"
+                android:topLeftRadius="12dp"
+                android:topRightRadius="0dp" />
+        </shape>
+    </item>
+</layer-list>

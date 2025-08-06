@@ -1,0 +1,10 @@
+
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Zustand: Fokussiert -->
+    <item android:state_focused="true"
+        android:drawable="@drawable/focused_scroll_tvchannel_border" />
+
+    <!-- Standardzustand -->
+    <item android:drawable="@drawable/default_scroll_tvchannel" />
+</selector>

@@ -265,10 +265,10 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
         binding.rvHistoryTvchannels.setOnFocusChangeListener { _, hasFocus ->
             if (hasFocus) {
-                binding.rvHistoryMovies.isSelected = false
-                binding.rvHistorySeries.isSelected = false
-                binding.rvHistoryTvchannels.isSelected = true
                 if (!binding.containerWatchhistoryVodInfo.isVisible) {
+                    binding.rvHistoryMovies.isSelected = false
+                    binding.rvHistorySeries.isSelected = false
+                    binding.rvHistoryTvchannels.isSelected = true
                     onCategorySelected(StatsMainCategory.TVCHANNELS)
                 }
             }

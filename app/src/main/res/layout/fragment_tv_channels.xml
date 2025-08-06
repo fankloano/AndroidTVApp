@@ -1077,4 +1077,21 @@
         app:layout_constraintHeight_percent="0.50"
         app:layout_constraintWidth_percent="0.40"/>
 
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rv_layout_scrollChannels"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/transparentColor"
+        android:descendantFocusability="afterDescendants"
+        android:nextFocusRight="@id/rv_layout_scrollChannels"
+        android:nextFocusLeft="@id/rv_layout_scrollChannels"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintHeight_percent="0.4"
+        app:layout_constraintWidth_percent="0.3"
+        app:layout_constraintTop_toTopOf="@id/videoView_preview"
+        app:layout_constraintBottom_toBottomOf="@id/videoView_preview"
+        app:layout_constraintEnd_toEndOf="@id/videoView_preview"
+        tools:listitem="@layout/rv_item_scroll_tvchannel" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

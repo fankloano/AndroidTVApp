@@ -64,6 +64,7 @@ import com.example.mj_player_tv.database.entity.TvCategoryOB_
 import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.databinding.FragmentTvChannelsBinding
+import com.example.mj_player_tv.ui.adapter.ScrollTvChannelAdapter
 import com.example.mj_player_tv.ui.adapter.TvAccountCategoryAdapter
 import com.example.mj_player_tv.ui.adapter.TvChannelsAdapter
 import com.example.mj_player_tv.utils.Resource
@@ -113,6 +114,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private lateinit var tvAccountCategoryAdapter: TvAccountCategoryAdapter
 
     private var tvChannelsAdapter: TvChannelsAdapter? = null
+
+    private var scrolltvChannelAdapter: ScrollTvChannelAdapter? = null
 
     val constraintSet = ConstraintSet()
 
@@ -222,6 +225,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
         prepareRecyclerView()
         prepareTvChannelsRecyclerView()
+        prepareScrollTvChannelsRecyclerView()
 
         var accountsList = listOf<AccountTvCategory>()
 
@@ -912,6 +916,33 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             setFocusOutSideAllowed(false, false)
             setSmoothFocusChangesEnabled(false)
         }
+    }
+
+    private fun prepareScrollTvChannelsRecyclerView() {
+        scrolltvChannelAdapter = ScrollTvChannelAdapter(
+            scrollTvChannelClickListener,
+            this,
+            helpViewModel,
+            epgDataBox
+        )
+        binding.rvLayoutTvChannels.apply {
+            adapter = tvChannelsAdapter
+            addItemDecoration(
+                DpadLinearSpacingDecoration.create(
+                    itemSpacing = 4,
+                    edgeSpacing = 4,
+                    perpendicularEdgeSpacing = 4
+                )
+            )
+            setFocusOutAllowed(false, false)
+            setFocusOutSideAllowed(false, false)
+            setSmoothFocusChangesEnabled(false)
+        }
+    }
+
+    private val scrollTvChannelClickListener = ScrollTvChannelAdapter.OnClickListener { tvchannpos ->
+        changingPlayingChannel(tvchannpos)
+        binding
     }
 
     private fun submitCollapsedTVList() {
