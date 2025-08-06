@@ -110,6 +110,7 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
 
         holder.binding.cardEpisode.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.rvItemOrginalnameEpisodes.isSelected = hasFocus
+            holder.binding.progressBar.isSelected = hasFocus
             if (hasFocus) {
                 holder.binding.alphaView.visibility = View.INVISIBLE
                 fragment.showFocusedEpisodeInfos(episode)

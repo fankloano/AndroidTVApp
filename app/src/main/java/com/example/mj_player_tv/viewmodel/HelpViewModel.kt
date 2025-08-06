@@ -2267,6 +2267,17 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         )
     }
 
+    private val _focusToWatchlistCard = MutableLiveData<Boolean?>()
+    val focusToWatchlistCard: LiveData<Boolean?> = _focusToWatchlistCard
+
+    fun requestFocusOnWatchListCard(onwatchlist: Boolean) {
+        _focusToWatchlistCard.value = onwatchlist
+    }
+
+    fun clearFocusOnWatchlListCard() {
+        _focusToWatchlistCard.value = null
+    }
+
     private val _watchlistResults = MutableStateFlow<List<WatchlistItem>>(emptyList())
     val watchlistResults: StateFlow<List<WatchlistItem>> = _watchlistResults.asStateFlow()
 

@@ -96,7 +96,17 @@ class WatchlistStatsFragment : Fragment(R.layout.fragment_watchlist_stats) {
             changeFragment(WatchHistoryFragment())
         }
 
-
+        helpViewModel.focusToWatchlistCard.observe(viewLifecycleOwner) { focusOnWatchList ->
+            if (focusOnWatchList != null) {
+                showCards()
+                if (focusOnWatchList) {
+                    binding.linLayoutCardWatchlist.requestFocus()
+                } else {
+                    binding.linLayoutCardStats.requestFocus()
+                }
+                helpViewModel.clearFocusOnWatchlListCard()
+            }
+        }
     }
 
     fun focusToLast() {
@@ -105,15 +115,14 @@ class WatchlistStatsFragment : Fragment(R.layout.fragment_watchlist_stats) {
         }
     }
 
-    fun closeFragmentContainer(watchlist: Boolean) {
-        binding.containerWatchlistStats.visibility = View.GONE
+    private fun showCards() {
         binding.cardWatchlist.visibility = View.VISIBLE
         binding.cardStats.visibility = View.VISIBLE
-        if (watchlist) {
-            binding.linLayoutCardWatchlist.requestFocus()
-        } else {
-            binding.linLayoutCardStats.requestFocus()
-        }
+    }
+
+    private fun hideCards() {
+        binding.cardWatchlist.visibility = View.GONE
+        binding.cardStats.visibility = View.GONE
     }
 
     private fun changeFragment(fragment: Fragment) {
@@ -121,8 +130,7 @@ class WatchlistStatsFragment : Fragment(R.layout.fragment_watchlist_stats) {
         transaction.replace(R.id.container_watchlist_stats, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
-        binding.cardWatchlist.visibility = View.GONE
-        binding.cardStats.visibility = View.GONE
+        hideCards()
         binding.containerWatchlistStats.visibility = View.VISIBLE
         helpViewModel.watchstatsContainerOpened = true
     }

@@ -230,10 +230,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
+                helpViewModel.requestFocusOnWatchListCard(false)
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
             }
@@ -259,10 +256,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
+                helpViewModel.requestFocusOnWatchListCard(false)
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
             }
@@ -274,7 +268,9 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 binding.rvHistoryMovies.isSelected = false
                 binding.rvHistorySeries.isSelected = false
                 binding.rvHistoryTvchannels.isSelected = true
-                onCategorySelected(StatsMainCategory.TVCHANNELS)
+                if (!binding.containerWatchhistoryVodInfo.isVisible) {
+                    onCategorySelected(StatsMainCategory.TVCHANNELS)
+                }
             }
         }
 
@@ -288,11 +284,8 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
                 parentFragmentManager.popBackStack()
+                helpViewModel.requestFocusOnWatchListCard(false)
                 return@setOnKeyListener true
             }
             return@setOnKeyListener false

@@ -105,7 +105,7 @@
             android:padding="1dp"
             android:progress="20"
             android:max="100"
-            android:progressTint="?attr/mainPrimaryColor"
+            android:progressTint="@color/progressbar_tint"
             android:layout_centerVertical="true"/>
 
         <TextView

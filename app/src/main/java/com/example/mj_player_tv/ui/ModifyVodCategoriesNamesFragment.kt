@@ -19,6 +19,7 @@ import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -128,9 +129,14 @@ class ModifyVodCategoriesNamesFragment : Fragment(R.layout.fragment_modify_vodca
                 settings.moviecategoryPrefixes = newPrefixes.toMutableList()
                 settings.moviecategorySuffixes.clear()
                 settings.moviecategorySuffixes = newSuffixes.toMutableList()
-                withContext(Dispatchers.IO) { settingsBox.put(settings) }
-
-                helpViewModel.updatePrefixesAndSuffixesMovieCategories(settings.moviecategoryPrefixes, settings.moviecategorySuffixes)
+                withContext(Dispatchers.IO) {
+                    settingsBox.put(settings)
+                    helpViewModel.updatePrefixesAndSuffixesMovieCategories(
+                        settings.moviecategoryPrefixes,
+                        settings.moviecategorySuffixes
+                    )
+                }
+                delay(250)
                 parentFragmentManager.popBackStack()
             }
         }

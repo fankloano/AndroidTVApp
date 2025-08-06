@@ -21,6 +21,7 @@ import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -108,18 +109,11 @@ class ModifyChannelNamesFragment : Fragment(R.layout.fragment_modify_channelname
         }
     }
 
-    private fun changeFragment(fragment: Fragment) {
-        val transaction = parentFragmentManager.beginTransaction()
-        transaction.replace(R.id.settings_container, fragment)
-        transaction.addToBackStack(null)
-        transaction.commit()
-    }
-
     private fun saveNewPreAndSuffixes() {
         val prefixesText = binding.editTextPrefixes.text.toString()
         val suffixesText = binding.editTextSuffixes.text.toString()
 
-        helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val settingsAll = withContext(Dispatchers.IO) { settingsBox.all }
             val settings = settingsAll.firstOrNull()
             if (settings != null) {
@@ -132,8 +126,10 @@ class ModifyChannelNamesFragment : Fragment(R.layout.fragment_modify_channelname
                 settings.suffixes = newSuffixes.toMutableList()
                 withContext(Dispatchers.IO) { settingsBox.put(settings) }
 
-                helpViewModel.updatePrefixesAndSuffixes(settings.prefixes, settings.suffixes)
-
+                helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+                    helpViewModel.updatePrefixesAndSuffixes(settings.prefixes, settings.suffixes)
+                }
+                delay(250)
                 withContext(Dispatchers.Main) {
                     if (isAdded) { // Verhindert Absturz, falls Fragment nicht mehr existiert
                         parentFragmentManager.popBackStack()

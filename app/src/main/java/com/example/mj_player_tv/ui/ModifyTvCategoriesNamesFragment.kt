@@ -22,6 +22,7 @@ import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -121,7 +122,7 @@ class ModifyTvCategoriesNamesFragment : Fragment(R.layout.fragment_modify_tvcate
         val prefixesText = binding.editTextPrefixes.text.toString()
         val suffixesText = binding.editTextSuffixes.text.toString()
 
-        helpViewModel.viewModelScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val settingsAll = withContext(Dispatchers.IO) { settingsBox.all }
             val settings = settingsAll.firstOrNull()
             if (settings != null) {
@@ -134,8 +135,13 @@ class ModifyTvCategoriesNamesFragment : Fragment(R.layout.fragment_modify_tvcate
                 settings.tvcategorySuffixes = newSuffixes.toMutableList()
                 withContext(Dispatchers.IO) { settingsBox.put(settings) }
 
-                helpViewModel.updatePrefixesAndSuffixesTvCategories(settings.tvcategoryPrefixes, settings.tvcategorySuffixes)
-
+                helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+                    helpViewModel.updatePrefixesAndSuffixesTvCategories(
+                        settings.tvcategoryPrefixes,
+                        settings.tvcategorySuffixes
+                    )
+                }
+                delay(250)
                 withContext(Dispatchers.Main) {
                     if (isAdded) { // Verhindert Absturz, falls Fragment nicht mehr existiert
                         parentFragmentManager.popBackStack()

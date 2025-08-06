@@ -300,10 +300,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
+                helpViewModel.requestFocusOnWatchListCard(true)
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
             }
@@ -329,10 +326,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
+                helpViewModel.requestFocusOnWatchListCard(true)
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
             }
@@ -358,10 +352,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(true)
-                }
+                helpViewModel.requestFocusOnWatchListCard(true)
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
             }
