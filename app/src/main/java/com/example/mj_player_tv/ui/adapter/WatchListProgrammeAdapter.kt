@@ -98,7 +98,6 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
                     }
                     if (((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) && bindingAdapterPosition == 0) {
                         fragment.focusToPlaylist()
-                        fragment.resetProgramDetails()
                         return@setOnKeyListener true
                     }
                     return@setOnKeyListener false

@@ -160,5 +160,11 @@
         android:indeterminate="true"
         android:indeterminateTint="@color/light_blue"/>
 
+    <View
+        android:id="@+id/focusBlocker"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

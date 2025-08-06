@@ -392,7 +392,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                             GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
                             GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
                             GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
-                            GlobalSearchMainCategory.PROGRAMS -> binding.tvCatEpg.requestFocus()
+                            GlobalSearchMainCategory.PROGRAMS -> {
+                                binding.recyclerItems.setSpanCount(1)
+                                binding.tvCatEpg.requestFocus()
+                            }
                         }
                     }
 

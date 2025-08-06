@@ -18,10 +18,7 @@ android {
         targetSdk 35
         versionCode 1
         versionName "1.0"
-        ndk {
-            //noinspection ChromeOsAbiSupport
-            abiFilters 'armeabi-v7a', 'arm64-v8a'  // Fügen Sie hier dieselben ABI-Arten hinzu
-        }
+
     }
 
     buildTypes {
@@ -78,7 +75,7 @@ dependencies {
     implementation "androidx.media3:media3-exoplayer-dash:1.8.0"
     implementation "androidx.media3:media3-exoplayer-hls:1.8.0"
     implementation 'androidx.media3:media3-exoplayer-smoothstreaming:1.8.0'
-    implementation 'org.jellyfin.media3:media3-ffmpeg-decoder:1.6.1+2'
+    implementation 'org.jellyfin.media3:media3-ffmpeg-decoder:1.8.0+1'
     implementation 'com.google.android.exoplayer:extension-okhttp:2.19.1'
 
     //D-Pad Recyclerview
@@ -98,14 +95,14 @@ dependencies {
     implementation 'com.google.firebase:firebase-perf:22.0.0'
 
     // Sentry
-    implementation 'io.sentry:sentry-android:8.17.0'
-    implementation 'io.sentry:sentry-android-ndk:8.17.0'
+    implementation 'io.sentry:sentry-android:8.18.0'
+    implementation 'io.sentry:sentry-android-ndk:8.18.0'
 
     //Datum-Bearbeitung
     implementation "com.jakewharton.threetenabp:threetenabp:1.4.9"
 
     //GZ Entpacken
-    implementation 'org.apache.commons:commons-compress:1.27.1'
+    implementation 'org.apache.commons:commons-compress:1.28.0'
 
     //XZ Entpacken
     implementation 'org.tukaani:xz:1.10'

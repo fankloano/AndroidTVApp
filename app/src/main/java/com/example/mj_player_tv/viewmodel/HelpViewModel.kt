@@ -59,6 +59,8 @@ import com.example.mj_player_tv.database.help.AccountSeriesCategory
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.database.help.GlobalSearchItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.database.help.StatsDisplayItem
+import com.example.mj_player_tv.database.help.StatsMainCategory
 import com.example.mj_player_tv.database.help.WatchlistItem
 import com.example.mj_player_tv.database.help.WatchlistMainCategory
 import com.example.mj_player_tv.network.model.plex.items.Metadata
@@ -79,6 +81,7 @@ import com.example.mj_player_tv.utils.Resource
 import io.objectbox.Box
 import io.objectbox.android.AndroidScheduler
 import io.objectbox.kotlin.and
+import io.objectbox.kotlin.query
 import io.objectbox.query.QueryBuilder
 import io.objectbox.reactive.DataSubscription
 import kotlinx.coroutines.Deferred
@@ -403,6 +406,10 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     var selectedWatchlistCategory: WatchlistMainCategory? = null
 
     var selectedWatchlistAccount: Accounts? = null
+
+    var selectedStatsCategory: StatsMainCategory? = null
+
+    var selectedStatsAccount: Accounts? = null
 
     var currentSelectedWatchHistory: String = ""
 
@@ -1605,11 +1612,14 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 val playlistsQuery = accountBox.query(Accounts_.isSelected.equal(true)).order(Accounts_.name).build()
                 val playlists = playlistsQuery.find()
                 playlistsQuery.close()
+                val currentMoviesMapQuery = movieBox.query(MovieOB_.isFavorite.equal(true)).build()
+                val currentMoviesMap =  currentMoviesMapQuery.find().associateBy { it.idByAccountData }
 
+                val currentSeriesMapQuery = seriesBox.query(SeriesOB_.isFavorite.equal(true)).build()
+                val currentSeriesMap = currentSeriesMapQuery.find().associateBy { it.idByAccountData }
                 // Parallel für jede Playlist ausführen
                 val tasks = playlists.sortedBy { it.name }.map { playlist ->
-
-                    async { processPlaylist(playlist, searchString, showFilteredCategories) }
+                    async { processPlaylist(playlist, searchString, showFilteredCategories, currentMoviesMap, currentSeriesMap) }
                 }
 
                 // Warten, bis alle Playlists fertig sind
@@ -1621,12 +1631,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    private suspend fun processPlaylist(playlist: Accounts, searchString: String, showFilteredCategories: Boolean) {
-        val currentMoviesMap = movieBox.query(MovieOB_.accountId.equal(playlist.id))
-            .build().find().associateBy { it.idByAccountData }
-
-        val currentSeriesMap = seriesBox.query(SeriesOB_.accountId.equal(playlist.id))
-            .build().find().associateBy { it.idByAccountData }
+    private suspend fun processPlaylist(playlist: Accounts, searchString: String, showFilteredCategories: Boolean, currentMoviesMap: Map<String, MovieOB>, currentSeriesMap: Map<String, SeriesOB>) {
 
         // Starte parallele Tasks für Programme, Filme und Serien
         coroutineScope {
@@ -2017,11 +2022,15 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 )
                 when (response) {
                     is Resource.Success -> {
+                        currentSeriesMap.forEach { s, seriesOB ->
+                            Log.d("STALKERSERIESGLOBALSEARCH", "MAP!!! ${playlist.name} = ${seriesOB.seriesName} = ID: ${seriesOB.idByAccountData}")
+                        }
                         val maxItemsPerPage =  response.data.js.max_page_items
                         val totalItems = response.data.js.total_items
                         val totalPages = ceil(totalItems.toDouble() / maxItemsPerPage.toDouble()).toInt()
                         val stalkerseries = response.data.js.data.map { seriesData ->
                             val idByAccountData = "${seriesData.id}_${playlist.id}"
+                            Log.d("STALKERSERIESGLOBALSEARCH", "${playlist.name} = ${seriesData.name} = ID: $idByAccountData")
                             currentSeriesMap[idByAccountData] ?: convertToSeriesOB(seriesData, playlist)
                         }
                         addSeriesToSearchResults(playlist, stalkerseries)
@@ -2331,6 +2340,74 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             .map { (account, list) -> WatchlistItem.Programs(account, list) }
     }
 
+    private val _statsResults = MutableStateFlow<List<StatsDisplayItem>>(emptyList())
+    val statsResults: StateFlow<List<StatsDisplayItem>> = _statsResults.asStateFlow()
+
+    fun resetStatsData() {
+        _statsResults.value = emptyList()
+        _statsSearching.value = false
+        hasFetchedStats = false
+    }
+
+    var hasFetchedStats = false
+
+    private val _statsSearching = MutableStateFlow(false)
+    val statsSearching: StateFlow<Boolean> = _statsSearching.asStateFlow()
+
+    private var statsJob: Job? = null
+
+    fun cancelStatsJob() {
+        statsJob?.cancel()
+        _statsSearching.value = false
+    }
+
+    fun fetchStatsData() {
+        statsJob?.cancel()
+        _statsSearching.value = true
+        statsJob = viewModelScope.launch(Dispatchers.IO) {
+            val channelsDeferred = async { getStatTvChannels() }
+            val moviesDeferred = async { getStatMovies() }
+            val seriesDeferred = async { getStatSeries() }
+
+            val channelStats = channelsDeferred.await()
+            val movieStats = moviesDeferred.await()
+            val seriesStats = seriesDeferred.await()
+
+            val combinedStats = movieStats + seriesStats + channelStats
+            _statsResults.value = combinedStats
+            _statsSearching.value = false
+            hasFetchedStats = true
+        }
+    }
+
+    fun getStatMovies(): List<StatsDisplayItem> {
+        val moviesQuery = movieBox.query(
+            MovieOB_.isCompletelyWatched.equal(true)
+                .or(MovieOB_.isPartlyWatched.equal(true))
+        ).order(MovieOB_.percentagePlayed).build()
+        val movies = moviesQuery.find()
+        moviesQuery.close()
+        return movies.map { StatsDisplayItem.MovieItem(it) }
+    }
+
+    fun getStatSeries(): List<StatsDisplayItem> {
+        val seriesQuery = seriesBox.query(
+            SeriesOB_.isCompletelyWatched.equal(true)
+                .or(SeriesOB_.isPartlyWatched.equal(true))
+        ).order(SeriesOB_.seriesPercentagePlayed).build()
+        val series = seriesQuery.find()
+        seriesQuery.close()
+        return series.map { StatsDisplayItem.SeriesItem(it) }
+    }
+
+    fun getStatTvChannels(): List<StatsDisplayItem> {
+        val channelsQuery = tvChannBox.query(TvChannelOB_.timeWatched.greater(0L))
+            .orderDesc(TvChannelOB_.timeWatched).build()
+        val channels = channelsQuery.find()
+        channelsQuery.close()
+        return channels.map { StatsDisplayItem.TvChannelItem(it) }
+    }
+
     fun toUnixTimestamp(dateString: String?): String? {
         if (dateString.isNullOrBlank()) return null // Rückgabe "0" falls `null` oder leer
         return try {
@@ -2340,7 +2417,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             "0" // Rückgabe "0" falls das Datum ungültig ist
         }
     }
-
 
     fun createSequentialList(start: Int, end: Int): List<Int> {
         return (start..end).toList()

@@ -69,11 +69,11 @@ class WatchlistItemsAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             TYPE_MOVIES -> {
-                val binding = RvItemMoviesBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                val binding = RvItemGlobalsearchmoviesBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 MoviesViewHolder(binding, helpViewModel, fragment)
             }
             TYPE_SERIES -> {
-                val binding = RvItemSeriesBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                val binding = RvItemGlobalsearchseriesBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 SeriesViewHolder(binding, helpViewModel, fragment)
             }
             else -> throw IllegalArgumentException("Invalid viewType $viewType")
@@ -91,7 +91,7 @@ class WatchlistItemsAdapter(
     }
 
     inner class MoviesViewHolder(
-        private val binding: RvItemMoviesBinding,
+        private val binding: RvItemGlobalsearchmoviesBinding,
         private val helpViewModel: HelpViewModel,
         private val fragment: WatchListFragment
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -140,7 +140,7 @@ class WatchlistItemsAdapter(
     }
 
     inner class SeriesViewHolder(
-        private val binding: RvItemSeriesBinding,
+        private val binding: RvItemGlobalsearchseriesBinding,
         private val helpViewModel: HelpViewModel,
         private val fragment: WatchListFragment
     ) : RecyclerView.ViewHolder(binding.root) {
@@ -172,6 +172,7 @@ class WatchlistItemsAdapter(
                     }
                     return@setOnKeyListener false
                 }
+
                 cardviewSerie.setOnClickListener {
                     onItemClick(seriesItem)
                 }

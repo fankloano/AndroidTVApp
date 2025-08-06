@@ -7,8 +7,7 @@
     android:background="@drawable/background_rounded_leftup_rightdown_gradient_overlay"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:elevation="6dp"
-    android:stateListAnimator="@animator/focus_zoom_card"
+    android:stateListAnimator="@animator/focus_zoom_card_small"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
 

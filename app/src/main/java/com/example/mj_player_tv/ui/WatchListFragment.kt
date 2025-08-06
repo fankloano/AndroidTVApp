@@ -53,6 +53,7 @@ import org.apache.commons.lang3.mutable.Mutable
 import java.security.Key
 import androidx.core.view.isVisible
 import androidx.core.view.isGone
+import androidx.core.view.isInvisible
 import androidx.core.view.isNotEmpty
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
@@ -88,9 +89,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     private lateinit var playlistAdapter: WatchlistPlaylistAdapter
     private lateinit var watchlistItemsAdapter: WatchlistItemsAdapter
     private lateinit var watchlistProgramsAdapter: WatchListProgrammeAdapter
-
-    private var moviesAdapter: WatchListMoviesAdapter? = null
-    private var seriesAdapter: WatchlistSeriesAdapter? = null
 
     private var moviesByAccount: Map<Accounts, List<MovieOB>>? = null
 
@@ -224,12 +222,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             }
                         }
                     }
-                    if (firstCategory == WatchlistMainCategory.MOVIES) {
-                        val firstMovie = moviesByAccount?.get(firstAccount)?.firstOrNull()
-                        firstMovie?.let {
-                            updateMovieUi(it)
-                        }
-                    }
 
                     binding.root.post {
                         when (firstCategory) {
@@ -282,6 +274,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         binding.tvNodatafound.visibility = View.GONE
                     } else {
                         binding.tvNodatafound.visibility = View.VISIBLE
+                        binding.rvWatchlistMovies.requestFocus()
                     }
                 }
             }
@@ -396,7 +389,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 moviesViewModel.clearFocusToMovies()
             }
         }
-
     }
 
     fun focusToPlaylist() {
@@ -609,7 +601,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 resetProgramDetails()
                 hideProgramsLayout()
                 showVodLayout()
-                binding.relLayoutProgramdescr.visibility = View.GONE
                 binding.recyclerItems.setSpanCount(7)
                 seriesByAccount?.keys?.toList()
             }
@@ -617,8 +608,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 hideVodLayout()
                 showProgramsLayout()
                 resetSeriesDetailsUi()
-                binding.relLayoutProgramdescr.visibility = View.VISIBLE
-                binding.linLayoutMovieInfo.visibility = View.GONE
                 binding.recyclerItems.setSpanCount(1)
                 programsByAccount?.keys?.toList()
             }
@@ -672,8 +661,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             else -> {} // optional: nichts tun oder Default setzen
         }
     }
-
-
 
     fun updateMovieUi(movie: MovieOB) {
         if (helpViewModel.currentFocusedMovie?.idByAccountData != movie.idByAccountData) {
@@ -1316,10 +1303,10 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     }
 
     private fun setProgramUi(program: Programme) {
-        val epgDataOB = program.epgData.target
-        if (binding.relLayoutProgramdescr.isGone) {
+        if (binding.relLayoutProgramdescr.isInvisible) {
             binding.relLayoutProgramdescr.visibility = View.VISIBLE
         }
+        val epgDataOB = program.epgData.target
         binding.tvCurrentProgram.text = epgDataOB.name
         binding.tvCurrentSubtitle.text = epgDataOB.sub_title
         binding.tvCurrentSubtitle.visibility = if (epgDataOB.sub_title.isNotEmpty()) {
@@ -1335,7 +1322,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     }
 
     fun resetProgramDetails() {
-        binding.relLayoutProgramdescr.visibility = View.GONE
         binding.tvCurrentProgram.text = ""
         binding.tvCurrentSubtitle.text = ""
         binding.tvCurrentCategory.text = ""
@@ -1390,10 +1376,13 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
     override fun onDestroy() {
         super.onDestroy()
+        helpViewModel.currentFocusedMovie = null
+        helpViewModel.currentFocusedSerie = null
         helpViewModel.selectedWatchlistCategory = null
         helpViewModel.selectedWatchlistAccount = null
         helpViewModel.isWatchlistContainerOpened = false
         seriesDetailJob?.cancel()
+        helpViewModel.resetWatchlistData()
         helpViewModel.cancelWatchlistJob()
         _binding = null
     }

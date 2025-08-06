@@ -32,9 +32,6 @@ import com.example.mj_player_tv.databinding.FragmentTvChannelsBinding
 import com.example.mj_player_tv.databinding.FragmentWatchlistBinding
 import com.example.mj_player_tv.ui.adapter.GlobalSearchPlaylistAdapter
 import com.example.mj_player_tv.ui.adapter.GlobalSearchTvChannelsAdapter
-import com.example.mj_player_tv.ui.adapter.WatchHistoryMoviesAdapter
-import com.example.mj_player_tv.ui.adapter.WatchHistorySeriesAdapter
-import com.example.mj_player_tv.ui.adapter.WatchHistoryTvChannelsAdapter
 import com.example.mj_player_tv.ui.adapter.WatchListMoviesAdapter
 import com.example.mj_player_tv.ui.adapter.WatchlistPlaylistAdapter
 import com.example.mj_player_tv.ui.adapter.WatchlistSeriesAdapter
@@ -55,11 +52,21 @@ import java.security.Key
 import androidx.core.view.isGone
 import kotlinx.coroutines.delay
 import androidx.core.view.isVisible
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import com.example.mj_player_tv.database.entity.EpisodesOB
+import com.example.mj_player_tv.database.entity.Programme
+import com.example.mj_player_tv.database.help.StatsDisplayItem
+import com.example.mj_player_tv.database.help.StatsMainCategory
+import com.example.mj_player_tv.database.help.WatchlistDisplayItem
+import com.example.mj_player_tv.database.help.WatchlistMainCategory
+import com.example.mj_player_tv.ui.adapter.StatsItemsAdapter
+import com.example.mj_player_tv.ui.adapter.WatchlistItemsAdapter
 import com.example.mj_player_tv.viewmodel.MoviesViewModel
 import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.SeriesViewModel
 import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
+import kotlinx.coroutines.flow.collectLatest
 
 @UnstableApi
 class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
@@ -68,21 +75,23 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
     private val binding get() = _binding!!
 
-    private var tvchannelsAdapter: WatchHistoryTvChannelsAdapter? = null
-    private var moviesAdapter: WatchHistoryMoviesAdapter? = null
-    private var seriesAdapter: WatchHistorySeriesAdapter? = null
+    private lateinit var statsItemsAdapter: StatsItemsAdapter
+
+    private var moviesList: List<StatsDisplayItem.MovieItem>? = null
+
+    private var seriesList: List<StatsDisplayItem.SeriesItem>? = null
+
+    private var tvchannelsList: List<StatsDisplayItem.TvChannelItem>? = null
+
+
+    private var selectedStatsCategory: StatsMainCategory? = null
+
+    private var lastLoadedCategory: StatsMainCategory? = null
+
+    private var isFirstOpenStats = true
 
     private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
-    private val movieBox = ObjectBox.store.boxFor(MovieOB::class.java)
-    private val seriesBox = ObjectBox.store.boxFor(SeriesOB::class.java)
     private val tvchBox = ObjectBox.store.boxFor(TvChannelOB::class.java)
-
-
-    private var moviesList: MutableList<MovieOB>? = null
-
-    private var seriesList: MutableList<SeriesOB>? = null
-
-    private var tvChannelsList: MutableList<TvChannelOB>? = null
 
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
         StalkerViewModelFactory(
@@ -129,146 +138,101 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
         parentFragmentManager.addOnBackStackChangedListener(backStackListener)
 
-        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
-            val testTvQuery = tvchBox.query(TvChannelOB_.timeWatched.greater(0L)).build()
-            tvChannelsList = testTvQuery.find()
-            testTvQuery.close()
-            if (!tvChannelsList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.progressBar.isVisible) {
-                        binding.progressBar.visibility = View.GONE
-                    }
-                    prepareTvChannelsRecyclerView()
-                    binding.rvHistoryTvchannels.isSelected = true
-                    binding.rvHistoryMovies.isSelected = false
-                    binding.rvHistorySeries.isSelected = false
-                    binding.rvHistoryTvchannels.requestFocus()
-                    tvchannelsAdapter?.submitList(tvChannelsList!!.sortedByDescending { it.timeWatched})
-                }
-            }
-            val movieQuery = movieBox.query(MovieOB_.isCompletelyWatched.equal(true)
-                .or(MovieOB_.isPartlyWatched.equal(true))).build()
-            moviesList = movieQuery.find()
-            movieQuery.close()
-            if (!moviesList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.progressBar.isVisible) {
-                        binding.progressBar.visibility = View.GONE
-                    }
-                    if (tvChannelsList.isNullOrEmpty()) {
-                        prepareMoviesRecyclerView()
-                        moviesAdapter?.submitList(moviesList!!.sortedBy { it.movieName })
-                        binding.rvHistoryTvchannels.isSelected = false
-                        binding.rvHistoryMovies.isSelected = true
-                        binding.rvHistorySeries.isSelected = false
+        helpViewModel.fetchStatsData()
+        prepareItemsRecyclerView()
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            helpViewModel.statsResults.flowWithLifecycle(
+                viewLifecycleOwner.lifecycle,
+                Lifecycle.State.STARTED
+            ).collectLatest { results ->
+                if (results.isEmpty()) return@collectLatest
+
+                tvchannelsList = results.filterIsInstance<StatsDisplayItem.TvChannelItem>()
+                moviesList = results.filterIsInstance<StatsDisplayItem.MovieItem>()
+                seriesList = results.filterIsInstance<StatsDisplayItem.SeriesItem>()
+                if (isFirstOpenStats) {
+                    if (!tvchannelsList.isNullOrEmpty()) {
+                        binding.recyclerItems.setSpanCount(5)
+                        helpViewModel.selectedStatsCategory = StatsMainCategory.TVCHANNELS
+                        selectedStatsCategory = StatsMainCategory.TVCHANNELS
+                        statsItemsAdapter.submitList(tvchannelsList)
+                        binding.rvHistoryTvchannels.requestFocus()
+                    } else if (!moviesList.isNullOrEmpty()) {
+                        binding.recyclerItems.setSpanCount(4)
+                        helpViewModel.selectedStatsCategory = StatsMainCategory.MOVIES
+                        selectedStatsCategory = StatsMainCategory.MOVIES
+                        statsItemsAdapter.submitList(moviesList)
                         binding.rvHistoryMovies.requestFocus()
-                    }
-                }
-            }
-            val seriesQuery = seriesBox.query(SeriesOB_.isCompletelyWatched.equal(true)
-                .or(SeriesOB_.isPartlyWatched.equal(true))).build()
-            seriesList = seriesQuery.find()
-            seriesQuery.close()
-            if (!seriesList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.progressBar.isVisible) {
-                        binding.progressBar.visibility = View.GONE
-                    }
-                    if (tvChannelsList.isNullOrEmpty() && moviesList.isNullOrEmpty()) {
-                        prepareSeriesRecyclerView()
-                        seriesAdapter?.submitList(seriesList!!.sortedBy { it.seriesName })
-                        binding.rvHistoryTvchannels.isSelected = false
-                        binding.rvHistoryMovies.isSelected = false
-                        binding.rvHistorySeries.isSelected = true
-                        binding.rvHistorySeries.requestFocus()
-                    }
-                }
-            }
-            if (moviesList.isNullOrEmpty() && seriesList.isNullOrEmpty() && tvChannelsList.isNullOrEmpty()) {
-                withContext(Dispatchers.Main) {
-                    if (binding.progressBar.isVisible) {
-                        binding.progressBar.visibility = View.GONE
-                    }
-                    binding.rvHistoryTvchannels.isSelected = true
-                    binding.rvHistoryMovies.isSelected = false
-                    binding.rvHistorySeries.isSelected = false
-                    binding.rvHistoryTvchannels.requestFocus()
-                    binding.tvNodatafound.visibility = View.VISIBLE
-                }
-            }
-        }
-
-        binding.rvHistoryTvchannels.setOnKeyListener { _, keyCode, event ->
-            if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerItems.requestFocus()
-                return@setOnKeyListener true
-            } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
-                helpViewModel.watchstatsContainerOpened = false
-                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(false)
-                }
-                parentFragmentManager.popBackStack()
-                return@setOnKeyListener true
-            }
-            return@setOnKeyListener false
-        }
-
-        binding.rvHistoryTvchannels.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelecttv.isSelected = hasFocus
-            if (hasFocus) {
-                if (!helpViewModel.isWatchHistoryContainerOpened) {
-                    binding.rvHistoryTvchannels.isSelected = true
-                    binding.rvHistoryMovies.isSelected = false
-                    binding.rvHistorySeries.isSelected = false
-                    if (!tvChannelsList.isNullOrEmpty() && (binding.recyclerItems.adapter == moviesAdapter || binding.recyclerItems.adapter == seriesAdapter)) {
-                        binding.recyclerItems.visibility = View.VISIBLE
-                        binding.tvNodatafound.visibility = View.GONE
-                        prepareTvChannelsRecyclerView()
-                        tvchannelsAdapter?.submitList(tvChannelsList!!.sortedByDescending { it.timeWatched})
                     } else {
-                        if (tvChannelsList.isNullOrEmpty()) {
-                            binding.recyclerItems.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
+                        if (!seriesList.isNullOrEmpty()) {
+                            binding.recyclerItems.setSpanCount(4)
+                            helpViewModel.selectedStatsCategory = StatsMainCategory.SERIES
+                            selectedStatsCategory = StatsMainCategory.SERIES
+                            statsItemsAdapter.submitList(seriesList)
+                            binding.rvHistorySeries.requestFocus()
+                        } else {
+                            helpViewModel.selectedStatsCategory = StatsMainCategory.TVCHANNELS
+                            selectedStatsCategory = StatsMainCategory.TVCHANNELS
+                            binding.rvHistoryTvchannels.requestFocus()
                         }
+                    }
+                    isFirstOpenStats = false
+                }
+            }
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            helpViewModel.statsSearching.flowWithLifecycle(
+                viewLifecycleOwner.lifecycle,
+                Lifecycle.State.STARTED
+            ).collectLatest { searching ->
+                if (searching) {
+                    binding.tvNodatafound.visibility = View.GONE
+                    binding.progressBar.visibility = View.VISIBLE
+                } else {
+                    if (!helpViewModel.hasFetchedStats) {
+                        binding.tvNodatafound.visibility = View.GONE
+                        return@collectLatest
+                    }
+
+                    binding.progressBar.visibility = View.GONE
+                    val hasResults = !(moviesList?.isEmpty() == true &&
+                            seriesList?.isEmpty() == true &&
+                            tvchannelsList?.isEmpty() == true)
+
+                    if (hasResults) {
+                        binding.tvNodatafound.visibility = View.GONE
+                    } else {
+                        binding.tvNodatafound.visibility = View.VISIBLE
+                        binding.rvHistoryTvchannels.requestFocus()
                     }
                 }
             }
         }
 
         binding.rvHistoryMovies.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelectmovies.isSelected = hasFocus
-            if (hasFocus ) {
-                if (!helpViewModel.isWatchHistoryContainerOpened) {
-                    helpViewModel.currentFocusedSerie = null
-                    binding.rvHistoryMovies.isSelected = true
-                    binding.rvHistoryTvchannels.isSelected = false
-                    binding.rvHistorySeries.isSelected = false
-                    if (!moviesList.isNullOrEmpty() && (binding.recyclerItems.adapter == seriesAdapter || binding.recyclerItems.adapter == tvchannelsAdapter )) {
-                        binding.recyclerItems.visibility = View.VISIBLE
-                        binding.tvNodatafound.visibility = View.GONE
-                        prepareMoviesRecyclerView()
-                        moviesAdapter?.submitList(moviesList!!.sortedBy { it.movieName })
-                    } else {
-                        if (moviesList.isNullOrEmpty()) {
-                            prepareMoviesRecyclerView()
-                            binding.recyclerItems.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
-                        }
-                    }
-                }
+            if (hasFocus) {
+                binding.rvHistoryMovies.isSelected = true
+                binding.rvHistorySeries.isSelected = false
+                binding.rvHistoryTvchannels.isSelected = false
+                onCategorySelected(StatsMainCategory.MOVIES)
             }
         }
 
         binding.rvHistoryMovies.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerItems.requestFocus()
+                if (statsItemsAdapter.currentList.isNotEmpty()) {
+                    binding.recyclerItems.requestFocus()
+                } else {
+                    binding.rvHistoryMovies.requestFocus()
+                }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
                 val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(false)
+                    mainFragment.closeFragmentContainer(true)
                 }
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
@@ -277,37 +241,56 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         }
 
         binding.rvHistorySeries.setOnFocusChangeListener { _, hasFocus ->
-            binding.tvSelectseries.isSelected = hasFocus
             if (hasFocus) {
-                if (!helpViewModel.isWatchHistoryContainerOpened) {
-                    binding.rvHistoryMovies.isSelected = false
-                    binding.rvHistoryTvchannels.isSelected = false
-                    binding.rvHistorySeries.isSelected = true
-                    if (!seriesList.isNullOrEmpty() && (binding.recyclerItems.adapter == moviesAdapter || binding.recyclerItems.adapter == tvchannelsAdapter )) {
-                        binding.recyclerItems.visibility = View.VISIBLE
-                        binding.tvNodatafound.visibility = View.GONE
-                        prepareSeriesRecyclerView()
-                        seriesAdapter?.submitList(seriesList!!.sortedBy { it.seriesName })
-                    } else {
-                        if (seriesList.isNullOrEmpty()) {
-                            prepareSeriesRecyclerView()
-                            binding.recyclerItems.visibility = View.INVISIBLE
-                            binding.tvNodatafound.visibility = View.VISIBLE
-                        }
-                    }
-                }
+                binding.rvHistoryMovies.isSelected = false
+                binding.rvHistorySeries.isSelected = true
+                binding.rvHistoryTvchannels.isSelected = false
+                onCategorySelected(StatsMainCategory.SERIES)
             }
         }
 
         binding.rvHistorySeries.setOnKeyListener { _, keyCode, event ->
             if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
-                binding.recyclerItems.requestFocus()
+                if (statsItemsAdapter.currentList.isNotEmpty()) {
+                    binding.recyclerItems.requestFocus()
+                } else {
+                    binding.rvHistorySeries.requestFocus()
+                }
                 return@setOnKeyListener true
             } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 helpViewModel.watchstatsContainerOpened = false
                 val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (mainFragment is WatchlistStatsFragment) {
-                    mainFragment.closeFragmentContainer(false)
+                    mainFragment.closeFragmentContainer(true)
+                }
+                parentFragmentManager.popBackStack()
+                return@setOnKeyListener true
+            }
+            return@setOnKeyListener false
+        }
+
+        binding.rvHistoryTvchannels.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.rvHistoryMovies.isSelected = false
+                binding.rvHistorySeries.isSelected = false
+                binding.rvHistoryTvchannels.isSelected = true
+                onCategorySelected(StatsMainCategory.TVCHANNELS)
+            }
+        }
+
+        binding.rvHistoryTvchannels.setOnKeyListener { _, keyCode, event ->
+            if (((keyCode == KeyEvent.KEYCODE_DPAD_DOWN) || (keyCode == KeyEvent.KEYCODE_DPAD_CENTER)) && event.action == KeyEvent.ACTION_DOWN) {
+                if (statsItemsAdapter.currentList.isNotEmpty()) {
+                    binding.recyclerItems.requestFocus()
+                } else {
+                    binding.rvHistoryTvchannels.requestFocus()
+                }
+                return@setOnKeyListener true
+            } else if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
+                helpViewModel.watchstatsContainerOpened = false
+                val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
+                if (mainFragment is WatchlistStatsFragment) {
+                    mainFragment.closeFragmentContainer(true)
                 }
                 parentFragmentManager.popBackStack()
                 return@setOnKeyListener true
@@ -317,7 +300,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
         seriesViewModel.focusToSeriesRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
-                if (!seriesAdapter?.currentList.isNullOrEmpty()) {
+                if (statsItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
                     binding.rvHistorySeries.requestFocus()
@@ -328,7 +311,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
         moviesViewModel.focusToMoviesRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
-                if (!moviesAdapter?.currentList.isNullOrEmpty()) {
+                if (statsItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
                     binding.rvHistoryMovies.requestFocus()
@@ -338,123 +321,130 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         }
     }
 
+    private fun prepareItemsRecyclerView() {
+        statsItemsAdapter = StatsItemsAdapter(helpViewModel, this, accountBox) { clickedItem, view ->
+            when (clickedItem) {
+                is StatsDisplayItem.MovieItem -> {
+                    val selectedAccount = clickedItem.movie.movieAccount.target
+                    if (selectedAccount != null) {
+                        if (selectedAccount.isXtream) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(clickedItem.movie, selectedAccount!!)
+                                helpViewModel.currentFocusedMovie = xtreamMovie
+                                helpViewModel.currentMovieAccount = selectedAccount
+                                openMovieDetailFragment()
+                            }
+                        } else if (selectedAccount.isStalker) {
+                            helpViewModel.currentMovieAccount = selectedAccount
+                            helpViewModel.currentFocusedMovie = clickedItem.movie
+                            openMovieDetailFragment()
+                        }
+                    }
+                }
+                is StatsDisplayItem.SeriesItem -> {
+                    val selectedAccount = clickedItem.series.seriesAccount.target
+                    if (selectedAccount != null) {
+                        if (selectedAccount.isXtream) {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                val seasons =
+                                    xtreamViewModel.getXtreamSerieDetails(clickedItem.series,
+                                        selectedAccount
+                                    )
+                                clickedItem.series.totalSeasons = seasons.size
+                                helpViewModel.focusedSeasons =
+                                    seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE })
+                                        .toMutableList()
+                                helpViewModel.focusedEpisodes =
+                                    xtreamViewModel.episodesList.sortedWith(
+                                        compareBy(
+                                            { it.seasonNumber },
+                                            { it.episodeNumber })
+                                    ).toMutableList()
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        } else {
+                            viewLifecycleOwner.lifecycleScope.launch {
+                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
+                                stalkerViewModel.getSeriesDetail(clickedItem.series,
+                                    selectedAccount
+                                )
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
+                                    clickedItem.series.totalSeasons = seasons.size
+                                    helpViewModel.focusedSeasons =
+                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                            .thenBy {
+                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
+                                            }).toMutableList()
+                                    helpViewModel.focusedEpisodes =
+                                        stalkerViewModel.episodesList.sortedWith(
+                                            compareBy(
+                                                { it.seasonNumber },
+                                                { it.episodeNumber })
+                                        ).toMutableList()
+                                }
+                                helpViewModel.currentSeriesAccount = selectedAccount
+                                openSeriesDetailFragment()
+                            }
+                        }
+                    }
+                }
+                is StatsDisplayItem.TvChannelItem -> {
+                    showTvChannelPopUp(clickedItem.tvchannel, view)
+                }
+            }
+        }
 
-    fun focusToMovieOrSerie() {
-        if (helpViewModel.currentSelectedWatchHistory == "MOVIE") {
-            binding.rvHistoryMovies.requestFocus()
-        } else if (helpViewModel.currentSelectedWatchHistory == "SERIE") {
-            binding.rvHistorySeries.requestFocus()
-        } else if (helpViewModel.currentSelectedWatchHistory == "TV") {
-            binding.rvHistoryTvchannels.requestFocus()
-        } else {
+        binding.recyclerItems.apply {
+            adapter = statsItemsAdapter
+            setFocusableDirection(FocusableDirection.CONTINUOUS)
+            setSmoothFocusChangesEnabled(false)
+        }
+    }
+
+
+    fun onCategorySelected(category: StatsMainCategory) {
+        if (selectedStatsCategory == category) {
+            // Kategorie ist schon aktiv → nichts tun
             return
         }
-    }
-
-    private fun prepareTvChannelsRecyclerView() {
-        tvchannelsAdapter = WatchHistoryTvChannelsAdapter(onTvChannelClickListener, onTvChannelLongClickListener, this, helpViewModel)
-        binding.recyclerItems.apply {
-            adapter = tvchannelsAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-            setSpanCount(5)
-        }
-    }
-
-    private fun prepareMoviesRecyclerView() {
-        moviesAdapter = WatchHistoryMoviesAdapter(onMovieClickListener, this, helpViewModel, accountBox, onMovieLongClickListener)
-        binding.recyclerItems.apply {
-            adapter = moviesAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-            setSpanCount(4)
-        }
-    }
-
-    private fun prepareSeriesRecyclerView() {
-        seriesAdapter = WatchHistorySeriesAdapter(onSeriesClickListener, onSeriesLongClickListener, this, helpViewModel)
-        binding.recyclerItems.apply {
-            adapter = seriesAdapter
-            setFocusableDirection(FocusableDirection.CONTINUOUS)
-            setSmoothFocusChangesEnabled(false)
-            setSpanCount(4)
-        }
-    }
-
-    private val onTvChannelClickListener = WatchHistoryTvChannelsAdapter.OnClickListener { tvchannel ->
-        helpViewModel.currentSelectedWatchHistory = "TV"
-    }
-
-    private val onTvChannelLongClickListener = WatchHistoryTvChannelsAdapter.OnLongClickListener { tvchannel, view ->
-        showTvChannelPopUp(tvchannel, view)
-    }
-
-    private val onMovieClickListener = WatchHistoryMoviesAdapter.OnClickListener { movie ->
-
-        helpViewModel.currentSelectedWatchHistory = "MOVIE"
-        val account = movie.accountId?.let {
-            accountBox.get(it)
-        }
-        if (account != null) {
-            if (account.isXtream) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(movie, account)
-                    helpViewModel.currentFocusedMovie = xtreamMovie
-                    helpViewModel.currentMovieAccount = account
-                    openMovieDetailFragment()
+        statsItemsAdapter.submitList(null)
+        helpViewModel.selectedStatsCategory = category
+        when (category) {
+            StatsMainCategory.MOVIES -> {
+                helpViewModel.currentFocusedMovie = null
+                binding.recyclerItems.setSpanCount(4)
+                if (moviesList.isNullOrEmpty()) {
+                    binding.tvNodatafound.visibility = View.VISIBLE
+                } else {
+                    binding.tvNodatafound.visibility = View.INVISIBLE
+                    statsItemsAdapter.submitList(moviesList)
                 }
-            } else {
-                helpViewModel.currentMovieAccount = account
-                helpViewModel.currentFocusedMovie = movie
-                openMovieDetailFragment()
+            }
+            StatsMainCategory.SERIES -> {
+                helpViewModel.currentFocusedSerie = null
+                binding.recyclerItems.setSpanCount(4)
+                if (seriesList.isNullOrEmpty()) {
+                    binding.tvNodatafound.visibility = View.VISIBLE
+                } else {
+                    binding.tvNodatafound.visibility = View.INVISIBLE
+                    statsItemsAdapter.submitList(seriesList)
+                }
+            }
+            StatsMainCategory.TVCHANNELS -> {
+                binding.recyclerItems.setSpanCount(5)
+                if (tvchannelsList.isNullOrEmpty()) {
+                    binding.tvNodatafound.visibility = View.VISIBLE
+                } else {
+                    binding.tvNodatafound.visibility = View.INVISIBLE
+                    statsItemsAdapter.submitList(tvchannelsList)
+                }
             }
         }
-    }
-
-    private val onMovieLongClickListener = WatchHistoryMoviesAdapter.OnLongClickListener { movie ->
-
-    }
-
-    private val onSeriesClickListener = WatchHistorySeriesAdapter.OnClickListener { serie ->
-        helpViewModel.currentSelectedWatchHistory = "SERIE"
-        val account = serie.accountId?.let {
-            accountBox.get(it)
-        }
-        if (account != null) {
-            if (account.isXtream) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    val seasons =
-                        xtreamViewModel.getXtreamSerieDetails(serie, account)
-                    serie.totalSeasons = seasons.size
-                    helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                    helpViewModel.focusedEpisodes = xtreamViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    helpViewModel.currentFocusedSerie = serie
-                    helpViewModel.currentSeriesAccount = account
-                    openSeriesDetailFragment()
-                }
-            } else if (account.isStalker) {
-                viewLifecycleOwner.lifecycleScope.launch {
-                    stalkerViewModel.seriesDetailData.postValue(mutableListOf())
-                    stalkerViewModel.getSeriesDetail(serie, account)
-                    helpViewModel.currentFocusedSerie = serie
-                    stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                        serie.totalSeasons = seasons.size
-                        helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                            .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                        helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    }
-                    helpViewModel.currentSeriesAccount = account
-                    openSeriesDetailFragment()
-                }
-            } else {
-
-            }
-        }
-    }
-
-    private val onSeriesLongClickListener = WatchHistorySeriesAdapter.OnLongClickListener { serie ->
-
+        selectedStatsCategory = category
     }
 
     private fun showTvChannelPopUp(tvchannel: TvChannelOB, view: View) {
@@ -464,7 +454,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         val singleItem = popup.menu.findItem(R.id.remove_this)
         singleItem.setTitle("Remove ${tvchannel.showingName} from list")
         val allItem = popup.menu.findItem(R.id.remove_all)
-        if (tvChannelsList != null && tvChannelsList!!.size > 1) {
+        if (tvchannelsList != null && tvchannelsList!!.size > 1) {
             allItem.setVisible(true)
         } else {
             allItem.setVisible(false)
@@ -486,22 +476,22 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private fun removeChannelFromList(tvchannel: TvChannelOB) {
-        tvChannelsList = tvChannelsList?.filter { it.id != tvchannel.id }?.toMutableList()
-        tvchannelsAdapter?.submitList(tvChannelsList?.sortedByDescending { it.timeWatched } )
+        tvchannelsList = tvchannelsList?.filter { it.tvchannel.id != tvchannel.id }?.toMutableList()
+        statsItemsAdapter.submitList(tvchannelsList?.sortedByDescending { it.tvchannel.timeWatched } )
         binding.recyclerItems.requestFocus()
         tvchannel.timeWatched = 0L
         tvchBox.put(tvchannel)
     }
 
     private fun removeAllChannelsFromList() {
-        val channelList = tvChannelsList
-        tvChannelsList = mutableListOf()
-        tvchannelsAdapter?.submitList(tvChannelsList)
+        val channelList = tvchannelsList
+        tvchannelsList = mutableListOf()
+        statsItemsAdapter.submitList(tvchannelsList)
         binding.rvHistoryTvchannels.requestFocus()
         helpViewModel.viewModelScope.launch(Dispatchers.IO) {
             val updatedChannels = channelList?.map {
-                it.timeWatched = 0L
-                it
+                it.tvchannel.timeWatched = 0L
+                it.tvchannel
             }
             if (updatedChannels != null) {
                 tvchBox.put(updatedChannels)
@@ -515,6 +505,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         transaction.add(R.id.container_watchhistory_vod_info, MovieDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
+        binding.focusBlocker.requestFocus()
         binding.containerWatchhistoryVodInfo.visibility = View.VISIBLE
     }
 
@@ -524,6 +515,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         transaction.add(R.id.container_watchhistory_vod_info, SeriesDetailFragment())
         transaction.addToBackStack(null)
         transaction.commit()
+        binding.focusBlocker.requestFocus()
         binding.containerWatchhistoryVodInfo.visibility = View.VISIBLE
     }
 
@@ -562,10 +554,19 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         }
     }
 
+    fun focusToCategory() {
+        when (selectedStatsCategory) {
+            StatsMainCategory.MOVIES -> binding.rvHistoryMovies.requestFocus()
+            StatsMainCategory.SERIES -> binding.rvHistorySeries.requestFocus()
+            StatsMainCategory.TVCHANNELS -> binding.rvHistoryTvchannels.requestFocus()
+            null -> {}
+        }
+    }
+
     private val backStackListener = FragmentManager.OnBackStackChangedListener {
         if (isAdded && parentFragmentManager.fragments.lastOrNull() == this && helpViewModel.isSearchContainerOpened) {
             binding.recyclerItems.requestFocus()
-            helpViewModel.isWatchHistoryContainerOpened = false
+            helpViewModel.isWatchlistContainerOpened = false
         }
     }
 
@@ -576,11 +577,13 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
     override fun onDestroy() {
         super.onDestroy()
-        helpViewModel.currentSelectedWatchHistory = ""
+        helpViewModel.selectedStatsCategory = null
+        selectedStatsCategory = null
         helpViewModel.isWatchHistoryContainerOpened = false
-        moviesAdapter = null
-        seriesAdapter = null
-        tvchannelsAdapter = null
+        helpViewModel.currentFocusedMovie = null
+        helpViewModel.currentFocusedSerie = null
+        helpViewModel.resetStatsData()
+        helpViewModel.cancelStatsJob()
         _binding = null
     }
 }
