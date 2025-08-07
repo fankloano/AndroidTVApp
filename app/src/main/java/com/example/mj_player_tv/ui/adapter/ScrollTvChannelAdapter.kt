@@ -41,11 +41,44 @@ class ScrollTvChannelAdapter(
     inner class ViewHolder(val binding: RvItemScrollTvchannelBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(tvchannelpos: ChannelPositions) {
             val tvChannel = tvchannelpos.tvchannel.target
-            val epgChId = tvChannel.linkedEpgChannel?.target?.chEpgId
+            val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
+            val epgChId = linkedEpgChannel?.chEpgId
+            val image = tvChannel.logo
+            val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
+
+            binding.tvChannelname.text = tvChannel.showingName
+
+            if (tvChannel.account.target!!.useEpgLogos) {
+                if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvChannel.alwaysUsesExternalEpg)) {
+                    binding.ivChannelLogo.visibility = View.VISIBLE
+                    binding.ivChannelLogo.load(epgLogo)
+                } else {
+                    if (image.isNotEmpty()) {
+                        binding.ivChannelLogo.visibility = View.VISIBLE
+                        binding.ivChannelLogo.load(image)
+                    } else {
+                        binding.ivChannelLogo.visibility = View.INVISIBLE
+                    }
+                }
+            } else {
+                if (image.isNotEmpty()) {
+                    binding.ivChannelLogo.visibility = View.VISIBLE
+                    binding.ivChannelLogo.load(image)
+                } else {
+                    binding.ivChannelLogo.visibility = View.INVISIBLE
+                }
+            }
             val timeOffSet = helpViewModel.currentFocusedChannel?.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: helpViewModel.currentFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
             val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
             val currentTimeMillis =
                 (System.currentTimeMillis() / 1000).plus(calculateTimeOffsetInSeconds(timeOffSet))
+            val currentTime = System.currentTimeMillis()
+            val currentTimeString =
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(currentTime)
+            val halfHourLaterTime = currentTime + (30 * 60 * 1000)
+            val halfHourLaterTimeString =
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(halfHourLaterTime)
+            binding.progressBar.max = 100
             if (epgChId != null) {
                 val currentProgram = epgDataBox.query(
                     EpgDataOB_.epgChId.equal(epgChId)
@@ -63,16 +96,25 @@ class ScrollTvChannelAdapter(
                         ((currentProgram.stopTimestamp!! + timeOffSetSeconds).minus(
                             currentProgram.startTimestamp!! + timeOffSetSeconds
                         ))
-                    binding.progressBar.max = 100
                     val progress =
                         ((currentTimeMillis - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
                     binding.progressBar.progress = progress
+                } else {
+                    binding.progressBar.progress = 0
+                    binding.tvProgram.text = "No information"
+                    binding.tvStartTime.text = currentTimeString
+                    binding.tvEndTime.text = " - $halfHourLaterTimeString"
                 }
+            } else {
+                binding.progressBar.progress = 0
+                binding.tvProgram.text = "No information"
+                binding.tvStartTime.text = currentTimeString
+                binding.tvEndTime.text = " - $halfHourLaterTimeString"
             }
 
             binding.relLayoutScrollTvchannel.setOnKeyListener { _, keyCode, event ->
                 if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
-
+                    fragment.closeScrollTvChannelRV()
                     return@setOnKeyListener true
                 }
                 return@setOnKeyListener false
@@ -96,15 +138,21 @@ class ScrollTvChannelAdapter(
 
         holder.binding.relLayoutScrollTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.progressBar.isSelected = hasFocus
-
+            holder.binding.tvProgram.isSelected = hasFocus
+            holder.binding.tvChannelname.isSelected = hasFocus
             // Fokus erhalten → Timer starten
             if (hasFocus) {
+                holder.binding.overlayFull.visibility = View.GONE
                 focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls vorher noch aktiv
                 focusRunnable = Runnable {
-                    onClickListener.onClick(tvChannPos)
+                    if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
+                        onClickListener.onClick(tvChannPos)
+                    }
+                    fragment.closeScrollTvChannelRV()
                 }
                 focusHandler.postDelayed(focusRunnable!!, 2000) // 2 Sekunden
             } else {
+                holder.binding.overlayFull.visibility = View.VISIBLE
                 // Fokus verloren → Timer abbrechen
                 focusRunnable?.let { focusHandler.removeCallbacks(it) }
             }
@@ -112,7 +160,10 @@ class ScrollTvChannelAdapter(
 
         holder.binding.relLayoutScrollTvchannel.setOnClickListener {
             focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls noch aktiv
-            onClickListener.onClick(tvChannPos)
+            if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
+                onClickListener.onClick(tvChannPos)
+            }
+            fragment.closeScrollTvChannelRV()
         }
     }
 

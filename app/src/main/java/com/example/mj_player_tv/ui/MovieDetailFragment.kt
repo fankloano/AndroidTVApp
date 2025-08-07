@@ -505,11 +505,8 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
     }
 
     fun updateMovieInRV() {
-        if (helpViewModel.isWatchlistContainerOpened) {
-            val watchlistFragment = parentFragmentManager.findFragmentById(R.id.container_watchlist_stats)
-            if (watchlistFragment is WatchListFragment && helpViewModel.currentFocusedMovie != null) {
-                watchlistFragment.updateMovie(helpViewModel.currentFocusedMovie!!)
-            }
+        if (helpViewModel.isWatchlistContainerOpened || helpViewModel.isWatchHistoryContainerOpened) {
+            moviesViewModel.requestUpdateMovieInRV()
         } else {
             binding.ivFavorite.visibility = if (helpViewModel.currentFocusedMovie!!.isFavorite) {
                 View.VISIBLE

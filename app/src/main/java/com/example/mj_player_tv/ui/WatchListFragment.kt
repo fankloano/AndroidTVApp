@@ -235,8 +235,16 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     isFirstOpenWatchlist = false
                 }
 
+
+
                 selectedAccount?.let { account ->
                     selectedWatchlistCategory?.let { cat ->
+                        val playlists = when(cat) {
+                            WatchlistMainCategory.PROGRAMS -> programsByAccount?.keys
+                            WatchlistMainCategory.MOVIES -> moviesByAccount?.keys
+                            WatchlistMainCategory.SERIES -> seriesByAccount?.keys
+                        }?.toList()?.sortedBy { it.name } ?: emptyList()
+                        playlistAdapter.submitList(playlists)
                         val items = getDisplayableItemsFor(account, cat)
                         when (cat) {
                             WatchlistMainCategory.PROGRAMS -> {
@@ -364,9 +372,24 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 if (watchlistItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
-                    binding.rvWatchlistSeries.requestFocus()
+                    if (playlistAdapter.currentList.isNotEmpty()) {
+                        binding.recyclerPlaylists.requestFocus()
+                    } else {
+                        resetSeriesDetailsUi()
+                        binding.rvWatchlistSeries.requestFocus()
+                        binding.tvNodatafound.visibility = View.VISIBLE
+                    }
                 }
                 seriesViewModel.clearFocusToSeries()
+            }
+        }
+
+        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                helpViewModel.currentFocusedSerie?.let {
+                    helpViewModel.removeSerieFromWatchlist(it)
+                }
+                seriesViewModel.clearUpdateSerieInRV()
             }
         }
 
@@ -375,9 +398,24 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 if (watchlistItemsAdapter.currentList.isNotEmpty()) {
                     binding.recyclerItems.requestFocus()
                 } else {
-                    binding.rvWatchlistMovies.requestFocus()
+                    if (playlistAdapter.currentList.isNotEmpty()) {
+                        binding.recyclerPlaylists.requestFocus()
+                    } else {
+                        resetMovieDetailsUi()
+                        binding.rvWatchlistMovies.requestFocus()
+                        binding.tvNodatafound.visibility = View.VISIBLE
+                    }
                 }
                 moviesViewModel.clearFocusToMovies()
+            }
+        }
+
+        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                helpViewModel.currentFocusedMovie?.let {
+                    helpViewModel.removeMovieFromWatchlist(it)
+                }
+                moviesViewModel.clearUpdateOnMovieRV()
             }
         }
     }
@@ -417,6 +455,9 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 }
                 is WatchlistDisplayItem.SeriesItem -> {
                     if (selectedAccount != null) {
+                        if (clickedItem.series.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+                            seriesViewModel.openedSameSeries = true
+                        }
                         if (selectedAccount!!.isXtream) {
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val seasons =
@@ -1342,10 +1383,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         return ""
     }
 
-    fun updateMovie(movie: MovieOB) {
-        // Entferne Film
-
-    }
 
     fun updateSerie(serie: SeriesOB) {
         // Entferne Serie
@@ -1372,6 +1409,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         helpViewModel.selectedWatchlistCategory = null
         helpViewModel.selectedWatchlistAccount = null
         helpViewModel.isWatchlistContainerOpened = false
+        selectedAccount = null
+        selectedWatchlistCategory = null
         seriesDetailJob?.cancel()
         helpViewModel.resetWatchlistData()
         helpViewModel.cancelWatchlistJob()

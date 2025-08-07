@@ -623,11 +623,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun updateSeriesInRV() {
         if (helpViewModel.isWatchlistContainerOpened) {
-            val watchlistFragment =
-                parentFragmentManager.findFragmentById(R.id.container_watchlist_stats)
-            if (watchlistFragment is WatchListFragment && helpViewModel.currentFocusedSerie != null) {
-                watchlistFragment.updateSerie(helpViewModel.currentFocusedSerie!!)
-            }
+            seriesViewModel.requestUpdateSerieInRV()
         } else {
             seriesViewModel.requestUpdateSerieInRV()
         }

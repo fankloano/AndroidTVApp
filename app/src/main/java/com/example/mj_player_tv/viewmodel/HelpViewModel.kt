@@ -2321,6 +2321,50 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    fun removeMovieFromWatchlist(movie: MovieOB) {
+        val currentList = _watchlistResults.value.toMutableList()
+
+        val updatedList = currentList.mapNotNull { item ->
+            when (item) {
+                is WatchlistItem.Movies -> {
+                    if (item.movies.contains(movie)) {
+                        val newMovies = item.movies - movie
+                        if (newMovies.isEmpty()) {
+                            null // Account hat keine Filme mehr → entferne ihn komplett
+                        } else {
+                            WatchlistItem.Movies(item.account, newMovies)
+                        }
+                    } else item
+                }
+
+                else -> item
+            }
+        }
+        _watchlistResults.value = updatedList
+    }
+
+    fun removeSerieFromWatchlist(serie: SeriesOB) {
+        val currentList = _watchlistResults.value.toMutableList()
+
+        val updatedList = currentList.mapNotNull { item ->
+            when (item) {
+                is WatchlistItem.Series -> {
+                    if (item.series.contains(serie)) {
+                        val newSeries = item.series - serie
+                        if (newSeries.isEmpty()) {
+                            null // Account hat keine Serien mehr → entferne ihn komplett
+                        } else {
+                            WatchlistItem.Series(item.account, newSeries)
+                        }
+                    } else item
+                }
+                else -> item
+            }
+        }
+        _watchlistResults.value = updatedList
+    }
+
+
     fun getWatchlistMovies(): List<WatchlistItem> {
         val movies = movieBox.query(MovieOB_.isFavorite.equal(true)).build().use { it.find() }
         if (movies.isEmpty()) return emptyList()
@@ -2370,6 +2414,12 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     fun cancelStatsJob() {
         statsJob?.cancel()
         _statsSearching.value = false
+    }
+
+    fun removeStatsItem(item: StatsDisplayItem) {
+        val currentList = _statsResults.value.toMutableList()
+        currentList.remove(item)
+        _statsResults.value = currentList
     }
 
     fun fetchStatsData() {

@@ -42,7 +42,7 @@
                   android:layout_width="wrap_content"
                   android:layout_height="wrap_content"
                   tools:text="DE: SKY CINEMA HIGHLIGHT 4K FHD"
-                  android:textColor="@color/textview_scroll_tvchannel"
+                  android:textColor="@drawable/selector_textview_scroll_tvchannels"
                   android:textSize="12sp"
                   android:maxLines="1"
                   android:scrollHorizontally="true"
@@ -75,16 +75,16 @@
 
                    <TextView
                        android:id="@+id/tv_Program"
-                       android:layout_width="wrap_content"
+                       android:layout_width="match_parent"
                        android:layout_height="wrap_content"
                        tools:text="Es war einmal in Amerika"
-                       android:textColor="@color/textview_scroll_tvchannel"
-                       android:textSize="12sp"
-                       android:layout_marginStart="15dp"
-                       android:scrollHorizontally="true"
+                       android:textColor="@drawable/selector_textview_scroll_tvchannels"
+                       android:textSize="11sp"
+                       android:layout_marginStart="10dp"
+                       android:layout_marginEnd="10dp"
+                       android:singleLine="true"
                        android:ellipsize="marquee"
-                       android:maxLines="1"
-                       android:duplicateParentState="true"
+                       android:scrollHorizontally="true"
                        android:marqueeRepeatLimit="marquee_forever" />
 
                </LinearLayout>
@@ -104,5 +104,13 @@
 
           </LinearLayout>
 
+    <View
+        android:id="@+id/overlay_full"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        android:background="@drawable/background_overlay_scroll_tvchannels"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

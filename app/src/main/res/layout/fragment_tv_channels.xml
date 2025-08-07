@@ -111,11 +111,12 @@
             android:id="@+id/rv_layout_TvChannels"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_below="@id/tv_selectedTvCategory"
+            android:layout_marginTop="-1dp"
             android:background="?attr/backgroundDark"
             android:descendantFocusability="afterDescendants"
             android:nextFocusRight="@id/tv_showFullEpg"
             android:orientation="vertical"
-            android:layout_below="@id/tv_selectedTvCategory"
             tools:listitem="@layout/rv_item_tvchannels" />
 
     </RelativeLayout>
@@ -1081,17 +1082,39 @@
         android:id="@+id/rv_layout_scrollChannels"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="?attr/transparentColor"
-        android:descendantFocusability="afterDescendants"
         android:nextFocusRight="@id/rv_layout_scrollChannels"
         android:nextFocusLeft="@id/rv_layout_scrollChannels"
         android:orientation="vertical"
+        android:background="@drawable/background_scrolltvchannel_recyclerview"
         android:visibility="gone"
         app:layout_constraintHeight_percent="0.4"
         app:layout_constraintWidth_percent="0.3"
         app:layout_constraintTop_toTopOf="@id/videoView_preview"
         app:layout_constraintBottom_toBottomOf="@id/videoView_preview"
-        app:layout_constraintEnd_toEndOf="@id/videoView_preview"
+        app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/rv_item_scroll_tvchannel" />
+
+    <!-- Obere Schatten-Overlay -->
+    <View
+        android:id="@+id/shadow_top"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@drawable/shadow_top"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rv_layout_scrollChannels"
+        app:layout_constraintStart_toStartOf="@id/rv_layout_scrollChannels"
+        app:layout_constraintEnd_toEndOf="@id/rv_layout_scrollChannels" />
+
+    <!-- Untere Schatten-Overlay -->
+    <View
+        android:id="@+id/shadow_bottom"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:background="@drawable/shadow_bottom"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@id/rv_layout_scrollChannels"
+        app:layout_constraintStart_toStartOf="@id/rv_layout_scrollChannels"
+        app:layout_constraintEnd_toEndOf="@id/rv_layout_scrollChannels" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

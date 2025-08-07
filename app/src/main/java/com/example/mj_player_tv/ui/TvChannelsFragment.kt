@@ -36,6 +36,7 @@ import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException
 import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.DefaultLoadControl
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.drm.DrmSession.DrmSessionException
@@ -48,6 +49,8 @@ import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.media3.extractor.DefaultExtractorsFactory
 import androidx.media3.extractor.ts.DefaultTsPayloadReaderFactory
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import coil.load
@@ -74,6 +77,10 @@ import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
 import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.rubensousa.dpadrecyclerview.OnViewHolderSelectedListener
+import com.rubensousa.dpadrecyclerview.layoutmanager.PivotLayoutManager
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import io.objectbox.Box
 import io.objectbox.reactive.DataSubscription
@@ -329,40 +336,14 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.videoView.requestFocus()
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN && event.action == KeyEvent.ACTION_DOWN) {
                 if (!helpViewModel.isPlayingCatchup) {
-                    pendingDirection += 1
+                    showScrollTvChannelRV()
                     return@setOnKeyListener true
                 }
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_UP && event.action == KeyEvent.ACTION_DOWN) {
                 if (!helpViewModel.isPlayingCatchup) {
-                    pendingDirection -= 1
+                    showScrollTvChannelRV()
                     return@setOnKeyListener true
                 }
-            } else if ((keyCode == KeyEvent.KEYCODE_DPAD_UP || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) && event.action == KeyEvent.ACTION_UP) {
-                if (!helpViewModel.isPlayingCatchup) {
-                    pendingDirection.let { direction ->
-                        val list = tvChannelsAdapter?.currentList
-                        if (list.isNullOrEmpty()) return@setOnKeyListener true
-
-                        val currentIndex = list.indexOf(helpViewModel.currentPlayingChannelPosition)
-                        val targetIndex = when {
-                            currentIndex == -1 -> 0 // fallback falls current nicht gefunden wird
-                            currentIndex + direction < 0 -> 0 // unterhalb der Liste -> ersten nehmen
-                            currentIndex + direction >= list.size -> list.size - 1 // über Liste -> letzten nehmen
-                            else -> currentIndex + direction
-                        }
-                        val channel = list.getOrNull(targetIndex)
-                        channel?.let {
-                            isFirstPlayingChannel = true
-                            changingPlayingChannel(it)
-                        }
-
-                        pendingDirection = 0
-                    }
-                    return@setOnKeyListener true
-                }
-            } else {
-                // Ignoriere alle anderen Tastenereignisse während des Vollbildmodus
-                return@setOnKeyListener true
             }
             // Lasse die normale Verarbeitung für andere Tasten zu
             false
@@ -925,24 +906,60 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             helpViewModel,
             epgDataBox
         )
-        binding.rvLayoutTvChannels.apply {
-            adapter = tvChannelsAdapter
+        binding.rvLayoutScrollChannels.apply {
+            adapter = scrolltvChannelAdapter
             addItemDecoration(
                 DpadLinearSpacingDecoration.create(
                     itemSpacing = 4,
-                    edgeSpacing = 4,
-                    perpendicularEdgeSpacing = 4
+                    edgeSpacing = 0,
+                    perpendicularEdgeSpacing = 0
                 )
             )
             setFocusOutAllowed(false, false)
             setFocusOutSideAllowed(false, false)
             setSmoothFocusChangesEnabled(false)
+            addOnViewHolderSelectedListener(object : OnViewHolderSelectedListener {
+                override fun onViewHolderSelected(
+                    parent: DpadRecyclerView,
+                    child: RecyclerView.ViewHolder?,
+                    position: Int,
+                    subPosition: Int
+                ) {
+                    updateShadows(position)
+                }
+            })
         }
+    }
+
+    private fun updateShadows(position: Int) {
+        val total = scrolltvChannelAdapter?.itemCount ?: 0
+
+        binding.shadowTop.visibility = if (position > 0) View.VISIBLE else View.GONE
+        binding.shadowBottom.visibility = if (position < total - 1) View.VISIBLE else View.GONE
     }
 
     private val scrollTvChannelClickListener = ScrollTvChannelAdapter.OnClickListener { tvchannpos ->
         changingPlayingChannel(tvchannpos)
-        binding
+        binding.videoView.requestFocus()
+    }
+
+    private fun showScrollTvChannelRV() {
+        val channelList = tvChannelsAdapter?.currentList
+        binding.rvLayoutScrollChannels.visibility = View.VISIBLE
+        scrolltvChannelAdapter?.submitList(channelList)
+        binding.rvLayoutScrollChannels.post {
+            val position = scrolltvChannelAdapter?.currentList?.indexOf(helpViewModel.currentPlayingChannelPosition)
+            if (position != null) {
+                binding.rvLayoutScrollChannels.setSelectedPosition(position)
+            }
+            binding.rvLayoutScrollChannels.requestFocus()
+        }
+    }
+
+    fun closeScrollTvChannelRV() {
+        scrolltvChannelAdapter?.submitList(null)
+        binding.rvLayoutScrollChannels.visibility = View.GONE
+        binding.videoView.requestFocus()
     }
 
     private fun submitCollapsedTVList() {
@@ -2874,6 +2891,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             resumeFromBackground = false
             player = ExoPlayer.Builder(this@TvChannelsFragment.requireActivity())
                 .setLoadControl(DefaultLoadControl.Builder().setBufferDurationsMs(50000, 50000, 1500, 2000).build())
+                .setRenderersFactory(
+                    DefaultRenderersFactory(requireContext())
+                        .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                        .setEnableDecoderFallback(true)
+                )
                 .build()
 
             binding.videoView.player = player

@@ -14,14 +14,11 @@ RetrofitInstance {
     //Create the Retrofit service instance using the retrofit.
     fun getInstance(url:String): Api {
         Log.d("RetrofitRequest:", "THIS $url")
-        val loggingInterceptor = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
+
         val client = OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS) // Verbindungs-Timeout
             .readTimeout(30, TimeUnit.SECONDS)    // Lese-Timeout
             .writeTimeout(30, TimeUnit.SECONDS)   // Schreib-Timeout
-            .addInterceptor(loggingInterceptor)
             .build()
         val retrofit = Retrofit.Builder()
             .baseUrl(url)
