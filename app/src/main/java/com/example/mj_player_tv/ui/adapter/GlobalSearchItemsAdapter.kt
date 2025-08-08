@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -39,7 +40,7 @@ class GlobalSearchItemsAdapter(
     private val fragment: GlobalSearchFragment,
     private val programmeBox: Box<Programme>,
     private val epgDataBox: Box<EpgDataOB>,
-    private val onItemClick: (GlobalSearchDisplayItem) -> Unit
+    private val onItemClick: (GlobalSearchDisplayItem) -> Unit,
 ) : ListAdapter<GlobalSearchDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
@@ -239,6 +240,7 @@ class GlobalSearchItemsAdapter(
                 cardviewSerie.setOnClickListener {
                     onItemClick(seriesItem)
                 }
+
             }
         }
     }
@@ -432,7 +434,8 @@ class GlobalSearchItemsAdapter(
         }
 
         private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View) {
-            val popup = PopupMenu(view.context, view)
+            Log.d("POPUPMENU KLICK", "JA")
+            val popup = PopupMenu(view.context, view, Gravity.NO_GRAVITY, 0,R.style.CustomPopupMenu)
             popup.menuInflater.inflate(R.menu.menu_search_program_options, popup.menu)
             val tvchannel = tvchannelPos.tvchannel.target
             val currentTime = System.currentTimeMillis() / 1000

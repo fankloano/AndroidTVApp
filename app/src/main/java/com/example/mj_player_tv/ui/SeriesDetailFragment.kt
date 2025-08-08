@@ -623,7 +623,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun updateSeriesInRV() {
         if (helpViewModel.isWatchlistContainerOpened) {
-            seriesViewModel.requestUpdateSerieInRV()
+            seriesViewModel.requestRemoveSeriesFromWatchlistOrStats()
         } else {
             seriesViewModel.requestUpdateSerieInRV()
         }

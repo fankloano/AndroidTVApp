@@ -121,7 +121,7 @@
             android:fadeScrollbars="false"
             tools:text="In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt.In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt.In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt."
             android:textColor="?attr/textColorLight"
-            android:textSize="12sp"
+            android:textSize="13sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"

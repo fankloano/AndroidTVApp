@@ -21,6 +21,7 @@ import com.example.mj_player_tv.ui.FullEpgFragment
 import com.example.mj_player_tv.ui.TvChannelsFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import io.objectbox.Box
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -146,6 +147,7 @@ class ScrollTvChannelAdapter(
                 focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls vorher noch aktiv
                 focusRunnable = Runnable {
                     if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
+                        holder.binding.relLayoutScrollTvchannel.isPressed = true
                         onClickListener.onClick(tvChannPos)
                     }
                     fragment.closeScrollTvChannelRV()

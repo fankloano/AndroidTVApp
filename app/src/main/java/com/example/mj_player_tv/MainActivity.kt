@@ -284,6 +284,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             closeMenu()
             val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
             if (containerFragment is TvChannelsFragment) {
+                viewModel.requestCloseGlobalSearchFragment()
                 toggleActivateOnMenu(activityMainBinding.btnTv)
                 toggleSelectedMenu(activityMainBinding.btnTv)
                 viewModel.isTvAccountMenuOpened = true
@@ -707,7 +708,16 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
     fun checkTvChannelsFragmentFromGlobalSearch() {
         val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
         if (containerFragment is TvChannelsFragment) {
-
+            viewModel.requestCloseGlobalSearchFragment()
+            makeNavHostInvisible()
+            closeMenu()
+            hideMenu()
+            toggleActivateOnMenu(activityMainBinding.btnTv)
+            viewModel.firstOpenTvChFrag = true
+            toggleVisibilityOfMainContainer(true)
+            viewModel.isTvAccountMenuOpened = true
+            lastOpenedFragment = Constants.FRAGMENT_TV
+            containerFragment.openChannelFromGlobalSearch()
         } else {
             makeNavHostInvisible()
             closeMenu()
@@ -885,28 +895,6 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
 
     fun makeAddPlaylistContainerInvisible() {
         activityMainBinding.addPlaylistFragment.visibility = View.GONE
-    }
-
-    @OptIn(UnstableApi::class)
-    fun openTvChannelsFragmentFromGlobalSearch(channelPos: ChannelPositions) {
-        val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
-        if (containerFragment is TvChannelsFragment) {
-            toggleActivateOnMenu(activityMainBinding.btnTv)
-            toggleSelectedMenu(activityMainBinding.btnTv)
-            viewModel.isTvAccountMenuOpened = true
-            toggleVisibilityOfMainContainer(true)
-            containerFragment.openChannelFromGlobalSearch(channelPos)
-        } else {
-            closeMenu()
-            resetNavHostFragment()
-            toggleActivateOnMenu(activityMainBinding.btnTv)
-            viewModel.firstOpenTvChFrag = true
-            toggleVisibilityOfMainContainer(true)
-            viewModel.isTvAccountMenuOpened = true
-            lastOpenedFragment = Constants.FRAGMENT_TV
-            changeFragment(TvChannelsFragment())
-            activityMainBinding.navHostFragment.requestFocus()
-        }
     }
 
 

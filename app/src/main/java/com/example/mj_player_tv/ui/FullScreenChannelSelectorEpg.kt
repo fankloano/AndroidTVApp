@@ -57,17 +57,23 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        if (helpViewModel.currentPlayingChannelPosition != null || helpViewModel.fullScreenFocusedChannel != null) {
-            binding.relLayoutPrograminfo.visibility = View.VISIBLE
-            showEpgInfo(helpViewModel.fullScreenFocusedChannel ?: helpViewModel.currentPlayingChannel!!)
+        if (helpViewModel.isPlayingCatchup) {
+            helpViewModel.catchupPlayingChannelPosition?.let {
+                showEpgInfo(it.tvchannel.target)
+            }
+        } else {
+            if (helpViewModel.currentPlayingChannelPosition != null || helpViewModel.fullScreenFocusedChannel != null) {
+                binding.relLayoutPrograminfo.visibility = View.VISIBLE
+                showEpgInfo(
+                    helpViewModel.fullScreenFocusedChannel ?: helpViewModel.currentPlayingChannel!!
+                )
+            }
         }
-
     }
 
     fun showEpgInfo(tvchannel: TvChannelOB) {
         resetInfos()
         binding.relLayoutPrograminfo.visibility = View.VISIBLE
-        Log.d("FULLSCREENEPG", "FOR CHANNEL: ${tvchannel.showingName}")
         val currentTime = System.currentTimeMillis()
         if (tvchannel.linkedEpgChannel?.target != null) {
             viewLifecycleOwner.lifecycleScope.launch {
@@ -137,7 +143,7 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
                             SimpleDateFormat("HH:mm", Locale.getDefault()).format(halfHourLaterTime)
                         binding.tvCurrentProgram.text = resources.getString(R.string.no_information)
                         binding.tvCurrentStartTime.text = currentTimeString
-                    binding.tvCurrentEndTime.text = " - $halfHourLaterTimeString"
+                        binding.tvCurrentEndTime.text = " - $halfHourLaterTimeString"
                         binding.tvDescription.text = resources.getString(R.string.no_description)
                         binding.tvCurrentSubtitle.visibility = View.GONE
                         binding.progressBar.visibility = View.INVISIBLE

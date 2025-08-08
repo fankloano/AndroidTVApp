@@ -67,4 +67,16 @@ class SeriesViewModel(application: Application) : AndroidViewModel(application) 
         _updateSeriesDetail.value = null
     }
 
+    private val _removeSeriesFromWatchlistOrStats = MutableLiveData<Unit?>()
+    val removeSeriesFromWatchlistOrStats: LiveData<Unit?> = _removeSeriesFromWatchlistOrStats
+
+    fun requestRemoveSeriesFromWatchlistOrStats() {
+        _removeSeriesFromWatchlistOrStats.value = Unit
+    }
+
+    fun clearRemoveSeriesFromWatchlistOrStats() {
+        _removeSeriesFromWatchlistOrStats.value = null
+    }
+
+
 }

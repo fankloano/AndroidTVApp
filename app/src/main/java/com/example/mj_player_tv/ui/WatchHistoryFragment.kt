@@ -337,6 +337,9 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 is StatsDisplayItem.SeriesItem -> {
                     val selectedAccount = clickedItem.series.seriesAccount.target
                     if (selectedAccount != null) {
+                        if (clickedItem.series.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+                            seriesViewModel.openedSameSeries = true
+                        }
                         if (selectedAccount.isXtream) {
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val seasons =

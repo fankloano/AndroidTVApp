@@ -40,4 +40,15 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
         _focusToMoviesRequest.value = null
     }
 
+    private val _removeMovieFromWatchlistOrStats = MutableLiveData<Unit?>()
+    val removeMovieFromWatchlistOrStats: LiveData<Unit?> = _removeMovieFromWatchlistOrStats
+
+    fun requestRemoveMovieFromWatchlistOrStats() {
+        _removeMovieFromWatchlistOrStats.value = Unit
+    }
+
+    fun clearRemoveMovieFromWatchlistOrStats() {
+        _removeMovieFromWatchlistOrStats.value = null
+    }
+
 }

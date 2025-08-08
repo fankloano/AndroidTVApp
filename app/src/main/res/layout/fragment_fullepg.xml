@@ -23,7 +23,7 @@
         app:layout_constraintWidth_percent="0.12"
         android:scaleType="fitCenter"
         android:layout_marginStart="15dp"
-        android:src="@drawable/skybundesliga" />
+        tools:src="@drawable/skybundesliga" />
 
         <TextView
             android:id="@+id/tv_tvchannelname"

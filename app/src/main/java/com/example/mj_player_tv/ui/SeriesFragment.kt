@@ -1,6 +1,7 @@
 package com.example.mj_player_tv.ui
 
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -676,6 +677,9 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
 
     private val onSeriesClickListener = SeriesAdapter.OnClickListener { serie ->
         viewLifecycleOwner.lifecycleScope.launch {
+            if (serie.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData) {
+                seriesViewModel.openedSameSeries = true
+            }
             helpViewModel.currentFocusedSerie = serie
             helpViewModel.currentSeriesImage = if (!serie.backdropPath.isNullOrEmpty()) {
                 serie.backdropPath
@@ -781,15 +785,29 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                                     ).await()
                                 when (tmdbSeriesDetailsByImdbId) {
                                     is Resource.Success -> {
-                                        val backdropPath = tmdbSeriesDetailsByImdbId.data?.movie_results?.firstOrNull()?.backdrop_path
-                                        if (!backdropPath.isNullOrEmpty()) {
-                                            val backgroundImage = "https://image.tmdb.org/t/p/original$backdropPath"
+                                        val movie = tmdbSeriesDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                        val backdropPath = movie?.backdrop_path
+                                        val posterPath = movie?.poster_path
+                                        val screenshotUri = serie.screenshot_uri
+
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+
+                                        if (imageToLoad != null) {
                                             binding.ivSeriesposter.visibility = View.VISIBLE
-                                            binding.ivSeriesposter.load(backgroundImage)
+                                            binding.ivSeriesposter.load(imageToLoad)
                                         } else {
-                                            // Fallback oder invisible setzen
                                             binding.ivSeriesposter.visibility = View.INVISIBLE
                                         }
+
+                                        serie.backdropPath = imageToLoad ?: ""
                                     }
 
                                     is Resource.Error -> {
@@ -811,16 +829,32 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                                 when (tmdbSerieDetails) {
                                     is Resource.Success -> {
                                         if (serie.backdropPath.isNullOrEmpty()) {
-                                            val backdropPath = tmdbSerieDetails.data?.backdrop_path
-                                            if (!backdropPath.isNullOrEmpty()) {
-                                                val backgroundImage = "https://image.tmdb.org/t/p/original$backdropPath"
+                                            val data = tmdbSerieDetails.data
+                                            val backdropPath = data?.backdrop_path
+                                            val posterPath = data?.poster_path
+                                            val screenshotUri = serie.screenshot_uri
+
+                                            val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                            val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+
+                                            val imageToLoad = when {
+                                                !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                                !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                                !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                                else -> null
+                                            }
+
+                                            if (imageToLoad != null) {
                                                 binding.ivSeriesposter.visibility = View.VISIBLE
-                                                binding.ivSeriesposter.load(backgroundImage)
+                                                binding.ivSeriesposter.load(imageToLoad)
                                             } else {
-                                                // Fallback oder invisible setzen
                                                 binding.ivSeriesposter.visibility = View.INVISIBLE
                                             }
-                                            serie.backdropPath = backdropPath ?: ""
+
+                                            serie.backdropPath = imageToLoad ?: ""
+                                        } else {
+                                            binding.ivSeriesposter.visibility = View.VISIBLE
+                                            binding.ivSeriesposter.load(serie.backdropPath)
                                         }
                                     }
                                     is Resource.Error -> {

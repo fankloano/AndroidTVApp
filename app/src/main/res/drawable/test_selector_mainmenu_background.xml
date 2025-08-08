@@ -25,7 +25,7 @@
                     <gradient
                         android:startColor="?attr/mainPrimaryColor"
                         android:centerColor="?attr/mainPrimaryColor"
-                        android:endColor="@android:color/transparent"
+                        android:endColor="?attr/mainPrimaryColor"
                         android:angle="0"/>
                 </shape>
             </item>

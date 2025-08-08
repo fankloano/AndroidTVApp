@@ -710,10 +710,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"
-                android:layout_weight="0.05"
+                android:layout_weight="0.08"
                 android:paddingStart="8dp"
                 android:textColor="@color/light_grey"
-                tools:text="00:00" />
+                tools:text="15:00:00" />
 
             <androidx.media3.ui.DefaultTimeBar
                 android:id="@+id/seekBar"
@@ -721,10 +721,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="6dp"
-                android:layout_marginEnd="8dp"
+                android:layout_marginEnd="15dp"
                 android:layout_marginBottom="5dp"
-                android:layout_weight="0.9"
+                android:layout_weight="0.85"
                 android:focusable="true"
+                android:visibility="invisible"
                 android:focusableInTouchMode="true"
                 app:buffered_color="#736E6E"
                 app:scrubber_color="@color/light_blue_darker"
@@ -739,9 +740,9 @@
                 android:id="@+id/tv_totalTimeCatchup"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="0.05"
+                android:layout_weight="0.08"
                 android:textColor="@color/light_grey"
-                tools:text="00:00" />
+                tools:text="15:00:50" />
 
         </LinearLayout>
 
@@ -1088,33 +1089,10 @@
         android:background="@drawable/background_scrolltvchannel_recyclerview"
         android:visibility="gone"
         app:layout_constraintHeight_percent="0.4"
-        app:layout_constraintWidth_percent="0.3"
+        app:layout_constraintWidth_percent="0.32"
         app:layout_constraintTop_toTopOf="@id/videoView_preview"
         app:layout_constraintBottom_toBottomOf="@id/videoView_preview"
         app:layout_constraintEnd_toEndOf="parent"
         tools:listitem="@layout/rv_item_scroll_tvchannel" />
-
-    <!-- Obere Schatten-Overlay -->
-    <View
-        android:id="@+id/shadow_top"
-        android:layout_width="0dp"
-        android:layout_height="80dp"
-        android:background="@drawable/shadow_top"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/rv_layout_scrollChannels"
-        app:layout_constraintStart_toStartOf="@id/rv_layout_scrollChannels"
-        app:layout_constraintEnd_toEndOf="@id/rv_layout_scrollChannels" />
-
-    <!-- Untere Schatten-Overlay -->
-    <View
-        android:id="@+id/shadow_bottom"
-        android:layout_width="0dp"
-        android:layout_height="80dp"
-        android:background="@drawable/shadow_bottom"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/rv_layout_scrollChannels"
-        app:layout_constraintStart_toStartOf="@id/rv_layout_scrollChannels"
-        app:layout_constraintEnd_toEndOf="@id/rv_layout_scrollChannels" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

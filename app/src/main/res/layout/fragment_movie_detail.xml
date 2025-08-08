@@ -270,11 +270,10 @@ Christopher Lee: Saruman"
                 tools:text="NACHDEM DAS VON GANDALF"  />
 
             <View
-                android:id="@+id/gradientView"
+                android:id="@+id/gradientViewBottom"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
                 android:background="@drawable/gradient_overlay_description"
-                android:visibility="gone"
                 app:layout_constraintBottom_toTopOf="@id/relLayout_movie_Settings"
                 app:layout_constraintStart_toStartOf="@id/tv_moviedescription"
                 app:layout_constraintEnd_toEndOf="@id/tv_moviedescription"/>

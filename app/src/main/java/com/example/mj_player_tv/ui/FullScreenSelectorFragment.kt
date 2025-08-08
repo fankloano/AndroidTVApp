@@ -133,7 +133,6 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
                     }
                     channelPositions
                 }
-
                 else -> {
                     helpViewModel.fullScreenFocusedTvCategory?.tvChannelLink?.reset()
                     when (helpViewModel.fullScreenFocusedTvCategory?.orderBy) {
@@ -445,7 +444,6 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
         setTvChannelsVisibilityAnimated(false)
         setTvCategoriesVisibilityAnimated(false)
         setTvAccountsVisibilityAnimated(false)
-
     }
 
     fun setFocusToTvChannels() {

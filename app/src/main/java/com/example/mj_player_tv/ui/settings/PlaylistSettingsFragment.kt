@@ -374,13 +374,11 @@ class PlaylistSettingsFragment : Fragment(R.layout.fragment_playlist_settings), 
                 binding.loadingBalken.visibility = View.VISIBLE
                 binding.tvLastUpdatePlaylist.visibility = View.INVISIBLE
                 binding.tvUpdatePlaylist.text = "Updating Playlist..."
-                binding.relLayoutUpdate.isFocusable = false
-                binding.relLayoutUpdate.isFocusableInTouchMode = false
+                binding.relLayoutUpdate.isClickable = false
             } else {
                 binding.loadingBalken.visibility = View.GONE
                 binding.tvUpdatePlaylist.text = "Update Playlist"
-                binding.relLayoutUpdate.isFocusable = true
-                binding.relLayoutUpdate.isFocusableInTouchMode = true
+                binding.relLayoutUpdate.isClickable = true
                 binding.tvLastUpdatePlaylist.visibility = View.VISIBLE
                 binding.tvLastUpdatePlaylist.text = if (accountData.lastUpdateStatus == 0) {
                     "${convertUnixTimestampToDateTime(accountData.lastUpdatedDate)} -> Failed!"

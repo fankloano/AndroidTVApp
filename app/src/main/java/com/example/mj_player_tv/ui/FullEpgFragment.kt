@@ -1145,15 +1145,14 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                         Log.d("CATCHUP STALKER", "CATCHUPDATA: ${catchUp.data}")
                         helpViewModel.isPlayingCatchup = true
                         helpViewModel.catchupEpgData = clickedEpgData
-                        helpViewModel.currentPlayingChannel = tvChannel
-                        helpViewModel.currentPlayingChannelPosition = tvChannelPos
+                        helpViewModel.catchupPlayingChannelPosition = tvChannelPos
                         helpViewModel.currentPlayingTvCategory = tvCategory
                         helpViewModel.currentPlayingTvAccount = account
                         helpViewModel.isFullScreenFullEpg = false
                         val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                         if (mainFragment is TvChannelsFragment) {
                             mainFragment.hideFullEpgAndDetailEpgContainer()
-                            helpViewModel.currentPlayingChannelPosition = tvChannelPos
+                            helpViewModel.catchupPlayingChannelPosition = tvChannelPos
                             val url =  catchUp.data?.removePrefix("ffmpeg ")?.trim() ?: ""
                             Log.d("CATCHUP STALKER", "CATCHUPURL: $url")
                             mainFragment.cancelChannelLoadJob()
@@ -1211,17 +1210,14 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             Log.d("CATCHUP XTREAM", "NOT EXTERN: CATCHUP URL: $url")
             helpViewModel.isPlayingCatchup = true
             helpViewModel.catchupEpgData = clickedEpgData
-            helpViewModel.currentPlayingChannel = tvChannel
-            helpViewModel.currentPlayingChannelPosition = tvChannelPos
-            helpViewModel.currentPlayingTvCategory = tvCategory
-            helpViewModel.currentPlayingTvAccount = account
+            helpViewModel.catchupPlayingChannelPosition = tvChannelPos
             closeEpgOptions()
 
             helpViewModel.isFullScreenFullEpg = false
             val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
             if (mainFragment is TvChannelsFragment) {
                 mainFragment.hideFullEpgAndDetailEpgContainer()
-                helpViewModel.currentPlayingChannelPosition =
+                helpViewModel.catchupPlayingChannelPosition =
                     tvChannelPos
                 mainFragment.cancelChannelLoadJob()
                 mainFragment.switchChannel(
@@ -1295,11 +1291,16 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
     }
 
     fun showNewEpgData(epgData: EpgDataOB) {
-        if (helpViewModel.currentFocusedChannPosition != null) {
+        val focusedChannPos = if (helpViewModel.isFullScreenFullEpg) {
+            helpViewModel.fullScreenFocusedChannelPosition
+        } else {
+            helpViewModel.currentFocusedChannPosition
+        }
+        if (focusedChannPos != null) {
             Log.d("FOCUSEDFULLEPGDATA", "$epgData")
             binding.detailepgcontainerview.visibility = View.VISIBLE
             binding.relLayoutDetailEpg.visibility = View.VISIBLE
-            val timeOffSet = helpViewModel.currentFocusedChannel?.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: helpViewModel.currentFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
+            val timeOffSet = focusedChannPos.tvchannel.target?.epgTimeOffSet ?: focusedChannPos.tvcategory.target?.epgTimeOffSet ?: focusedChannPos.tvchannel.target?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
             val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
             val startTime = formatUnixTimestampToTime(epgData.startTimestamp ?: 0, timeOffSet)
             val endTime = formatUnixTimestampToTime(epgData.stopTimestamp ?: 0, timeOffSet)

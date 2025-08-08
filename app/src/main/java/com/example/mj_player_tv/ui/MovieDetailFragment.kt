@@ -130,13 +130,13 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
                     if (isTextTruncated) {
                         binding.tvMoviedescription.isVerticalScrollBarEnabled = true
                         binding.tvMoviedescription.movementMethod = ScrollingMovementMethod()
-                        binding.gradientView.visibility = View.VISIBLE
+                        binding.gradientViewBottom.visibility = View.VISIBLE
                         binding.ivMoretext.visibility = View.VISIBLE
                     } else {
                         binding.tvMoviedescription.isVerticalScrollBarEnabled = false
                         binding.tvMoviedescription.movementMethod = null
                         binding.tvMoviedescription.scrollTo(0, 0) // Zurück zur Ausgangsposition
-                        binding.gradientView.visibility = View.GONE
+                        binding.gradientViewBottom.visibility = View.GONE
                         binding.ivMoretext.visibility = View.GONE
                     }
                 }
@@ -436,7 +436,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
                         when (keyCode) {
                             KeyEvent.KEYCODE_BACK -> {
                                 binding.tvMoviedescription.scrollTo(0, 0)
-                                binding.gradientView.visibility = View.VISIBLE
+                                binding.gradientViewBottom.visibility = View.VISIBLE
                                 binding.ivMoretext.visibility = View.VISIBLE
                                 binding.btnPlay.requestFocus()
                                 return@setOnKeyListener true
@@ -506,7 +506,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
 
     fun updateMovieInRV() {
         if (helpViewModel.isWatchlistContainerOpened || helpViewModel.isWatchHistoryContainerOpened) {
-            moviesViewModel.requestUpdateMovieInRV()
+            moviesViewModel.requestRemoveMovieFromWatchlistOrStats()
         } else {
             binding.ivFavorite.visibility = if (helpViewModel.currentFocusedMovie!!.isFavorite) {
                 View.VISIBLE
@@ -530,7 +530,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
                 val isTextTruncated = lastLineBottom > (binding.tvMoviedescription.height - tolerance)
 
                 if (isTextTruncated) {
-                    binding.gradientView.visibility = View.GONE
+                    binding.gradientViewBottom.visibility = View.GONE
                     binding.ivMoretext.visibility = View.GONE
                     binding.tvMoviedescription.requestFocus()
                 } else {
@@ -928,6 +928,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
     private fun updateAndFocusPlayButton() {
         val movie = helpViewModel.currentFocusedMovie
         if (movie != null) {
+            updateMovieRunningTime()
             binding.btnPlay.text = if (movie.isCompletelyWatched) {
                 "Re-Watch"
             } else if (movie.isPartlyWatched) {

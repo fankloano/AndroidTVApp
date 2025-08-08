@@ -315,6 +315,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var catchupEpgData: EpgDataOB? = null
 
+    var catchupPlayingChannelPosition: ChannelPositions? = null
+
     var isLoadingMovieCategory: String? = null
 
     var globalSearchCatchupUrl = ""
@@ -1573,6 +1575,17 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         _isSearching.value = false
     }
 
+    private val _closeGlobalSearchFragment = MutableLiveData<Unit?>()
+    val closeGlobalSearchFragment: LiveData<Unit?> = _closeGlobalSearchFragment
+
+    fun requestCloseGlobalSearchFragment() {
+        _closeGlobalSearchFragment.value = Unit
+    }
+
+    fun clearCloseGlobalSearchFragment() {
+        _closeGlobalSearchFragment.value = null
+    }
+
     var hasSearched = false
 
     fun makeGlobalSearch(showFilteredCategories: Boolean, searchString: String) {
@@ -2445,7 +2458,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         val moviesQuery = movieBox.query(
             MovieOB_.isCompletelyWatched.equal(true)
                 .or(MovieOB_.isPartlyWatched.equal(true))
-        ).order(MovieOB_.percentagePlayed).build()
+        ).orderDesc(MovieOB_.percentagePlayed).build()
         val movies = moviesQuery.find()
         moviesQuery.close()
         return movies.map { StatsDisplayItem.MovieItem(it) }
@@ -2455,7 +2468,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         val seriesQuery = seriesBox.query(
             SeriesOB_.isCompletelyWatched.equal(true)
                 .or(SeriesOB_.isPartlyWatched.equal(true))
-        ).order(SeriesOB_.seriesPercentagePlayed).build()
+        ).orderDesc(SeriesOB_.seriesPercentagePlayed).build()
         val series = seriesQuery.find()
         seriesQuery.close()
         return series.map { StatsDisplayItem.SeriesItem(it) }

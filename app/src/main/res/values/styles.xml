@@ -18,10 +18,11 @@
         <item name="android:paddingLeft">16dip</item>
         <item name="android:paddingRight">16dip</item>
     </style>
-    <style name="CustomPopupMenu" parent="android:Widget.PopupMenu">
-        <item name="android:popupBackground">@drawable/popup_custom_background</item>
-        <item name="android:colorFocusedHighlight">@color/light_mid_grey</item>
-        <item name="android:textSize">12sp</item>
+
+    <style name="CustomPopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">?attr/mainPrimaryColorDark</item>
+        <item name="android:popupElevation">8dp</item>
+        <item name="android:dropDownSelector">@drawable/popup_menu_item_selector</item>
     </style>
 
 </resources>

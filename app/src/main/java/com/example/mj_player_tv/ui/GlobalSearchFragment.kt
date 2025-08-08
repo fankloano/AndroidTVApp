@@ -611,6 +611,13 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 moviesViewModel.clearUpdateOnMovieRV()
             }
         }
+
+        helpViewModel.closeGlobalSearchFragment.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                parentFragmentManager.popBackStack()
+                helpViewModel.clearCloseGlobalSearchFragment()
+            }
+        }
     }
 
     private fun getDisplayableItemsFor(account: Accounts, category: GlobalSearchMainCategory): List<GlobalSearchDisplayItem> {
@@ -876,7 +883,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         helpViewModel.currentFocusedTvAccount = tvChannelPos.tvcategory.target.tvaccount.target
         helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
         helpViewModel.checkCategoryActivated(tvChannelPos.tvcategory.target)
-        Log.d("CLICKEDFROMGLOBALSEARCH", "${tvChannelPos.tvchannel.target.showingName} IN ${tvChannelPos.tvcategory.target.showingName}")
+        Log.d("CLICKEDFROMGLOBALSEARCH", "${helpViewModel.currentFocusedChannPosition?.tvchannel?.target?.showingName} IN ${helpViewModel.currentFocusedTvCategory?.showingName} FROM ACC: ${helpViewModel.currentFocusedTvAccount?.name}")
         (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
     }
 
@@ -885,6 +892,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         val tvCategory = tvChannelPos.tvcategory.target
         val tvChannel = tvChannelPos.tvchannel.target
         helpViewModel.currentFocusedChannPosition = tvChannelPos
+        helpViewModel.currentFocusedChannel = tvChannel
         helpViewModel.currentFocusedTvCategory = tvCategory
         if (tvChannel.linkedEpgChannel?.target?.isExternalEpg == true) {
             if (tvChannel.account.target.isXtream) {
@@ -982,8 +990,11 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             helpViewModel.globalSearchCatchupUrl = url
             helpViewModel.isPlayingCatchup = true
             helpViewModel.catchupEpgData = clickedEpgData
+            helpViewModel.catchupPlayingChannelPosition = tvChannelPos
             helpViewModel.currentFocusedTvAccount = account
             helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+            helpViewModel.currentFocusedChannPosition = tvChannelPos
+            helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
             helpViewModel.channelFromSearchContainer = true
             (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
         }
@@ -1012,9 +1023,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                         Log.d("CATCHUP STALKER", "CATCHUPDATA: ${catchUp.data}")
                         helpViewModel.isPlayingCatchup = true
                         helpViewModel.catchupEpgData = clickedEpgData
+                        helpViewModel.catchupPlayingChannelPosition = tvChannelPos
                         helpViewModel.currentFocusedTvAccount = account
                         helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
                         helpViewModel.channelFromSearchContainer = true
+                        helpViewModel.currentFocusedChannPosition = tvChannelPos
+                        helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
                         helpViewModel.globalSearchCatchupUrl = catchUp.data?.removePrefix("ffmpeg")?.trim() ?: ""
                         (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
                     }

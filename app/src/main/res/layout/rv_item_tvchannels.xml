@@ -31,7 +31,7 @@
                 app:layout_constraintWidth_percent="0.12"
                 android:scaleType="fitCenter"
                 android:layout_marginStart="2dp"
-                android:src="@drawable/skybundesliga"
+                tools:src="@drawable/skybundesliga"
                 app:layout_constraintStart_toEndOf="@id/iv_catchup"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"/>

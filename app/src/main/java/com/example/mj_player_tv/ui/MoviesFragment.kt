@@ -399,6 +399,7 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             setFocusOutSideAllowed(true, false)
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
+            setItemViewCacheSize(10)
         }
     }
 
@@ -423,6 +424,7 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             setFocusOutAllowed(true, false)
             setFocusOutSideAllowed(true, false)
             setSmoothFocusChangesEnabled(false)
+            setItemViewCacheSize(10)
         }
     }
 

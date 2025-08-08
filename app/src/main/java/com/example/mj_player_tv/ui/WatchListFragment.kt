@@ -384,12 +384,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             }
         }
 
-        seriesViewModel.updateSerieRVRequest.observe(viewLifecycleOwner) { request ->
+        seriesViewModel.removeSeriesFromWatchlistOrStats.observe(viewLifecycleOwner) { request ->
             if (request != null) {
                 helpViewModel.currentFocusedSerie?.let {
                     helpViewModel.removeSerieFromWatchlist(it)
                 }
-                seriesViewModel.clearUpdateSerieInRV()
+                seriesViewModel.clearRemoveSeriesFromWatchlistOrStats()
             }
         }
 
@@ -410,12 +410,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             }
         }
 
-        moviesViewModel.updateMovieRVRequest.observe(viewLifecycleOwner) { request ->
+        moviesViewModel.removeMovieFromWatchlistOrStats.observe(viewLifecycleOwner) { request ->
             if (request != null) {
                 helpViewModel.currentFocusedMovie?.let {
                     helpViewModel.removeMovieFromWatchlist(it)
                 }
-                moviesViewModel.clearUpdateOnMovieRV()
+                moviesViewModel.clearRemoveMovieFromWatchlistOrStats()
             }
         }
     }
