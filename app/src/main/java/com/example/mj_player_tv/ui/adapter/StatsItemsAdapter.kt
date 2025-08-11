@@ -57,7 +57,8 @@ class StatsItemsAdapter(
     private val helpViewModel: HelpViewModel,
     private val fragment: WatchHistoryFragment,
     private val accountBox: Box<Accounts>,
-    private val onItemClick: (StatsDisplayItem, View) -> Unit
+    private val onItemClick: (StatsDisplayItem, View, Int) -> Unit,
+    private val onLongItemClick: (StatsDisplayItem, View, Int) -> Unit
 ) : ListAdapter<StatsDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
@@ -148,7 +149,12 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewVod.setOnClickListener {
-                    onItemClick.invoke(movieItem, itemView)
+                    onItemClick.invoke(movieItem, itemView, bindingAdapterPosition)
+                }
+
+                binding.cardViewVod.setOnLongClickListener {
+                    onLongItemClick.invoke(movieItem, itemView, bindingAdapterPosition)
+                    true
                 }
             }
         }
@@ -339,7 +345,12 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewVod.setOnClickListener {
-                    onItemClick.invoke(seriesItem, itemView)
+                    onItemClick.invoke(seriesItem, itemView, bindingAdapterPosition)
+                }
+
+                binding.cardViewVod.setOnLongClickListener {
+                    onLongItemClick.invoke(seriesItem, itemView, bindingAdapterPosition)
+                    true
                 }
             }
         }
@@ -529,7 +540,7 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewTv.setOnClickListener {
-                    onItemClick.invoke(channelItem, itemView)
+                    onItemClick.invoke(channelItem, itemView, bindingAdapterPosition)
                 }
             }
         }
@@ -550,11 +561,14 @@ class StatsItemsAdapter(
     class DiffCallback : DiffUtil.ItemCallback<StatsDisplayItem>() {
         override fun areItemsTheSame(oldItem: StatsDisplayItem, newItem: StatsDisplayItem): Boolean {
             val result = when {
-                oldItem is StatsDisplayItem.MovieItem && newItem is StatsDisplayItem.MovieItem ->
-                    oldItem.movie.idByAccountData == newItem.movie.idByAccountData
-                oldItem is StatsDisplayItem.SeriesItem && newItem is StatsDisplayItem.SeriesItem ->
-                    oldItem.series.idByAccountData == newItem.series.idByAccountData
-
+                oldItem is StatsDisplayItem.MovieItem && newItem is StatsDisplayItem.MovieItem -> {
+                    oldItem.movie.idByAccountData == newItem.movie.idByAccountData &&
+                            oldItem.movie.percentagePlayed == newItem.movie.percentagePlayed
+                }
+                oldItem is StatsDisplayItem.SeriesItem && newItem is StatsDisplayItem.SeriesItem -> {
+                    oldItem.series.idByAccountData == newItem.series.idByAccountData &&
+                            oldItem.series.seriesPercentagePlayed == newItem.series.seriesPercentagePlayed
+                }
                 oldItem is StatsDisplayItem.TvChannelItem && newItem is StatsDisplayItem.TvChannelItem ->
                     oldItem.tvchannel.idByAccountData == newItem.tvchannel.idByAccountData
                 else -> false

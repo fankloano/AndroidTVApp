@@ -305,14 +305,8 @@ class PlexFragment : Fragment(R.layout.fragment_plex) {
         if (backgroundImage != null) {
             binding.ivPlexposter.visibility = View.VISIBLE
             val imageUrl = "${helpViewModel.currentPlexAccount?.stalkerUrl}$backgroundImage?X-Plex-Token=${helpViewModel.currentPlexAccount?.token}"
-            Log.d("PLEX BACKGROUND", "${item.title} = $imageUrl")
             binding.ivPlexposter.load(imageUrl)
 
-            if (item.type == "movie") {
-                helpViewModel.currentMovieImage = imageUrl
-            } else if (item.type == "show") {
-                helpViewModel.currentSeriesImage = imageUrl
-            }
         } else {
             if (item.Image != null) {
                 val otherImage = item.Image.firstOrNull()?.url
@@ -754,7 +748,6 @@ class PlexFragment : Fragment(R.layout.fragment_plex) {
         helpViewModel.currentPlexAccount = null
         helpViewModel.clickedPlexCategoryId = 0L
         helpViewModel.currentMovieAccount = null
-        helpViewModel.currentMovieImage = null
         _binding = null
     }
 }

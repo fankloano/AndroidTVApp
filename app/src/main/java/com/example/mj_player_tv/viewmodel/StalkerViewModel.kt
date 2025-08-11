@@ -2831,20 +2831,19 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
         ).flow
     }
 
-    var seriesDetailData =  MutableLiveData<MutableList<SeasonsOB>>()
 
-    val seriesCache: MutableMap<String, Pair<MutableList<SeasonsOB>, MutableList<EpisodesOB>>> = mutableMapOf()
+    val seriesCacheLive = MutableLiveData<MutableMap<String, Pair<List<SeasonsOB>, List<EpisodesOB>>>>()
+
 
     suspend fun getSeriesDetail(
         serieDetail: SeriesOB,
         account: Accounts
     ) {
         withContext(Dispatchers.IO) {
-            seriesCache[serieDetail.idByAccountData]?.let { cachedData ->
-                // Wenn die Serie im Cache ist, lade nur die Seasons und Episoden
-                episodesList = cachedData.second.toMutableList()
-                return@let cachedData.first.toList()  // Seasons abrufen
+            if (seriesCacheLive.value?.containsKey(serieDetail.idByAccountData) == true) {
+                return@withContext
             }
+            val currentCache = seriesCacheLive.value ?: mutableMapOf()
             val response = stalkerRepository.getSeriesDetails(
                 account.stalkerUrl,
                 "mac=${account.macAddress}; stb_lang=de; timezone=${account.timezone};",
@@ -2887,8 +2886,14 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                         ).apply {
                             serie.target = serieDetail
                         }
-                    }.toMutableList()
-                    val newEpisodes = getAllEpisodes(newSeasons, serieDetail, account)
+                    }.sortedWith(
+                        compareBy<SeasonsOB> {
+                            it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0
+                        }.thenBy {
+                            it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
+                        }
+                    ).toMutableList()
+                    val newEpisodes = getAllEpisodes(newSeasons, serieDetail, account).toMutableList()
                     if (existingSerieInDB) {
                         if (serieDetail.totalSeasons < newSeasons.size) {
                             serieDetail.newSeasons = true
@@ -2904,22 +2909,20 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                         }
                     }
 
-                    seriesCache[serieDetail.idByAccountData] = Pair(newSeasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList(), episodesList)
-                    seriesDetailData.postValue(newSeasons)
+                    currentCache[serieDetail.idByAccountData] = Pair(newSeasons, newEpisodes)
+                    seriesCacheLive.postValue(currentCache)
 
                 }
                 is Resource.Error -> {
-                    seriesDetailData.postValue(mutableListOf()) // Rückgabe einer leeren Liste im Fehlerfall
+                    currentCache[serieDetail.idByAccountData] = Pair(emptyList(), emptyList())
+                    seriesCacheLive.postValue(currentCache) // Rückgabe einer leeren Liste im Fehlerfall
                 }
             }
         }
     }
 
-    var episodesList: MutableList<EpisodesOB> = mutableListOf()
-
     fun getAllEpisodes(seasons: List<SeasonsOB>, serieDetail: SeriesOB, account: Accounts) : List<EpisodesOB> {
-        episodesList.clear()
+        val localEpisodesList = mutableListOf<EpisodesOB>()
         val existingEpisodesMap = episodesBox.query(
             EpisodesOB_.seriesIdByAccount.equal(serieDetail.idByAccountData)
         ).build().find().associateBy { it.seriesSeasonEpisodeIdByAccountData }
@@ -2948,9 +2951,9 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                     thisSeason.episodes.add(this)
                 }
             }
-            episodesList.addAll(episodes)
+            localEpisodesList.addAll(episodes)
         }
-        return episodesList.toList()
+        return localEpisodesList.toList()
     }
 
     fun searchSeriesByCategory(

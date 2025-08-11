@@ -839,24 +839,9 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                             }
                         } else {
                             viewLifecycleOwner.lifecycleScope.launch {
-                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
-                                stalkerViewModel.getSeriesDetail(clickedItem.series, selectedAccount!!)
                                 helpViewModel.currentFocusedSerie = clickedItem.series
-                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                                    clickedItem.series.totalSeasons = seasons.size
-                                    helpViewModel.focusedSeasons =
-                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                                            .thenBy {
-                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
-                                            }).toMutableList()
-                                    helpViewModel.focusedEpisodes =
-                                        stalkerViewModel.episodesList.sortedWith(
-                                            compareBy(
-                                                { it.seasonNumber },
-                                                { it.episodeNumber })
-                                        ).toMutableList()
-                                }
                                 helpViewModel.currentSeriesAccount = selectedAccount
+                                stalkerViewModel.getSeriesDetail(clickedItem.series, selectedAccount!!)
                                 openSeriesDetailFragment()
                             }
                         }

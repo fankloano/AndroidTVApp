@@ -479,22 +479,24 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             }
                         } else {
                             viewLifecycleOwner.lifecycleScope.launch {
-                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
                                 stalkerViewModel.getSeriesDetail(clickedItem.series, selectedAccount!!)
-                                helpViewModel.currentFocusedSerie = clickedItem.series
-                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                                    clickedItem.series.totalSeasons = seasons.size
-                                    helpViewModel.focusedSeasons =
-                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                                            .thenBy {
-                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
-                                            }).toMutableList()
-                                    helpViewModel.focusedEpisodes =
-                                        stalkerViewModel.episodesList.sortedWith(
-                                            compareBy(
-                                                { it.seasonNumber },
-                                                { it.episodeNumber })
-                                        ).toMutableList()
+                                stalkerViewModel.seriesCacheLive.observe(viewLifecycleOwner) { cache ->
+                                    val cachedData = cache[helpViewModel.currentFocusedSerie?.idByAccountData]
+                                    if (cachedData != null) {
+                                        val (seasons, episodes) = cachedData
+                                        helpViewModel.currentFocusedSerie?.totalSeasons = seasons.size
+                                        helpViewModel.focusedSeasons = seasons
+                                            .sortedWith(
+                                                compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                                    .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }
+                                            )
+                                            .toMutableList()
+
+                                        // Episodes setzen
+                                        helpViewModel.focusedEpisodes = episodes
+                                            .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                                            .toMutableList()
+                                    }
                                 }
                                 helpViewModel.currentSeriesAccount = selectedAccount
                                 openSeriesDetailFragment()
@@ -741,21 +743,36 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                                     ).await()
                                 when (tmdbMovieDetailsByImdbId) {
                                     is Resource.Success -> {
-                                        val backgroundImage =
-                                            tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
-                                        binding.ivMovieposter.visibility = View.VISIBLE
-                                        binding.ivMovieposter.load(backgroundImage)
-                                        helpViewModel.currentMovieImage = backgroundImage
+                                        val movie = tmdbMovieDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                        val backdropPath = movie?.backdrop_path
+                                        val posterPath = movie?.poster_path
+                                        val screenshotUri = helpViewModel.currentFocusedMovie?.screenshot_uri
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+                                        if (imageToLoad != null) {
+                                            binding.ivMovieposter.visibility = View.VISIBLE
+                                            binding.ivMovieposter.load(imageToLoad)
+                                        } else {
+                                            binding.ivMovieposter.visibility = View.INVISIBLE
+                                        }
+                                        if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                            helpViewModel.currentFocusedMovie?.screenshot_uri = posterPath
+                                        }
+                                        helpViewModel.currentFocusedMovie?.backdropPath = imageToLoad ?: ""
                                     }
 
                                     is Resource.Error -> {
-                                        val moviePoster = movie.screenshot_uri
+                                        val moviePoster = helpViewModel.currentFocusedMovie?.screenshot_uri
                                         if (!moviePoster.isNullOrEmpty()) {
                                             binding.ivMovieposter.visibility = View.VISIBLE
                                             binding.ivMovieposter.load(moviePoster)
-                                            helpViewModel.currentMovieImage = moviePoster
                                         } else {
-                                            helpViewModel.currentMovieImage = ""
                                             binding.ivMovieposter.visibility = View.INVISIBLE
                                         }
                                     }
@@ -768,21 +785,36 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                                 ).await()
                                 when (tmdbMovieDetails) {
                                     is Resource.Success -> {
-                                        val backgroundImage =
-                                            tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
-                                        binding.ivMovieposter.visibility = View.VISIBLE
-                                        binding.ivMovieposter.load(backgroundImage)
-                                        helpViewModel.currentMovieImage = backgroundImage
+                                        val data = tmdbMovieDetails.data
+                                        val backdropPath = data?.backdrop_path
+                                        val posterPath = data?.poster_path
+                                        val screenshotUri = helpViewModel.currentFocusedMovie?.screenshot_uri
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+                                        if (imageToLoad != null) {
+                                            binding.ivMovieposter.visibility = View.VISIBLE
+                                            binding.ivMovieposter.load(imageToLoad)
+                                        } else {
+                                            binding.ivMovieposter.visibility = View.INVISIBLE
+                                        }
+                                        if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                            helpViewModel.currentFocusedMovie?.screenshot_uri = posterPath
+                                        }
+                                        helpViewModel.currentFocusedMovie?.backdropPath = imageToLoad ?: ""
                                     }
 
                                     is Resource.Error -> {
-                                        val moviePoster = movie.screenshot_uri
+                                        val moviePoster = helpViewModel.currentFocusedMovie?.screenshot_uri
                                         if (!moviePoster.isNullOrEmpty()) {
                                             binding.ivMovieposter.visibility = View.VISIBLE
                                             binding.ivMovieposter.load(moviePoster)
-                                            helpViewModel.currentMovieImage = moviePoster
                                         } else {
-                                            helpViewModel.currentMovieImage = ""
                                             binding.ivMovieposter.visibility = View.INVISIBLE
                                         }
                                     }
@@ -792,16 +824,13 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             if (!movie.screenshot_uri.isNullOrEmpty()) {
                                 binding.ivMovieposter.visibility = View.VISIBLE
                                 binding.ivMovieposter.load(movie.screenshot_uri)
-                                helpViewModel.currentMovieImage = movie.screenshot_uri
                             } else {
-                                helpViewModel.currentMovieImage = ""
                                 binding.ivMovieposter.visibility = View.INVISIBLE
                             }
                         }
                     } else {
                         binding.ivMovieposter.visibility = View.VISIBLE
                         binding.ivMovieposter.load(movie.backdropPath)
-                        helpViewModel.currentMovieImage = movie.backdropPath
                     }
                     setMovieDetailsNotImages(movie)
                 } else {
@@ -814,11 +843,28 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             ).await()
                             when (tmdbMovieDetailsByImdbId) {
                                 is Resource.Success -> {
-                                    val backgroundImage =
-                                        tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
-                                    binding.ivMovieposter.visibility = View.VISIBLE
-                                    binding.ivMovieposter.load(backgroundImage)
-                                    helpViewModel.currentMovieImage = backgroundImage
+                                    val movie = tmdbMovieDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                    val backdropPath = movie?.backdrop_path
+                                    val posterPath = movie?.poster_path
+                                    val screenshotUri = helpViewModel.currentFocusedMovie?.screenshot_uri
+                                    val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val imageToLoad = when {
+                                        !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                        !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                        !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                        else -> null
+                                    }
+                                    if (imageToLoad != null) {
+                                        binding.ivMovieposter.visibility = View.VISIBLE
+                                        binding.ivMovieposter.load(imageToLoad)
+                                    } else {
+                                        binding.ivMovieposter.visibility = View.INVISIBLE
+                                    }
+                                    if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                        helpViewModel.currentFocusedMovie?.screenshot_uri = posterPath
+                                    }
+                                    helpViewModel.currentFocusedMovie?.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
@@ -826,7 +872,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                                     if (!moviePoster.isNullOrEmpty()) {
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(moviePoster)
-                                        helpViewModel.currentMovieImage = moviePoster
                                     } else {
                                         binding.ivMovieposter.visibility = View.INVISIBLE
                                     }
@@ -840,11 +885,28 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             ).await()
                             when (tmdbMovieDetails) {
                                 is Resource.Success -> {
-                                    val backgroundImage =
-                                        tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
-                                    binding.ivMovieposter.visibility = View.VISIBLE
-                                    binding.ivMovieposter.load(backgroundImage)
-                                    helpViewModel.currentMovieImage = backgroundImage
+                                    val data = tmdbMovieDetails.data
+                                    val backdropPath = data?.backdrop_path
+                                    val posterPath = data?.poster_path
+                                    val screenshotUri = helpViewModel.currentFocusedMovie?.screenshot_uri
+                                    val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val imageToLoad = when {
+                                        !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                        !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                        !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                        else -> null
+                                    }
+                                    if (imageToLoad != null) {
+                                        binding.ivMovieposter.visibility = View.VISIBLE
+                                        binding.ivMovieposter.load(imageToLoad)
+                                    } else {
+                                        binding.ivMovieposter.visibility = View.INVISIBLE
+                                    }
+                                    if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                        helpViewModel.currentFocusedMovie?.screenshot_uri = posterPath
+                                    }
+                                    helpViewModel.currentFocusedMovie?.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
@@ -852,7 +914,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                                     if (!moviePoster.isNullOrEmpty()) {
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(moviePoster)
-                                        helpViewModel.currentMovieImage = moviePoster
                                     } else {
                                         binding.ivMovieposter.visibility = View.INVISIBLE
                                     }
@@ -864,7 +925,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         if (!movie.screenshot_uri.isNullOrEmpty()) {
                             binding.ivMovieposter.visibility = View.VISIBLE
                             binding.ivMovieposter.load(movie.screenshot_uri)
-                            helpViewModel.currentMovieImage = movie.screenshot_uri
                         } else {
                             binding.ivMovieposter.visibility = View.INVISIBLE
                         }
@@ -890,7 +950,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             binding.tvDuration.visibility = View.VISIBLE
             "0min"
         }
-        binding.tvReleaseyear.text = if (!movie.movieYear.isNullOrEmpty()) {
+        binding.tvReleaseyear.text = if (movie.movieYear.isNotEmpty()) {
             binding.tvReleaseyear.visibility = View.VISIBLE
             val year = if (movie.movieYear.length >= 4) movie.movieYear.substring(0, 4) else "n/a"
             year
@@ -1064,7 +1124,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             }
             setSeriesDetailsNotImages(serie)
             if ((serie.seriesAccount.target.isXtream && !xtreamViewModel.seriesCache.containsKey(serie.idByAccountData)) ||
-                serie.seriesAccount.target.isStalker && !stalkerViewModel.seriesCache.containsKey(serie.idByAccountData)) {
+                serie.seriesAccount.target.isStalker && stalkerViewModel.seriesCacheLive.value?.containsKey(serie.idByAccountData) != true) {
                 getSeriesDetailInfo(serie)
             } else {
                 if (serie.seriesAccount.target.isXtream) {
@@ -1072,8 +1132,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     helpViewModel.focusedEpisodes = xtreamViewModel.seriesCache[serie.idByAccountData]?.second?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))?.toMutableList()
                     serie.totalSeasons = helpViewModel.focusedSeasons?.size ?: 1
                 } else {
-                    helpViewModel.focusedSeasons = stalkerViewModel.seriesCache[serie.idByAccountData]?.first
-                    helpViewModel.focusedEpisodes = stalkerViewModel.seriesCache[serie.idByAccountData]?.second?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))?.toMutableList()
+                    helpViewModel.focusedSeasons = stalkerViewModel.seriesCacheLive.value?.get(serie.idByAccountData)?.first?.toMutableList() ?: mutableListOf()
+                    helpViewModel.focusedEpisodes = stalkerViewModel.seriesCacheLive.value
+                        ?.get(serie.idByAccountData)
+                        ?.second
+                        ?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                        ?.toMutableList() ?: mutableListOf()
                     serie.totalSeasons = helpViewModel.focusedSeasons?.size ?: 1
                 }
             }
@@ -1173,36 +1237,36 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     }
                 }
             } else {
-                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
                 stalkerViewModel.getSeriesDetail(serie, serie.seriesAccount.target)
-                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                    serie.totalSeasons = seasons.size
-                    helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                    helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    binding.tvTotSeasons.text = if (seasons.isEmpty()) {
-                        binding.tvTotSeasons.visibility = View.INVISIBLE
-                        ""
-                    } else {
-                        binding.tvTotSeasons.visibility = View.VISIBLE
-                        if (seasons.size == 1) {
-                            "1 Season"
+                stalkerViewModel.seriesCacheLive.observe(viewLifecycleOwner) { cache ->
+                    val cachedData = cache[serie.idByAccountData]
+                    if (cachedData != null) {
+                        val (seasons, episodes) = cachedData
+                        serie.totalSeasons = seasons.size
+                        helpViewModel.focusedSeasons = seasons
+                            .sortedWith(
+                                compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                    .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }
+                            )
+                            .toMutableList()
+
+                        // Episodes setzen
+                        helpViewModel.focusedEpisodes = episodes
+                            .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                            .toMutableList()
+                        binding.tvTotSeasons.text = if (seasons.isEmpty()) {
+                            binding.tvTotSeasons.visibility = View.INVISIBLE
+                            ""
                         } else {
-                            "${seasons.size} Seasons"
+                            binding.tvTotSeasons.visibility = View.VISIBLE
+                            if (seasons.size == 1) {
+                                "1 Season"
+                            } else {
+                                "${seasons.size} Seasons"
+                            }
                         }
                     }
                 }
-            }
-            binding.tvTotSeasons.text = if (serie.totalSeasons != 0) {
-                binding.tvTotSeasons.visibility = View.VISIBLE
-                if (serie.totalSeasons == 1) {
-                    "${serie.totalSeasons} Season"
-                } else {
-                    "${serie.totalSeasons} Seasons"
-                }
-            } else {
-                binding.tvTotSeasons.visibility = View.INVISIBLE
-                ""
             }
         }
     }

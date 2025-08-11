@@ -1,0 +1,48 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_height="wrap_content"
+    android:layout_width="250dp"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:padding="2dp"
+    android:background="?attr/backgroundDark"
+    android:focusable="true"
+    android:focusableInTouchMode="true">
+
+    <TextView
+        android:id="@+id/itemName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:background="?attr/backgroundDarkDark"
+        tools:text="DE | DER HERR DER RINGE - DIE ZWEI TÜRME"
+        android:maxLines="1"
+        android:ellipsize="marquee"
+        android:scrollHorizontally="true"
+        android:textSize="15sp"
+        android:clickable="true" />
+
+    <TextView
+        android:id="@+id/optionRemove"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginTop="5dp"
+        android:text="@string/reset_movie_watchtime"
+        android:background="@drawable/selector_fullepg_epgoptions_tv"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:textSize="15sp"
+        android:clickable="true" />
+
+    <TextView
+        android:id="@+id/optionFullWatched"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:layout_marginTop="5dp"
+        android:text="@string/set_movie_as_completely_watched"
+        android:background="@drawable/selector_fullepg_epgoptions_tv"
+        android:textSize="15sp"
+        android:focusable="true"
+        android:focusableInTouchMode="true" />
+    </LinearLayout>

@@ -22,7 +22,7 @@ data class MovieOB(
     val movieYear: String = "",
     val rate: String? = "",
     val rating_imdb: String? = "",
-    val screenshot_uri: String? = "",
+    var screenshot_uri: String? = "",
     var genres_str: String? = "",
     var actors: String? = "",
     val added: String? = "",

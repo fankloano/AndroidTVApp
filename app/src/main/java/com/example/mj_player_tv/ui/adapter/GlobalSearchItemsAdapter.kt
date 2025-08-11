@@ -174,7 +174,6 @@ class GlobalSearchItemsAdapter(
 
                 val image = movie.screenshot_uri
                 if (!image.isNullOrEmpty()) {
-                    Log.d("GLOBIMOVIEBILDI", "${movie.movieName} = $image")
                     ivMovies.load(image)
                 } else {
                     Log.d("GLOBIMOVIEBILDI", "${movie.movieName} ||| NO IMAGE")

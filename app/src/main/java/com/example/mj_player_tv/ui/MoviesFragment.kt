@@ -637,7 +637,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
         if (helpViewModel.currentMovieAccount!!.isStalker) {
             binding.rvLayoutStalkerMovies.visibility = View.GONE
         }
-        helpViewModel.currentMovieImage = null
         binding.loadMoviesProgressBar.visibility = View.VISIBLE
         binding.rvLayoutMovies.visibility = View.GONE
         binding.tvMovieQuantity.text = ""
@@ -723,7 +722,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                             tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(backgroundImage)
-                                        helpViewModel.currentMovieImage = backgroundImage
                                     }
 
                                     is Resource.Error -> {
@@ -731,9 +729,7 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                         if (!moviePoster.isNullOrEmpty()) {
                                             binding.ivMovieposter.visibility = View.VISIBLE
                                             binding.ivMovieposter.load(moviePoster)
-                                            helpViewModel.currentMovieImage = moviePoster
                                         } else {
-                                            helpViewModel.currentMovieImage = ""
                                             binding.ivMovieposter.visibility = View.INVISIBLE
                                         }
                                     }
@@ -750,7 +746,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                             tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(backgroundImage)
-                                        helpViewModel.currentMovieImage = backgroundImage
                                     }
 
                                     is Resource.Error -> {
@@ -758,9 +753,7 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                         if (!moviePoster.isNullOrEmpty()) {
                                             binding.ivMovieposter.visibility = View.VISIBLE
                                             binding.ivMovieposter.load(moviePoster)
-                                            helpViewModel.currentMovieImage = moviePoster
                                         } else {
-                                            helpViewModel.currentMovieImage = ""
                                             binding.ivMovieposter.visibility = View.INVISIBLE
                                         }
                                     }
@@ -770,16 +763,13 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                             if (!movie.screenshot_uri.isNullOrEmpty()) {
                                 binding.ivMovieposter.visibility = View.VISIBLE
                                 binding.ivMovieposter.load(movie.screenshot_uri)
-                                helpViewModel.currentMovieImage = movie.screenshot_uri
                             } else {
-                                helpViewModel.currentMovieImage = ""
                                 binding.ivMovieposter.visibility = View.INVISIBLE
                             }
                         }
                     } else {
                         binding.ivMovieposter.visibility = View.VISIBLE
                         binding.ivMovieposter.load(movie.backdropPath)
-                        helpViewModel.currentMovieImage = movie.backdropPath
                     }
                     setMovieDetailsNotImages(movie)
                 } else {
@@ -796,7 +786,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                         tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
                                     binding.ivMovieposter.visibility = View.VISIBLE
                                     binding.ivMovieposter.load(backgroundImage)
-                                    helpViewModel.currentMovieImage = backgroundImage
                                 }
 
                                 is Resource.Error -> {
@@ -804,7 +793,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                     if (!moviePoster.isNullOrEmpty()) {
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(moviePoster)
-                                        helpViewModel.currentMovieImage = moviePoster
                                     } else {
                                         binding.ivMovieposter.visibility = View.INVISIBLE
                                     }
@@ -822,7 +810,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                         tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
                                     binding.ivMovieposter.visibility = View.VISIBLE
                                     binding.ivMovieposter.load(backgroundImage)
-                                    helpViewModel.currentMovieImage = backgroundImage
                                 }
 
                                 is Resource.Error -> {
@@ -830,7 +817,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                     if (!moviePoster.isNullOrEmpty()) {
                                         binding.ivMovieposter.visibility = View.VISIBLE
                                         binding.ivMovieposter.load(moviePoster)
-                                        helpViewModel.currentMovieImage = moviePoster
                                     } else {
                                         binding.ivMovieposter.visibility = View.INVISIBLE
                                     }
@@ -842,7 +828,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                         if (!movie.screenshot_uri.isNullOrEmpty()) {
                             binding.ivMovieposter.visibility = View.VISIBLE
                             binding.ivMovieposter.load(movie.screenshot_uri)
-                            helpViewModel.currentMovieImage = movie.screenshot_uri
                         } else {
                             binding.ivMovieposter.visibility = View.INVISIBLE
                         }
@@ -1128,7 +1113,6 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
             }
             firstOpenCategory = true
             isFirstOpen = false
-            helpViewModel.currentMovieImage = null
             binding.loadMoviesProgressBar.visibility = View.VISIBLE
             binding.rvLayoutMovies.visibility = View.GONE
             binding.tvMovieCategoryName.text = ""

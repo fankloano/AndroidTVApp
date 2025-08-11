@@ -5,10 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="120dp"
     android:id="@+id/card_episode"
-    android:background="@drawable/background_episode"
     android:padding="1dp"
     android:focusable="true"
     android:focusableInTouchMode="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background_episode"
+        android:layout_marginEnd="3dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/rv_item_logo_episodes"
@@ -132,6 +137,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@drawable/background_overlay_episode"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <View
         android:id="@+id/rahmen_linls"

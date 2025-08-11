@@ -195,7 +195,6 @@ class SearchSeriesByCategoryFragment : Fragment(R.layout.fragment_search_series_
                 }
             } else {
                 viewLifecycleOwner.lifecycleScope.launch {
-                    stalkerViewModel.seriesDetailData.postValue(mutableListOf())
                     stalkerViewModel.getSeriesDetail(serie, account)
                     helpViewModel.currentFocusedSerie = serie
                     openSeriesDetailFragment()

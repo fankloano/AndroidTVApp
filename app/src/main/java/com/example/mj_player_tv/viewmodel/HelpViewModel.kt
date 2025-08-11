@@ -361,10 +361,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var isWatchHistoryContainerOpened = false
 
-    var currentMovieImage: String? = null
-
-    var currentSeriesImage: String? = null
-
     var currentSelectedEpgChannelSource: EpgSource? = null
 
     var currentlyPlayingUrl = ""

@@ -1,13 +1,18 @@
 package com.example.mj_player_tv.ui
 
+import android.graphics.Color
+import android.graphics.Rect
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.PopupMenu
-import android.widget.Toast
+import android.widget.PopupWindow
+import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
@@ -27,15 +32,6 @@ import com.example.mj_player_tv.database.entity.SeriesOB_
 import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.database.entity.TvChannelOB_
 import com.example.mj_player_tv.databinding.FragmentHistoryBinding
-import com.example.mj_player_tv.databinding.FragmentHomeBinding
-import com.example.mj_player_tv.databinding.FragmentTvChannelsBinding
-import com.example.mj_player_tv.databinding.FragmentWatchlistBinding
-import com.example.mj_player_tv.ui.adapter.GlobalSearchPlaylistAdapter
-import com.example.mj_player_tv.ui.adapter.GlobalSearchTvChannelsAdapter
-import com.example.mj_player_tv.ui.adapter.WatchListMoviesAdapter
-import com.example.mj_player_tv.ui.adapter.WatchlistPlaylistAdapter
-import com.example.mj_player_tv.ui.adapter.WatchlistSeriesAdapter
-import com.example.mj_player_tv.utils.Resource
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
@@ -46,16 +42,14 @@ import com.rubensousa.dpadrecyclerview.FocusableDirection
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import org.apache.commons.lang3.mutable.Mutable
-import java.security.Key
-import androidx.core.view.isGone
-import kotlinx.coroutines.delay
 import androidx.core.view.isVisible
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.flowWithLifecycle
 import com.example.mj_player_tv.database.entity.EpisodesOB
+import com.example.mj_player_tv.database.entity.EpisodesOB_
 import com.example.mj_player_tv.database.entity.Programme
+import com.example.mj_player_tv.database.entity.SeasonsOB_
+import com.example.mj_player_tv.database.help.Movie
 import com.example.mj_player_tv.database.help.StatsDisplayItem
 import com.example.mj_player_tv.database.help.StatsMainCategory
 import com.example.mj_player_tv.database.help.WatchlistDisplayItem
@@ -93,6 +87,13 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
     private val tvchBox = ObjectBox.store.boxFor(TvChannelOB::class.java)
 
+    private val movieBox = ObjectBox.store.boxFor(MovieOB::class.java)
+
+    private val seriesBox = ObjectBox.store.boxFor(SeriesOB::class.java)
+
+    private val seasonsBox = ObjectBox.store.boxFor(SeasonsOB::class.java)
+
+    private val episodesBox = ObjectBox.store.boxFor(EpisodesOB::class.java)
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
         StalkerViewModelFactory(
             requireActivity().application
@@ -315,7 +316,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private fun prepareItemsRecyclerView() {
-        statsItemsAdapter = StatsItemsAdapter(helpViewModel, this, accountBox) { clickedItem, view ->
+        statsItemsAdapter = StatsItemsAdapter(helpViewModel, this, accountBox, onItemClick =  { clickedItem, view, adapterPosition ->
             when (clickedItem) {
                 is StatsDisplayItem.MovieItem -> {
                     val selectedAccount = clickedItem.movie.movieAccount.target
@@ -346,6 +347,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                                     xtreamViewModel.getXtreamSerieDetails(clickedItem.series,
                                         selectedAccount
                                     )
+                                openSeriesDetailFragment()
                                 clickedItem.series.totalSeasons = seasons.size
                                 helpViewModel.focusedSeasons =
                                     seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
@@ -359,40 +361,36 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                                     ).toMutableList()
                                 helpViewModel.currentFocusedSerie = clickedItem.series
                                 helpViewModel.currentSeriesAccount = selectedAccount
-                                openSeriesDetailFragment()
                             }
                         } else {
                             viewLifecycleOwner.lifecycleScope.launch {
-                                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
+                                helpViewModel.currentFocusedSerie = clickedItem.series
+                                helpViewModel.currentSeriesAccount = selectedAccount
                                 stalkerViewModel.getSeriesDetail(clickedItem.series,
                                     selectedAccount
                                 )
-                                helpViewModel.currentFocusedSerie = clickedItem.series
-                                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                                    clickedItem.series.totalSeasons = seasons.size
-                                    helpViewModel.focusedSeasons =
-                                        seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                                            .thenBy {
-                                                it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE
-                                            }).toMutableList()
-                                    helpViewModel.focusedEpisodes =
-                                        stalkerViewModel.episodesList.sortedWith(
-                                            compareBy(
-                                                { it.seasonNumber },
-                                                { it.episodeNumber })
-                                        ).toMutableList()
-                                }
-                                helpViewModel.currentSeriesAccount = selectedAccount
                                 openSeriesDetailFragment()
                             }
                         }
                     }
                 }
                 is StatsDisplayItem.TvChannelItem -> {
-                    showTvChannelPopUp(clickedItem.tvchannel, view)
+                    showChannelPopUp(clickedItem.tvchannel, view, adapterPosition)
                 }
             }
-        }
+        }, onLongItemClick = { longclickedItem, view, adapterPosition ->
+            when (longclickedItem) {
+                is StatsDisplayItem.MovieItem -> {
+                    showMoviePopUp(longclickedItem.movie, view, adapterPosition)
+                }
+                is StatsDisplayItem.SeriesItem -> {
+                    showSeriesPopUp(longclickedItem.series, view, adapterPosition)
+                }
+                is StatsDisplayItem.TvChannelItem -> {
+                    showChannelPopUp(longclickedItem.tvchannel, view, adapterPosition)
+                }
+            }
+        })
 
         binding.recyclerItems.apply {
             adapter = statsItemsAdapter
@@ -443,32 +441,72 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         selectedStatsCategory = category
     }
 
-    private fun showTvChannelPopUp(tvchannel: TvChannelOB, view: View) {
-        val popup = PopupMenu(view.context, view)
-        popup.menuInflater.inflate(R.menu.menu_history_options, popup.menu)
+    private fun showChannelPopUp(tvchannel: TvChannelOB, anchor: View, adapterPosition: Int) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
+        val widthInDp = 250
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
 
-        val singleItem = popup.menu.findItem(R.id.remove_this)
-        singleItem.setTitle("Remove ${tvchannel.showingName} from list")
-        val allItem = popup.menu.findItem(R.id.remove_all)
-        if (tvchannelsList != null && tvchannelsList!!.size > 1) {
-            allItem.setVisible(true)
-        } else {
-            allItem.setVisible(false)
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val removeOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val fullWatchedOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        removeOption.text = "Remove / Reset Channel"
+        fullWatchedOption.text = "Clear complete list"
+        itemName.text = tvchannel.showingName
+        itemName.isSelected = true
+        // Sichtbarkeit wie vorher bei PopupMenu
+        fullWatchedOption.visibility = if (tvchannelsList!!.size > 1) View.VISIBLE else View.GONE
+
+        // Click-Listener
+        removeOption.setOnClickListener {
+            removeChannelFromList(tvchannel)
+            popupWindow.dismiss()
         }
-        popup.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.remove_this -> {
-                    removeChannelFromList(tvchannel)
-                    true
-                }
-                R.id.remove_all -> {
-                    removeAllChannelsFromList()
-                    true
-                }
-                else -> false
-            }
+
+        fullWatchedOption.setOnClickListener {
+            removeAllChannelsFromList()
+            popupWindow.dismiss()
         }
-        popup.show()
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+
+// Popup messen (wichtig, bevor man Positionen berechnet)
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+// Mittelpunkt vom Anchor
+        val centerX = anchorX + (anchor.width / 2)
+        val centerY = anchorY + (anchor.height / 2)
+
+// Popup so setzen, dass sein Mittelpunkt = Anchor-Mittelpunkt ist
+        val xPosition = centerX - (popupWidth / 2)
+        val yPosition = centerY - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+        showDimOverlay()
+        removeOption.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
     }
 
     private fun removeChannelFromList(tvchannel: TvChannelOB) {
@@ -494,6 +532,262 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             }
         }
     }
+    private fun showMoviePopUp(movie: MovieOB, anchor: View, adapterPosition: Int) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
+        val widthInDp = 250
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val removeOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val fullWatchedOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        itemName.text = movie.movieName
+        itemName.isSelected = true
+        // Sichtbarkeit wie vorher bei PopupMenu
+        fullWatchedOption.visibility = if (movie.isPartlyWatched) View.VISIBLE else View.GONE
+
+        // Click-Listener
+        removeOption.setOnClickListener {
+            removieMovieFromList(movie)
+            popupWindow.dismiss()
+        }
+
+        fullWatchedOption.setOnClickListener {
+            setMovieAsCompletelyWatched(movie)
+            popupWindow.dismiss()
+        }
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+
+// Popup messen (wichtig, bevor man Positionen berechnet)
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+// Mittelpunkt vom Anchor
+        val centerX = anchorX + (anchor.width / 2)
+        val centerY = anchorY + (anchor.height / 2)
+
+// Popup so setzen, dass sein Mittelpunkt = Anchor-Mittelpunkt ist
+        val xPosition = centerX - (popupWidth / 2)
+        val yPosition = centerY - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+        showDimOverlay()
+        removeOption.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
+
+
+    private fun removieMovieFromList(movie: MovieOB) {
+            movie.isCompletelyWatched = false
+            movie.isPartlyWatched = false
+            movie.currentPosition = 0L
+            movie.percentagePlayed = 0.0
+            moviesList = moviesList?.filter { it.movie.id != movie.id }?.toMutableList()
+            statsItemsAdapter.submitList(moviesList?.sortedByDescending { it.movie.percentagePlayed } )
+            binding.recyclerItems.requestFocus()
+            if (!movie.isFavorite) {
+                movieBox.remove(movie)
+            } else {
+                movieBox.put(movie)
+            }
+    }
+
+    private fun setMovieAsCompletelyWatched(movie: MovieOB) {
+        movie.isPartlyWatched = false
+        movie.isCompletelyWatched = true
+        movie.currentPosition = 0L
+        movie.percentagePlayed = 1.0
+        movieBox.put(movie)
+        statsItemsAdapter.submitList(moviesList?.sortedByDescending { it.movie.percentagePlayed } )
+
+        val currentList = statsItemsAdapter.currentList
+
+        // Finde Position vom MovieItem, dessen movie.id mit deinem movie übereinstimmt
+        val position = currentList.indexOfFirst {
+            it is StatsDisplayItem.MovieItem && it.movie.id == movie.id
+        }
+
+        if (position != -1) {
+            // Nur dieses Item neu binden
+            statsItemsAdapter.notifyItemChanged(position)
+        }
+
+    }
+
+    private fun showSeriesPopUp(serie: SeriesOB, anchor: View, adapterPosition: Int) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
+        val widthInDp = 250
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val removeOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val fullWatchedOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        itemName.text = serie.seriesName
+        itemName.isSelected = true
+        removeOption.text = "Remove / Reset Series"
+        fullWatchedOption.text = "Set Series as Watched"
+        // Sichtbarkeit wie vorher bei PopupMenu
+        fullWatchedOption.visibility = if (serie.isPartlyWatched) View.VISIBLE else View.GONE
+
+        // Click-Listener
+        removeOption.setOnClickListener {
+            removieSeriesFromList(serie)
+            popupWindow.dismiss()
+            removeDimOverlay()
+        }
+
+        fullWatchedOption.setOnClickListener {
+            setSeriesAsCompletelyWatched(serie)
+            popupWindow.dismiss()
+            removeDimOverlay()
+        }
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+
+// Popup messen (wichtig, bevor man Positionen berechnet)
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+// Mittelpunkt vom Anchor
+        val centerX = anchorX + (anchor.width / 2)
+        val centerY = anchorY + (anchor.height / 2)
+
+// Popup so setzen, dass sein Mittelpunkt = Anchor-Mittelpunkt ist
+        val xPosition = centerX - (popupWidth / 2)
+        val yPosition = centerY - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+
+        showDimOverlay()
+        removeOption.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
+
+
+    private fun removieSeriesFromList(serie: SeriesOB) {
+        serie.isCompletelyWatched = false
+        serie.isPartlyWatched = false
+        serie.currentPosition = 0L
+        serie.seriesPercentagePlayed = 0.0
+        seriesList = seriesList?.filter { it.series.id != serie.id }?.toMutableList()
+        statsItemsAdapter.submitList(seriesList?.sortedByDescending { it.series.seriesPercentagePlayed } )
+        binding.recyclerItems.requestFocus()
+        seasonsBox.query(
+            SeasonsOB_.seriesIdByAccount.equal(serie.idByAccountData)
+        ).build().remove()
+        episodesBox.query(
+            EpisodesOB_.seriesIdByAccount.equal(serie.idByAccountData)
+        ).build().remove()
+        if (!serie.isFavorite) {
+            helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+                seriesBox.remove(serie)
+            }
+        } else {
+            seriesBox.put(serie)
+        }
+    }
+
+    private fun setSeriesAsCompletelyWatched(serie: SeriesOB) {
+        serie.isPartlyWatched = false
+        serie.isCompletelyWatched = true
+        serie.currentPosition = 0L
+        serie.seriesPercentagePlayed = 1.0
+        helpViewModel.focusedSeasons = stalkerViewModel.seriesCacheLive.value?.get(helpViewModel.currentFocusedSerie?.idByAccountData)?.first?.toMutableList() ?: mutableListOf()
+        helpViewModel.focusedEpisodes = stalkerViewModel.seriesCacheLive.value?.get(helpViewModel.currentFocusedSerie?.idByAccountData)?.second?.toMutableList() ?: mutableListOf()
+        statsItemsAdapter.submitList(seriesList?.sortedByDescending { it.series.seriesPercentagePlayed } )
+        val currentList = statsItemsAdapter.currentList
+
+        // Finde Position vom MovieItem, dessen movie.id mit deinem movie übereinstimmt
+        val position = currentList.indexOfFirst {
+            it is StatsDisplayItem.SeriesItem && it.series.id == serie.id
+        }
+
+        if (position != -1) {
+            // Nur dieses Item neu binden
+            statsItemsAdapter.notifyItemChanged(position)
+        }
+        helpViewModel.viewModelScope.launch(Dispatchers.IO) {
+            seriesBox.put(serie)
+            helpViewModel.focusedSeasons?.let { seasons ->
+                seasons.forEach {
+                    it.seasonPercentagePlayed = 1.0
+                    it.isSeasonFullyWatched = true
+                    it.isSeasonPartlyWatched = true
+                    seasonsBox.put(seasons)
+                }
+            }
+            helpViewModel.focusedEpisodes?.let { episodes ->
+                episodes.forEach {
+                    it.episodePercentagePlayed = 1.0
+                    it.isEpisodeFullyWatched = true
+                    it.isEpisodePartlyWatched = true
+                    it.currentPosition = 0L
+                    episodesBox.put(it)
+                }
+            }
+        }
+    }
+
+    private var dimView: View? = null
+
+    private fun showDimOverlay() {
+        dimView = View(requireContext()).apply {
+            setBackgroundColor(Color.parseColor("#B3000000")) // halbtransparent schwarz
+            isClickable = true // blockiert Klicks darunter
+        }
+        (requireActivity().window.decorView as ViewGroup).addView(
+            dimView,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    private fun removeDimOverlay() {
+        dimView?.let { (requireActivity().window.decorView as ViewGroup).removeView(it) }
+    }
+
 
     fun openMovieDetailFragment() {
         helpViewModel.isWatchHistoryContainerOpened = true

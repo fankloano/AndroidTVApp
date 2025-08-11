@@ -1,6 +1,8 @@
 package com.example.mj_player_tv.ui.adapter
 
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.util.Log
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -111,10 +113,30 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
         holder.binding.cardEpisode.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.rvItemOrginalnameEpisodes.isSelected = hasFocus
             holder.binding.progressBar.isSelected = hasFocus
+
             if (hasFocus) {
+                // Animation fadeIn
+                holder.binding.rahmenLinls.apply {
+                    alpha = 0f
+                    visibility = View.VISIBLE
+                    animate()
+                        .alpha(1f)
+                        .setDuration(250)
+                        .setListener(null)
+                }
                 holder.binding.alphaView.visibility = View.INVISIBLE
                 fragment.showFocusedEpisodeInfos(episode)
             } else {
+                // Animation fadeOut
+                holder.binding.rahmenLinls.animate()
+                    .alpha(0f)
+                    .setDuration(250)
+                    .setListener(object : AnimatorListenerAdapter() {
+                        override fun onAnimationEnd(animation: Animator) {
+                            holder.binding.rahmenLinls.visibility = View.INVISIBLE
+                        }
+                    })
+
                 holder.binding.alphaView.visibility = View.VISIBLE
             }
         }
@@ -128,8 +150,8 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
             onLongClickListener.onLongClick(episode, holder.binding.cardEpisode)
             true
         }
-
     }
+
 
     companion object {
         private val ACCOUNT_COMPERATOR = object : DiffUtil.ItemCallback<EpisodesOB>() {

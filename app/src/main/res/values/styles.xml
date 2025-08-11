@@ -20,7 +20,7 @@
     </style>
 
     <style name="CustomPopupMenu" parent="Widget.AppCompat.PopupMenu">
-        <item name="android:popupBackground">?attr/mainPrimaryColorDark</item>
+        <item name="android:popupBackground">@color/black</item>
         <item name="android:popupElevation">8dp</item>
         <item name="android:dropDownSelector">@drawable/popup_menu_item_selector</item>
     </style>

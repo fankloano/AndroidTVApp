@@ -111,7 +111,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.loadseriesDetailProgressBar.visibility = View.VISIBLE
+        binding.loadfullseriesProgressBar.visibility = View.VISIBLE
 
         prepareSeasonsRecyclerView()
 
@@ -123,10 +123,9 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             if (currentAccount != null) {
                 if (currentAccount!!.isXtream) {
                     if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {
-                        binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
+                        binding.loadfullseriesProgressBar.visibility = View.INVISIBLE
                         seasonsAdapter.submitList(helpViewModel.focusedSeasons)
                         binding.rvLayoutSeriesSeasons.post {
-
                             if (helpViewModel.currentFocusedSerie?.lastWatchedSeason != 0) {
                                 val lastSeason =
                                     helpViewModel.focusedSeasons?.firstOrNull { it.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason }
@@ -154,12 +153,15 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                             showDetailUi(it)
                         }
                     } else {
+                        binding.loadfullseriesProgressBar.visibility = View.INVISIBLE
                         noDataReceived()
                     }
                 } else {
-                    if (stalkerViewModel.seriesCache.containsKey(helpViewModel.currentFocusedSerie?.idByAccountData)) {
+                    if (stalkerViewModel.seriesCacheLive.value?.containsKey(helpViewModel.currentFocusedSerie?.idByAccountData) == true) {
+                        helpViewModel.focusedSeasons = stalkerViewModel.seriesCacheLive.value?.get(helpViewModel.currentFocusedSerie?.idByAccountData)?.first?.toMutableList() ?: mutableListOf()
+                        helpViewModel.focusedEpisodes = stalkerViewModel.seriesCacheLive.value?.get(helpViewModel.currentFocusedSerie?.idByAccountData)?.second?.toMutableList() ?: mutableListOf()
                         if (!helpViewModel.focusedSeasons.isNullOrEmpty()) {
-                            binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
+                            binding.loadfullseriesProgressBar.visibility = View.INVISIBLE
                             seasonsAdapter.submitList(helpViewModel.focusedSeasons)
                             binding.rvLayoutSeriesSeasons.post {
                                 if (helpViewModel.currentFocusedSerie?.lastWatchedSeason != 0) {
@@ -180,10 +182,8 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                         }
                                     }
                                 } else {
-                                    if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
-                                        showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
-                                    } else {
-                                        noDataReceived()
+                                    helpViewModel.focusedSeasons?.firstOrNull()?.let {
+                                        showEpisodesForSeason(it)
                                     }
                                 }
                             }
@@ -191,27 +191,50 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                 showDetailUi(it)
                             }
                         } else {
+                            binding.loadfullseriesProgressBar.visibility = View.INVISIBLE
                             noDataReceived()
                         }
                     } else {
-                        stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                            if (seasons.isNotEmpty() && isFirstOpen) {
-                                helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                                    .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                                helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
+                        stalkerViewModel.seriesCacheLive.observe(viewLifecycleOwner) { cache ->
+                            val cachedData = cache[helpViewModel.currentFocusedSerie?.idByAccountData]
+                            if (cachedData != null) {
+
+                                val (seasons, episodes) = cachedData
+                                helpViewModel.currentFocusedSerie?.totalSeasons = seasons.size
+                                helpViewModel.focusedSeasons = seasons
+                                    .sortedWith(
+                                        compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                            .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }
+                                    )
+                                    .toMutableList()
+
+                                // Episodes setzen
+                                helpViewModel.focusedEpisodes = episodes
+                                    .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                                    .toMutableList()
+
                                 binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
-                                seasonsAdapter.submitList(helpViewModel.focusedSeasons)
-                                binding.rvLayoutSeriesSeasons.post {
-                                    if (helpViewModel.currentFocusedSerie?.lastWatchedSeason != 0) {
-                                        val lastSeason =
-                                            seasons.firstOrNull { it.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason }
-                                        val lastSeasonPosition =
-                                            seasonsAdapter.currentList.indexOf(lastSeason)
-                                        binding.rvLayoutSeriesSeasons.setSelectedPosition(
-                                            lastSeasonPosition
-                                        )
-                                        if (lastSeason != null) {
-                                            showEpisodesForSeason(lastSeason)
+                                if (seasons.isNotEmpty()) {
+                                    binding.loadfullseriesProgressBar.visibility = View.INVISIBLE
+                                    seasonsAdapter.submitList(helpViewModel.focusedSeasons)
+                                    binding.rvLayoutSeriesSeasons.post {
+                                        if (helpViewModel.currentFocusedSerie?.lastWatchedSeason != 0) {
+                                            val lastSeason =
+                                                seasons.firstOrNull { it.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason }
+                                            val lastSeasonPosition =
+                                                seasonsAdapter.currentList.indexOf(lastSeason)
+                                            binding.rvLayoutSeriesSeasons.setSelectedPosition(
+                                                lastSeasonPosition
+                                            )
+                                            if (lastSeason != null) {
+                                                showEpisodesForSeason(lastSeason)
+                                            } else {
+                                                if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
+                                                    showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
+                                                } else {
+                                                    noDataReceived()
+                                                }
+                                            }
                                         } else {
                                             if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
                                                 showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
@@ -219,31 +242,16 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                                 noDataReceived()
                                             }
                                         }
-                                    } else {
-                                        if (helpViewModel.focusedSeasons!!.firstOrNull() != null) {
-                                            showEpisodesForSeason(helpViewModel.focusedSeasons!!.first())
-                                        } else {
-                                            noDataReceived()
-                                        }
                                     }
+                                    helpViewModel.currentFocusedSerie?.let {
+                                        showDetailUi(it)
+                                    }
+                                    isFirstOpen = false
+                                } else {
+                                    noDataReceived()
                                 }
-                                helpViewModel.currentFocusedSerie?.let {
-                                    showDetailUi(it)
-                                }
-                                isFirstOpen = false
                             } else {
-                                if (seasons.isEmpty() && isFirstOpen) {
-                                    lifecycleScope.launch {
-                                        delay(2000) // z. B. 400ms warten
-                                        val latestSeasons = stalkerViewModel.seriesDetailData.value?.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                                            .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE })?.toMutableList()
-                                        if (latestSeasons.isNullOrEmpty()) {
-                                            noDataReceived()
-                                        } else {
-                                            seasonsAdapter.submitList(latestSeasons)
-                                        }
-                                    }
-                                }
+                                Log.d("ISTNULL", "NULL")
                             }
                         }
                     }
@@ -277,8 +285,12 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         }
 
         binding.btnPlay.setOnKeyListener { v, keyCode, event ->
-            if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+            if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 closeFragment()
+                return@setOnKeyListener true
+            }
+            if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                focusToEpisodes()
                 return@setOnKeyListener true
             }
             false
@@ -301,8 +313,12 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         }
 
         binding.btnaddFavorite.setOnKeyListener { v, keyCode, event ->
-            if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+            if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 closeFragment()
+                return@setOnKeyListener true
+            }
+            if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                focusToEpisodes()
                 return@setOnKeyListener true
             }
             false
@@ -363,8 +379,12 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         }
 
         binding.btnaddWatched.setOnKeyListener { v, keyCode, event ->
-            if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+            if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 closeFragment()
+                return@setOnKeyListener true
+            }
+            if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                focusToEpisodes()
                 return@setOnKeyListener true
             }
             false
@@ -445,9 +465,6 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                         showFocusedEpisodeInfos(helpViewModel.currentFocusedEpisode!!)
                         binding.btnaddWatched.requestFocus()
                         updateSeriesInRV()
-                        helpViewModel.focusedSeasons?.forEach {
-                            Log.d("SEASON ÜBERSICHT ALLE OK", "${helpViewModel.currentFocusedSerie?.seriesName} = ${it.seasonNumber} PARTLY: ${it.isSeasonPartlyWatched} FULL: ${it.isSeasonFullyWatched}")
-                        }
                     } else {
                         helpViewModel.currentFocusedSerie!!.isCompletelyWatched = false
                         helpViewModel.currentFocusedSerie!!.isPartlyWatched = false
@@ -527,7 +544,9 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                             binding.rvLayoutSeriesSeasons.post {
                                 binding.rvLayoutSeriesSeasons.setSelectedPosition(seasonPosition)
                             }
-                            helpViewModel.currentFocusedEpisode = helpViewModel.focusedEpisodes?.filter { it.seasonNumber == helpViewModel.currentFocusedSeason?.seasonNumber }?.sortedBy { it.episodeNumber }?.firstOrNull()
+                            helpViewModel.currentFocusedEpisode =
+                                helpViewModel.focusedEpisodes?.filter { it.seasonNumber == helpViewModel.currentFocusedSeason?.seasonNumber }
+                                    ?.minByOrNull { it.episodeNumber }
                             episodesAdapter.submitList(null)
                             episodesAdapter.submitList(helpViewModel.focusedEpisodes?.filter { it.seasonNumber == helpViewModel.currentFocusedSeason?.seasonNumber }?.sortedBy { it.episodeNumber })
                             val episodePosition = episodesAdapter.currentList.indexOf(helpViewModel.currentFocusedEpisode)
@@ -555,8 +574,16 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         }
 
         binding.btnInfo.setOnKeyListener { v, keyCode, event ->
-            if ((keyCode == KeyEvent.KEYCODE_BACK || keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+            if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {
                 closeFragment()
+                return@setOnKeyListener true
+            }
+            if ((keyCode == KeyEvent.KEYCODE_DPAD_UP) && event.action == KeyEvent.ACTION_DOWN) {
+                focusToEpisodes()
+                return@setOnKeyListener true
+            }
+            if ((keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) && event.action == KeyEvent.ACTION_DOWN) {
+                focusToEpisodes()
                 return@setOnKeyListener true
             }
             false
@@ -1060,11 +1087,13 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                 helpViewModel.currentFocusedSerie?.seriescat?.target?.seriesaccount?.target
             if (account != null) {
                 if (account.isStalker) {
-                    stalkerViewModel.seriesCache[helpViewModel.currentFocusedSerie!!.idByAccountData] =
-                        Pair(
-                            helpViewModel.focusedSeasons ?: mutableListOf(),
-                            helpViewModel.focusedEpisodes ?: mutableListOf()
-                        )
+                    val currentCache = stalkerViewModel.seriesCacheLive.value ?: mutableMapOf()
+
+                    currentCache[helpViewModel.currentFocusedSerie!!.idByAccountData] = Pair(
+                        helpViewModel.focusedSeasons ?: mutableListOf(),
+                        helpViewModel.focusedEpisodes ?: mutableListOf()
+                    )
+                    stalkerViewModel.seriesCacheLive.postValue(currentCache)
                 } else {
                     xtreamViewModel.seriesCache[helpViewModel.currentFocusedSerie!!.idByAccountData] =
                         Pair(
@@ -1090,7 +1119,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun showDetailUi(serie: SeriesOB) {
         binding.tvSeriestitle.text = serie.seriesName
-        if (helpViewModel.isSearchContainerOpened) {
+        if (helpViewModel.isSearchContainerOpened || helpViewModel.watchstatsContainerOpened) {
                 getSeriesImage()
         }
 
@@ -1286,23 +1315,33 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                 ).await()
                             when (tmdbSeriesDetailsByImdbId) {
                                 is Resource.Success -> {
-                                    val backgroundImage =
-                                        tmdbSeriesDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
-                                    binding.ivSeriesposter.visibility = View.VISIBLE
-                                    Log.d("SERIENDETAILSACHE","IMDB: Bild: $backgroundImage")
-                                    binding.ivSeriesposter.load(backgroundImage)
-                                    helpViewModel.currentSeriesImage = backgroundImage
+                                    val movie = tmdbSeriesDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                    val backdropPath = movie?.backdrop_path
+                                    val posterPath = movie?.poster_path
+                                    val screenshotUri = helpViewModel.currentFocusedSerie?.screenshot_uri
+                                    val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val imageToLoad = when {
+                                        !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                        !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                        !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                        else -> null
+                                    }
+                                    if (imageToLoad != null) {
+                                        binding.ivSeriesposter.visibility = View.VISIBLE
+                                        binding.ivSeriesposter.load(imageToLoad)
+                                    } else {
+                                        binding.ivSeriesposter.visibility = View.INVISIBLE
+                                    }
+                                    helpViewModel.currentFocusedSerie?.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
                                     val seriesPoster = helpViewModel.currentFocusedSerie?.screenshot_uri
                                     if (!seriesPoster.isNullOrEmpty()) {
                                         binding.ivSeriesposter.visibility = View.VISIBLE
-                                        Log.d("SERIENDETAILSACHE","IMDB: ERROR: $seriesPoster")
                                         binding.ivSeriesposter.load(seriesPoster)
-                                        helpViewModel.currentSeriesImage = seriesPoster
                                     } else {
-                                        Log.d("SERIENDETAILSACHE","IMDB: ERROR: NIX")
                                         binding.ivSeriesposter.visibility = View.INVISIBLE
                                     }
                                 }
@@ -1318,38 +1357,36 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                                 }
                             when (tmdbSerieDetails) {
                                 is Resource.Success -> {
-                                    if (helpViewModel.currentFocusedSerie?.backdropPath.isNullOrEmpty()) {
-                                        val backgroundImage =
-                                            tmdbSerieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
-                                        binding.ivSeriesposter.visibility = View.VISIBLE
-                                        Log.d("SERIENDETAILSACHE","TMDB: Bild: $backgroundImage")
+                                        val data = tmdbSerieDetails.data
+                                        val backdropPath = data?.backdrop_path
+                                        val posterPath = data?.poster_path
+                                        val screenshotUri = helpViewModel.currentFocusedSerie?.screenshot_uri
 
-                                        binding.ivSeriesposter.load(backgroundImage)
-                                        helpViewModel.currentFocusedSerie?.backdropPath = backgroundImage ?: ""
-                                        helpViewModel.currentSeriesImage = backgroundImage
-                                    } else {
-                                        val seriesPoster = helpViewModel.currentFocusedSerie?.screenshot_uri
-                                        if (!seriesPoster.isNullOrEmpty()) {
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+
+                                        if (imageToLoad != null) {
                                             binding.ivSeriesposter.visibility = View.VISIBLE
-                                            Log.d("SERIENDETAILSACHE","TMDB: Ok aber leer: $seriesPoster")
-                                            binding.ivSeriesposter.load(seriesPoster)
-                                            helpViewModel.currentSeriesImage = seriesPoster
+                                            binding.ivSeriesposter.load(imageToLoad)
                                         } else {
-                                            Log.d("SERIENDETAILSACHE","TMDB: Ok: NIX")
                                             binding.ivSeriesposter.visibility = View.INVISIBLE
                                         }
-                                    }
+                                        helpViewModel.currentFocusedSerie?.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
                                     val seriesPoster = helpViewModel.currentFocusedSerie?.screenshot_uri
                                     if (!seriesPoster.isNullOrEmpty()) {
                                         binding.ivSeriesposter.visibility = View.VISIBLE
-                                        Log.d("SERIENDETAILSACHE","TMDB: ERROR: $seriesPoster")
                                         binding.ivSeriesposter.load(seriesPoster)
-                                        helpViewModel.currentSeriesImage = seriesPoster
                                     } else {
-                                        Log.d("SERIENDETAILSACHE","TMDB: ERROR: NIX")
                                         binding.ivSeriesposter.visibility = View.INVISIBLE
                                     }
                                 }
@@ -1359,19 +1396,14 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                     } else {
                         if (!helpViewModel.currentFocusedSerie?.screenshot_uri.isNullOrEmpty()) {
                             binding.ivSeriesposter.visibility = View.VISIBLE
-                            Log.d("SERIENDETAILSACHE","KEIN TMDB: ApiBild")
                             binding.ivSeriesposter.load(helpViewModel.currentFocusedSerie?.screenshot_uri)
-                            helpViewModel.currentSeriesImage = helpViewModel.currentFocusedSerie?.screenshot_uri
                         } else {
-                            Log.d("SERIENDETAILSACHE","KEIN TMDB Kein ApiBild")
                             binding.ivSeriesposter.visibility = View.INVISIBLE
                         }
                     }
                 } else {
                     binding.ivSeriesposter.visibility = View.VISIBLE
-                    Log.d("SERIENDETAILSACHE","HAT SCHON BACKGROUNDBILD")
                     binding.ivSeriesposter.load(helpViewModel.currentFocusedSerie?.backdropPath)
-                    helpViewModel.currentSeriesImage = helpViewModel.currentFocusedSerie?.backdropPath
                 }
             }
         }
@@ -1379,6 +1411,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun showEpisodesForSeason(season: SeasonsOB) {
         if (season.seriesSeasonIdByAccountData == helpViewModel.currentFocusedSeason?.seriesSeasonIdByAccountData && !changedSeason && !seriesViewModel.openedSameSeries) return
+        binding.loadseriesDetailProgressBar.visibility = View.VISIBLE
         val oldPosition = seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
         val newPosition = seasonsAdapter.currentList.indexOf(season)
         helpViewModel.currentFocusedSeason = helpViewModel.focusedSeasons?.firstOrNull { it.seriesSeasonIdByAccountData == season.seriesSeasonIdByAccountData }
@@ -1405,21 +1438,20 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                         val imageUrl = "https://image.tmdb.org/t/p/original${tmdbseasoninfo.poster_path}"
                         binding.ivSeriesposter.load(imageUrl)
                     } else {
-                        val imageUrl = helpViewModel.currentSeriesImage ?: helpViewModel.currentFocusedSerie?.screenshot_uri
+                        val imageUrl = helpViewModel.currentFocusedSerie?.screenshot_uri
                         if (imageUrl != null) {
                             binding.ivSeriesposter.load(imageUrl)
                         }
-                        Log.e("TMDB ERROR", "API-Call erfolgreich, aber keine Staffel-Daten erhalten.")
                     }
                 } catch (e: Exception) {
                     Log.e("TMDB ERROR", "Fehler beim Abrufen der TMDB-Daten: ${e.message}")
-                    val imageUrl = helpViewModel.currentSeriesImage ?: helpViewModel.currentFocusedSerie?.screenshot_uri
+                    val imageUrl = helpViewModel.currentFocusedSerie?.screenshot_uri
                     if (imageUrl != null) {
                         binding.ivSeriesposter.load(imageUrl)
                     }
                 }
             } else {
-                val imageUrl = helpViewModel.currentSeriesImage ?: helpViewModel.currentFocusedSerie?.screenshot_uri
+                val imageUrl = helpViewModel.currentFocusedSerie?.screenshot_uri
                 if (imageUrl != null) {
                     binding.ivSeriesposter.load(imageUrl)
                 }
@@ -1444,9 +1476,14 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             // Aktualisiere die Episodenliste im Adapter
 
             if (!helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }?.toMutableList().isNullOrEmpty()) {
+                binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
                 episodesAdapter.submitList(helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }
                     ?.toMutableList())
             } else {
+
+                binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
+                Toast.makeText(this@SeriesDetailFragment.requireActivity(), "No Episodes found!",
+                    Toast.LENGTH_SHORT).show()
                 binding.rvLayoutSeriesSeasons.requestFocus()
             }
             // Setze die letzte geschaut Episode falls vorhanden

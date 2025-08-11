@@ -452,7 +452,6 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
         if (helpViewModel.currentMovieAccount!!.isStalker) {
             binding.rvLayoutStalkerSeries.visibility = View.GONE
         }
-        helpViewModel.currentMovieImage = null
         binding.loadSeriesProgressBar.visibility = View.VISIBLE
         binding.rvLayoutSeries.visibility = View.GONE
         binding.tvSeriesQuantity.text = ""
@@ -656,13 +655,6 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 seriesViewModel.openedSameSeries = true
             }
             helpViewModel.currentFocusedSerie = serie
-            helpViewModel.currentSeriesImage = if (!serie.backdropPath.isNullOrEmpty()) {
-                serie.backdropPath
-            } else if (!serie.screenshot_uri.isNullOrEmpty()) {
-                serie.screenshot_uri
-            } else {
-                ""
-            }
             openSeriesDetailFragment()
         }
     }
@@ -681,13 +673,6 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                 seriesViewModel.openedSameSeries = true
             }
             helpViewModel.currentFocusedSerie = serie
-            helpViewModel.currentSeriesImage = if (!serie.backdropPath.isNullOrEmpty()) {
-                serie.backdropPath
-            } else if (!serie.screenshot_uri.isNullOrEmpty()) {
-                serie.screenshot_uri
-            } else {
-                ""
-            }
             openSeriesDetailFragment()
         }
     }
@@ -747,7 +732,7 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
             }
             setSeriesDetailsNotImages(serie)
             if ((helpViewModel.currentSeriesAccount!!.isXtream && !xtreamViewModel.seriesCache.containsKey(serie.idByAccountData)) ||
-                helpViewModel.currentSeriesAccount!!.isStalker && !stalkerViewModel.seriesCache.containsKey(serie.idByAccountData)) {
+                helpViewModel.currentSeriesAccount!!.isStalker && (stalkerViewModel.seriesCacheLive.value?.containsKey(serie.idByAccountData) != true)) {
                 getSeriesDetailInfo(serie)
             } else {
                 if (helpViewModel.currentSeriesAccount!!.isXtream) {
@@ -761,7 +746,7 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                     }
                     helpViewModel.focusedEpisodes = xtreamViewModel.seriesCache[serie.idByAccountData]?.second?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))?.toMutableList()
                 } else {
-                    helpViewModel.focusedSeasons = stalkerViewModel.seriesCache[serie.idByAccountData]?.first
+                    helpViewModel.focusedSeasons = stalkerViewModel.seriesCacheLive.value?.get(serie.idByAccountData)?.first?.toMutableList()
                     serie.totalSeasons = helpViewModel.focusedSeasons?.size ?: 1
                     binding.tvTotSeasons.visibility = View.VISIBLE
                     binding.tvTotSeasons.text = if (serie.totalSeasons == 1) {
@@ -769,7 +754,11 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                     } else {
                         "${serie.totalSeasons} Seasons"
                     }
-                    helpViewModel.focusedEpisodes = stalkerViewModel.seriesCache[serie.idByAccountData]?.second?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))?.toMutableList()
+                    helpViewModel.focusedEpisodes = stalkerViewModel.seriesCacheLive.value
+                        ?.get(serie.idByAccountData)
+                        ?.second
+                        ?.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                        ?.toMutableList() ?: mutableListOf()
                 }
             }
             currentTmdbSerieDetailJob?.cancel()
@@ -908,36 +897,36 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
                     }
                 }
             } else {
-                stalkerViewModel.seriesDetailData.postValue(mutableListOf())
                 stalkerViewModel.getSeriesDetail(serie, helpViewModel.currentSeriesAccount!!)
-                stalkerViewModel.seriesDetailData.observe(viewLifecycleOwner) { seasons ->
-                    serie.totalSeasons = seasons.size
-                    helpViewModel.focusedSeasons = seasons.sortedWith(compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
-                        .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }).toMutableList()
-                    helpViewModel.focusedEpisodes = stalkerViewModel.episodesList.sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber })).toMutableList()
-                    binding.tvTotSeasons.text = if (seasons.isEmpty()) {
-                        binding.tvTotSeasons.visibility = View.INVISIBLE
-                        ""
-                    } else {
-                        binding.tvTotSeasons.visibility = View.VISIBLE
-                        if (seasons.size == 1) {
-                            "1 Season"
+                stalkerViewModel.seriesCacheLive.observe(viewLifecycleOwner) { cache ->
+                    val cachedData = cache[serie.idByAccountData]
+                    if (cachedData != null) {
+                        val (seasons, episodes) = cachedData
+                        serie.totalSeasons = seasons.size
+                        helpViewModel.focusedSeasons = seasons
+                            .sortedWith(
+                                compareBy<SeasonsOB> { it.seasonNumber.toIntOrNull() == null || it.seasonNumber.toIntOrNull() == 0 }
+                                    .thenBy { it.seasonNumber.toIntOrNull() ?: Int.MAX_VALUE }
+                            )
+                            .toMutableList()
+
+                        // Episodes setzen
+                        helpViewModel.focusedEpisodes = episodes
+                            .sortedWith(compareBy({ it.seasonNumber }, { it.episodeNumber }))
+                            .toMutableList()
+                        binding.tvTotSeasons.text = if (seasons.isEmpty()) {
+                            binding.tvTotSeasons.visibility = View.INVISIBLE
+                            ""
                         } else {
-                            "${seasons.size} Seasons"
+                            binding.tvTotSeasons.visibility = View.VISIBLE
+                            if (seasons.size == 1) {
+                                "1 Season"
+                            } else {
+                                "${seasons.size} Seasons"
+                            }
                         }
                     }
                 }
-            }
-            binding.tvTotSeasons.text = if (serie.totalSeasons != 0) {
-                binding.tvTotSeasons.visibility = View.VISIBLE
-                if (serie.totalSeasons == 1) {
-                    "${serie.totalSeasons} Season"
-                } else {
-                    "${serie.totalSeasons} Seasons"
-                }
-            } else {
-                binding.tvTotSeasons.visibility = View.INVISIBLE
-                ""
             }
         }
     }
@@ -1195,7 +1184,6 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
             }
             firstOpenCategory = true
             isFirstOpen = false
-            helpViewModel.currentSeriesImage = null
             binding.loadSeriesProgressBar.visibility = View.VISIBLE
             binding.rvLayoutSeries.visibility = View.GONE
             helpViewModel.currentSeriesCategoryOB = thisCategory

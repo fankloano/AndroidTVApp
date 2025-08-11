@@ -2388,7 +2388,9 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         val episodes = helpViewModel.focusedEpisodes ?: mutableListOf()
 
         if (helpViewModel.currentSeriesAccount?.isStalker == true) {
-            stalkerViewModel.seriesCache[serie.idByAccountData] = seasons to episodes
+            val currentCache = stalkerViewModel.seriesCacheLive.value ?: mutableMapOf()
+            currentCache[serie.idByAccountData] = seasons to episodes
+            stalkerViewModel.seriesCacheLive.postValue(currentCache)
         } else {
             xtreamViewModel.seriesCache[serie.idByAccountData] = seasons to episodes
         }

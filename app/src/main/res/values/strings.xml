@@ -157,4 +157,6 @@
     <string name="search_for">Search for...</string>
     <string name="no_data_found">No data found!</string>
     <string name="plex">Plex</string>
+    <string name="reset_movie_watchtime">Reset movie watchtime</string>
+    <string name="set_movie_as_completely_watched">Set movie as completely watched!</string>
 </resources>
