@@ -289,7 +289,7 @@
             android:layout_marginStart="2dp"
             android:orientation="horizontal"
             android:clickable="true"
-            android:nextFocusDown="@id/relLayout_visibility"
+            android:nextFocusDown="@id/relLayout_manageCategories"
             android:nextFocusUp="@id/relLayout_orderCategories"
             android:nextFocusLeft="@id/relLayout_categoryEditor"
             android:nextFocusRight="@id/relLayout_categoryEditor"
@@ -304,6 +304,41 @@
                     android:layout_height="45dp"
                     android:textColor="@drawable/focused_selected_mainmenu"
                     android:text="Create new category"
+                    android:textSize="15sp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="5dp"
+                    android:background="@color/transparent"
+                    android:paddingEnd="5dp"/>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_manageCategories"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:gravity="center_vertical"
+            android:paddingStart="13dp"
+            android:paddingEnd="15dp"
+            android:layout_marginStart="2dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:nextFocusDown="@id/relLayout_visibility"
+            android:nextFocusUp="@id/relLayout_categoryEditor"
+            android:nextFocusLeft="@id/relLayout_manageCategories"
+            android:nextFocusRight="@id/relLayout_manageCategories"
+            android:background="@drawable/settings_item_background_darklight"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/relLayout_categoryEditor">
+
+                <TextView
+                    android:id="@+id/tv_manageCategories"
+                    android:layout_width="match_parent"
+                    android:layout_height="45dp"
+                    android:textColor="@drawable/focused_selected_mainmenu"
+                    android:text="Tv Category Editor"
                     android:textSize="15sp"
                     android:gravity="center_vertical"
                     android:paddingStart="5dp"

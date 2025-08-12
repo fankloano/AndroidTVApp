@@ -449,7 +449,12 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
     }
 
     private fun onAccountClicked(position: Int) {
-        val item = movieAccountCategoryAdapter.currentList[position] as AccountMovieCategory.Account
+        val list = movieAccountCategoryAdapter.currentList
+        if (position !in list.indices) {
+            // Position nicht gültig, evtl. ignore oder loggen
+            return
+        }
+        val item = list[position] as? AccountMovieCategory.Account ?: return
 
         if (expandedAccountId == item.id) {
             expandedAccountId = null
@@ -718,10 +723,28 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                     ).await()
                                 when (tmdbMovieDetailsByImdbId) {
                                     is Resource.Success -> {
-                                        val backgroundImage =
-                                            tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
-                                        binding.ivMovieposter.visibility = View.VISIBLE
-                                        binding.ivMovieposter.load(backgroundImage)
+                                        val thismovie = tmdbMovieDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                        val backdropPath = thismovie?.backdrop_path
+                                        val posterPath = thismovie?.poster_path
+                                        val screenshotUri = movie.screenshot_uri
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+                                        if (imageToLoad != null) {
+                                            binding.ivMovieposter.visibility = View.VISIBLE
+                                            binding.ivMovieposter.load(imageToLoad)
+                                        } else {
+                                            binding.ivMovieposter.visibility = View.INVISIBLE
+                                        }
+                                        if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                            movie.screenshot_uri = posterPath
+                                        }
+                                        movie.backdropPath = imageToLoad ?: ""
                                     }
 
                                     is Resource.Error -> {
@@ -742,10 +765,28 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                                 ).await()
                                 when (tmdbMovieDetails) {
                                     is Resource.Success -> {
-                                        val backgroundImage =
-                                            tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
-                                        binding.ivMovieposter.visibility = View.VISIBLE
-                                        binding.ivMovieposter.load(backgroundImage)
+                                        val data = tmdbMovieDetails.data
+                                        val backdropPath = data?.backdrop_path
+                                        val posterPath = data?.poster_path
+                                        val screenshotUri = movie.screenshot_uri
+                                        val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                        val imageToLoad = when {
+                                            !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                            !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                            !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                            else -> null
+                                        }
+                                        if (imageToLoad != null) {
+                                            binding.ivMovieposter.visibility = View.VISIBLE
+                                            binding.ivMovieposter.load(imageToLoad)
+                                        } else {
+                                            binding.ivMovieposter.visibility = View.INVISIBLE
+                                        }
+                                        if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                            movie.screenshot_uri = posterPath
+                                        }
+                                        movie.backdropPath = imageToLoad ?: ""
                                     }
 
                                     is Resource.Error -> {
@@ -782,10 +823,28 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                             ).await()
                             when (tmdbMovieDetailsByImdbId) {
                                 is Resource.Success -> {
-                                    val backgroundImage =
-                                        tmdbMovieDetailsByImdbId.data?.movie_results?.first()?.backdrop_path.let { "https://image.tmdb.org/t/p/original$it" }
-                                    binding.ivMovieposter.visibility = View.VISIBLE
-                                    binding.ivMovieposter.load(backgroundImage)
+                                    val thismovie = tmdbMovieDetailsByImdbId.data?.movie_results?.firstOrNull()
+                                    val backdropPath = thismovie?.backdrop_path
+                                    val posterPath = thismovie?.poster_path
+                                    val screenshotUri = movie.screenshot_uri
+                                    val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val imageToLoad = when {
+                                        !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                        !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                        !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                        else -> null
+                                    }
+                                    if (imageToLoad != null) {
+                                        binding.ivMovieposter.visibility = View.VISIBLE
+                                        binding.ivMovieposter.load(imageToLoad)
+                                    } else {
+                                        binding.ivMovieposter.visibility = View.INVISIBLE
+                                    }
+                                    if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                        movie.screenshot_uri = posterPath
+                                    }
+                                    movie.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
@@ -806,17 +865,34 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
                             ).await()
                             when (tmdbMovieDetails) {
                                 is Resource.Success -> {
-                                    val backgroundImage =
-                                        tmdbMovieDetails.data?.backdrop_path?.let { "https://image.tmdb.org/t/p/original$it" }
-                                    binding.ivMovieposter.visibility = View.VISIBLE
-                                    binding.ivMovieposter.load(backgroundImage)
+                                    val data = tmdbMovieDetails.data
+                                    val backdropPath = data?.backdrop_path
+                                    val posterPath = data?.poster_path
+                                    val screenshotUri = movie.screenshot_uri
+                                    val backdropImageUrl = backdropPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val posterImageUrl = posterPath?.let { "https://image.tmdb.org/t/p/original$it" }
+                                    val imageToLoad = when {
+                                        !backdropImageUrl.isNullOrEmpty() -> backdropImageUrl
+                                        !posterImageUrl.isNullOrEmpty() -> posterImageUrl
+                                        !screenshotUri.isNullOrEmpty() -> screenshotUri
+                                        else -> null
+                                    }
+                                    if (imageToLoad != null) {
+                                        binding.ivMovieposter.visibility = View.VISIBLE
+                                        binding.ivMovieposter.load(imageToLoad)
+                                    } else {
+                                        binding.ivMovieposter.visibility = View.INVISIBLE
+                                    }
+                                    if (screenshotUri.isNullOrEmpty() && posterPath != null) {
+                                        movie.screenshot_uri = posterPath
+                                    }
+                                    movie.backdropPath = imageToLoad ?: ""
                                 }
 
                                 is Resource.Error -> {
-                                    val moviePoster = movie.screenshot_uri
-                                    if (!moviePoster.isNullOrEmpty()) {
+                                    if (!movie.screenshot_uri.isNullOrEmpty()) {
                                         binding.ivMovieposter.visibility = View.VISIBLE
-                                        binding.ivMovieposter.load(moviePoster)
+                                        binding.ivMovieposter.load(movie.screenshot_uri)
                                     } else {
                                         binding.ivMovieposter.visibility = View.INVISIBLE
                                     }

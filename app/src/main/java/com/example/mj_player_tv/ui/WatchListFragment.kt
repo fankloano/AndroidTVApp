@@ -1,11 +1,18 @@
 package com.example.mj_player_tv.ui
 
+import android.content.Intent
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
@@ -60,8 +67,10 @@ import androidx.lifecycle.flowWithLifecycle
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgSource
+import com.example.mj_player_tv.database.entity.EpisodesOB
 import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.database.help.StatsDisplayItem
 import com.example.mj_player_tv.database.help.WatchlistDisplayItem
 import com.example.mj_player_tv.database.help.WatchlistItem
 import com.example.mj_player_tv.database.help.WatchlistMainCategory
@@ -74,10 +83,14 @@ import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
+import org.threeten.bp.Duration
+import org.threeten.bp.LocalDateTime
+import org.threeten.bp.format.DateTimeFormatter
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.text.isNotEmpty
 
 @UnstableApi
 class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
@@ -90,13 +103,19 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     private lateinit var watchlistItemsAdapter: WatchlistItemsAdapter
     private lateinit var watchlistProgramsAdapter: WatchListProgrammeAdapter
 
-    private var moviesByAccount: Map<Accounts, List<MovieOB>>? = null
+    private var moviesByAccount: MutableMap<Accounts, MutableList<MovieOB>>? = null
 
-    private var seriesByAccount: Map<Accounts, List<SeriesOB>>? = null
+    private var seriesByAccount: MutableMap<Accounts, MutableList<SeriesOB>>? = null
 
-    private var programsByAccount: Map<Accounts, List<Programme>>? = null
+    private var programsByAccount: MutableMap<Accounts, MutableList<Programme>>? = null
 
-    private val epgSourceBox = ObjectBox.store.boxFor(EpgSource::class.java)
+    private val movieBox = ObjectBox.store.boxFor(MovieOB::class.java)
+
+    private val seriesBox = ObjectBox.store.boxFor(SeriesOB::class.java)
+
+    private val epgDataBox = ObjectBox.store.boxFor(EpgDataOB::class.java)
+
+    private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
 
     private var selectedWatchlistCategory: WatchlistMainCategory? = null
 
@@ -164,19 +183,19 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                 moviesByAccount = movieResults.groupBy(
                     keySelector = { it.account },
                     valueTransform = { it.movies }
-                ).mapValues { it.value.flatten() }
+                ).mapValues { it.value.flatten().toMutableList() }.toMutableMap()
 
                 val seriesResults = results.filterIsInstance<WatchlistItem.Series>()
                 seriesByAccount = seriesResults.groupBy(
                     keySelector = { it.account },
                     valueTransform = { it.series }
-                ).mapValues { it.value.flatten() }
+                ).mapValues { it.value.flatten().toMutableList() }.toMutableMap()
 
                 val programsResults = results.filterIsInstance<WatchlistItem.Programs>()
                 programsByAccount = programsResults.groupBy(
                     keySelector = { it.account },
                     valueTransform = { it.programs }
-                ).mapValues { it.value.flatten() }
+                ).mapValues { it.value.flatten().toMutableList() }.toMutableMap()
 
                 if (isFirstOpenWatchlist) {
                     val (firstCategory, firstMap) = listOf(
@@ -248,10 +267,44 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         val items = getDisplayableItemsFor(account, cat)
                         when (cat) {
                             WatchlistMainCategory.PROGRAMS -> {
-                                val programItems = items.filterIsInstance<WatchlistDisplayItem.ProgramItem>()
+                                val programItems =
+                                    items.filterIsInstance<WatchlistDisplayItem.ProgramItem>()
                                 watchlistProgramsAdapter.submitList(programItems)
-                            } else -> {
+                            }
+                            else -> {
                                 watchlistItemsAdapter.submitList(items)
+                            }
+                        }
+                        if (playlists.isEmpty()) {
+                            when (cat) {
+                                WatchlistMainCategory.PROGRAMS -> binding.rvWatchlistProgramme.requestFocus()
+                                WatchlistMainCategory.MOVIES -> {
+                                    resetMovieDetailsUi()
+                                    binding.tvNodatafound.visibility = View.VISIBLE
+                                    binding.rvWatchlistMovies.requestFocus()
+                                }
+                                WatchlistMainCategory.SERIES -> {
+                                    resetSeriesDetailsUi()
+                                    binding.tvNodatafound.visibility = View.VISIBLE
+                                    binding.rvWatchlistSeries.requestFocus()
+                                }
+                            }
+                        } else {
+                            if (items.isEmpty()) {
+                                when (cat) {
+                                    WatchlistMainCategory.MOVIES -> {
+                                        resetMovieDetailsUi()
+                                    }
+                                    WatchlistMainCategory.SERIES -> {
+                                        resetSeriesDetailsUi()
+                                    }
+                                    WatchlistMainCategory.PROGRAMS -> {
+
+                                    }
+                                }
+                                binding.recyclerPlaylists.post {
+                                    binding.recyclerPlaylists.requestFocus()
+                                }
                             }
                         }
                     }
@@ -435,7 +488,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
     }
 
     private fun prepareItemsRecyclerView() {
-        watchlistItemsAdapter = WatchlistItemsAdapter(helpViewModel, this, epgSourceBox) { clickedItem ->
+        watchlistItemsAdapter = WatchlistItemsAdapter(helpViewModel, this,  { clickedItem ->
             when (clickedItem) {
                 is WatchlistDisplayItem.MovieItem -> {
                     if (selectedAccount != null) {
@@ -508,13 +561,218 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     return@WatchlistItemsAdapter
                 }
             }
-        }
+        }, onLongItemClick = { clickedItem, view ->
+            when (clickedItem) {
+                is WatchlistDisplayItem.MovieItem -> {
+                    showMoviePopUp(clickedItem.movie, view)
+                }
+                is WatchlistDisplayItem.SeriesItem -> {
+                    showSeriesPopUp(clickedItem.series, view)
+                }
+                is WatchlistDisplayItem.ProgramItem -> {
+
+                }
+            }
+        })
         binding.recyclerItems.apply {
             adapter = watchlistItemsAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
             setSmoothFocusChangesEnabled(false)
         }
     }
+
+    private fun showMoviePopUp(movie: MovieOB, anchor: View) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
+        val widthInDp = 250
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val removeOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val fullWatchedOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        itemName.text = movie.movieName
+        itemName.isSelected = true
+        // Sichtbarkeit wie vorher bei PopupMenu
+        removeOption.text = "Remove movie from watchlist"
+        fullWatchedOption.text = "Add movie to user-list"
+
+        // Click-Listener
+        removeOption.setOnClickListener {
+            removieMovieFromList(movie)
+            popupWindow.dismiss()
+        }
+
+        fullWatchedOption.setOnClickListener {
+            setMovieAsCompletelyWatched(movie)
+            popupWindow.dismiss()
+        }
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+
+// Popup messen (wichtig, bevor man Positionen berechnet)
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+// Mittelpunkt vom Anchor
+        val centerX = anchorX + (anchor.width / 2)
+        val centerY = anchorY + (anchor.height / 2)
+
+// Popup so setzen, dass sein Mittelpunkt = Anchor-Mittelpunkt ist
+        val xPosition = centerX - (popupWidth / 2)
+        val yPosition = centerY - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+        showDimOverlay()
+        removeOption.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
+
+    private fun removieMovieFromList(movie: MovieOB) {
+        movie.isFavorite = false
+        if (!movie.isCompletelyWatched || !movie.isPartlyWatched) {
+            movieBox.remove(movie)
+        } else {
+            movieBox.put(movie)
+        }
+        helpViewModel.removeMovieFromWatchlist(movie)
+    }
+
+    fun removeMovieFromAccount(account: Accounts, moviesToRemove: MovieOB) {
+        moviesByAccount?.get(account)?.remove(moviesToRemove)
+    }
+
+    private fun setMovieAsCompletelyWatched(movie: MovieOB) {
+        return
+    }
+
+
+    private fun showSeriesPopUp(serie: SeriesOB, anchor: View) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
+        val widthInDp = 250
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val removeOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val fullWatchedOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        itemName.text = serie.seriesName
+        itemName.isSelected = true
+        // Sichtbarkeit wie vorher bei PopupMenu
+        removeOption.text = "Remove series from watchlist"
+        fullWatchedOption.text = "Add series to user-list"
+
+        // Click-Listener
+        removeOption.setOnClickListener {
+            removieSeriesFromList(serie)
+            popupWindow.dismiss()
+        }
+
+        fullWatchedOption.setOnClickListener {
+            setSeriesAsCompletelyWatched(serie)
+            popupWindow.dismiss()
+        }
+
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+
+// Popup messen (wichtig, bevor man Positionen berechnet)
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+// Mittelpunkt vom Anchor
+        val centerX = anchorX + (anchor.width / 2)
+        val centerY = anchorY + (anchor.height / 2)
+
+// Popup so setzen, dass sein Mittelpunkt = Anchor-Mittelpunkt ist
+        val xPosition = centerX - (popupWidth / 2)
+        val yPosition = centerY - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
+        showDimOverlay()
+        removeOption.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
+
+
+    private fun removieSeriesFromList(serie: SeriesOB) {
+        serie.isFavorite = false
+        if (!serie.isCompletelyWatched || !serie.isPartlyWatched) {
+            seriesBox.remove(serie)
+        } else {
+            seriesBox.put(serie)
+        }
+        helpViewModel.removeSerieFromWatchlist(serie)
+    }
+
+    fun removeSeriesFromAccount(account: Accounts, seriesToRemove: SeriesOB) {
+        seriesByAccount?.get(account)?.remove(seriesToRemove)
+    }
+
+    private fun setSeriesAsCompletelyWatched(serie: SeriesOB) {
+        return
+    }
+
+
+    private var dimView: View? = null
+
+    private fun showDimOverlay() {
+        dimView = View(requireContext()).apply {
+            setBackgroundColor(Color.parseColor("#B3000000")) // halbtransparent schwarz
+            isClickable = true // blockiert Klicks darunter
+        }
+        (requireActivity().window.decorView as ViewGroup).addView(
+            dimView,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    private fun removeDimOverlay() {
+        dimView?.let { (requireActivity().window.decorView as ViewGroup).removeView(it) }
+    }
+
+
 
     private fun prepareProgramsRecyclerview() {
         watchlistProgramsAdapter = WatchListProgrammeAdapter(onProgrammeClickListerner, this, helpViewModel)
@@ -532,8 +790,346 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
     }
 
-    private val onProgrammeClickListerner = WatchListProgrammeAdapter.OnClickListener {
+    private val onProgrammeClickListerner = WatchListProgrammeAdapter.OnClickListener { programItem, view ->
+        showProgrammePopUp(programItem, view)
+    }
+    private fun showProgrammePopUp(programItem: WatchlistDisplayItem.ProgramItem, anchor: View) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup_program, null)
+        val widthInDp = 400
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true
+        )
+        popupWindow.elevation = 8f
+        val tvchannelPos = programItem.programs.tvchannels.target
+        val tvChannel = programItem.programs.tvchannels.target.tvchannel.target
+        val epg = programItem.programs.epgData.target
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        itemName.text = tvChannel.showingName
+        itemName.isSelected = true
+        // Views aus dem Layout holen
+        val playOption = popupView.findViewById<TextView>(R.id.optionRemove)
+        val replayOption = popupView.findViewById<TextView>(R.id.optionReplay)
+        val reminderOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+        val epgName = popupView.findViewById<TextView>(R.id.programName)
+        val channelLogo = popupView.findViewById<ImageView>(R.id.itemLogo)
+        epgName.visibility = View.VISIBLE
+        epgName.text = epg.name
+        epgName.isSelected = true
 
+        val currentTime = System.currentTimeMillis() / 1000
+        val isProgramFinished = (epg.stopTimestamp ?: 0L) < currentTime
+        if (isProgramFinished) {
+            return
+        }
+        val isProgramNotStarted = (epg.startTimestamp ?: 0) > currentTime
+        val isCatchupChannel = tvChannel.enable_tv_archive == 1
+        val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
+        val image = tvChannel.logo
+        val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
+        if (tvChannel.account.target!!.useEpgLogos) {
+            if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvChannel.alwaysUsesExternalEpg)) {
+                channelLogo.visibility = View.VISIBLE
+                channelLogo.load(epgLogo)
+            } else {
+                if (image.isNotEmpty()) {
+                    channelLogo.visibility = View.VISIBLE
+                    channelLogo.load(image)
+                } else {
+                    channelLogo.visibility = View.INVISIBLE
+                }
+            }
+        } else {
+            if (image.isNotEmpty()) {
+                channelLogo.visibility = View.VISIBLE
+                channelLogo.load(image)
+            } else {
+                channelLogo.visibility = View.INVISIBLE
+            }
+        }
+
+        val isProgramCurrentlyPlaying = (((epg.stopTimestamp ?: 0L) > currentTime &&
+                currentTime >= (epg.startTimestamp ?: 0)))
+
+        playOption.visibility = if (isProgramCurrentlyPlaying) View.VISIBLE else View.GONE
+        replayOption.visibility = if (isCatchupChannel && (isProgramCurrentlyPlaying)) View.VISIBLE else View.GONE
+        reminderOption.visibility = if (isProgramNotStarted) View.VISIBLE else View.GONE
+
+
+        replayOption.text = when {
+            isProgramCurrentlyPlaying && isCatchupChannel -> "Play from beginning"
+            else -> ""
+        }
+
+        val isProgrammReminded = programmeBox.query(
+            Programme_.epgForCh.equal("${epg.idByAccountData}_${tvChannel.idByAccountData}")
+        ).build().findFirst()
+
+        reminderOption.text = if (isProgrammReminded != null) {
+            "Remove reminder"
+        } else {
+            "Set reminder"
+        }
+
+        if (isProgramCurrentlyPlaying) {
+            playOption.requestFocus()
+        } else {
+            if (isProgramNotStarted) {
+                reminderOption.requestFocus()
+            }
+        }
+
+        // Click Listener
+        playOption.setOnClickListener {
+            playChannel(tvchannelPos)
+            popupWindow.dismiss()
+        }
+        replayOption.setOnClickListener {
+            replayProgram(tvchannelPos, epg)
+            popupWindow.dismiss()
+        }
+        reminderOption.setOnClickListener {
+            checkReminder(programItem, tvchannelPos, anchor)
+            popupWindow.dismiss()
+        }
+
+        // Position mittig über dem Item
+        val location = IntArray(2)
+        anchor.getLocationOnScreen(location)
+        val anchorX = location[0]
+        val anchorY = location[1]
+        popupView.measure(
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+        )
+        val popupWidth = popupView.measuredWidth
+        val popupHeight = popupView.measuredHeight
+
+        val xPos = anchorX + (anchor.width / 2) - (popupWidth / 2)
+        val yPos = anchorY + (anchor.height / 2) - (popupHeight / 2)
+
+        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPos, yPos)
+
+        // Hintergrund abdunkeln
+        showDimOverlay()
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+            binding.recyclerProgramme.requestFocus()
+        }
+    }
+
+    fun playChannel(tvChannelPos: ChannelPositions) {
+        helpViewModel.currentFocusedChannPosition = tvChannelPos
+        helpViewModel.channelFromSearchContainer = true
+        helpViewModel.currentFocusedTvAccount = tvChannelPos.tvcategory.target.tvaccount.target
+        helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+        helpViewModel.checkCategoryActivated(tvChannelPos.tvcategory.target)
+        Log.d("CLICKEDFROMGLOBALSEARCH", "${helpViewModel.currentFocusedChannPosition?.tvchannel?.target?.showingName} IN ${helpViewModel.currentFocusedTvCategory?.showingName} FROM ACC: ${helpViewModel.currentFocusedTvAccount?.name}")
+        (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
+    }
+
+    fun replayProgram(tvChannelPos: ChannelPositions, clickedEpgData: EpgDataOB) {
+        val tvCategory = tvChannelPos.tvcategory.target
+        val tvChannel = tvChannelPos.tvchannel.target
+        helpViewModel.currentFocusedChannPosition = tvChannelPos
+        helpViewModel.currentFocusedChannel = tvChannel
+        helpViewModel.currentFocusedTvCategory = tvCategory
+        if (tvChannel.linkedEpgChannel?.target?.isExternalEpg == true) {
+            if (tvChannel.account.target.isXtream) {
+                clickedEpgData.let { epgData ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val thisEpg = xtreamViewModel.findEpgMatch(
+                            epgData,
+                            tvChannel,
+                            tvCategory!!
+                        )
+                        when (thisEpg) {
+                            is Resource.Success -> {
+                                if (thisEpg.data != null) {
+                                    val startTime = thisEpg.data.start
+                                    val endTime = thisEpg.data.end
+                                    getXtreamCatchup(
+                                        tvChannelPos,
+                                        startTime,
+                                        endTime,
+                                        clickedEpgData
+                                    )
+                                }
+                            }
+                            is Resource.Error -> {
+                                Toast.makeText(
+                                    this@WatchListFragment.requireActivity(),
+                                    "Error fetching Catchup Link!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+                        }
+                    }
+                }
+            } else {
+                clickedEpgData.let { epgData ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val thisEpg = stalkerViewModel.findEpgMatch(
+                            epgData,
+                            tvChannel,
+                            epgData.datum,
+                            tvCategory!!
+                        )
+                        Log.d("CATCHUP STALKER", "NOT EXTERN: ${epgData.name}")
+                        when (thisEpg) {
+                            is Resource.Success -> {
+                                if (thisEpg.data != null) {
+                                    val epgId = thisEpg.data.id
+                                    getStalkerCatchupLink(
+                                        tvChannelPos,
+                                        epgId,
+                                        epgData
+                                    )
+                                }
+                            }
+
+                            is Resource.Error -> {
+                                Toast.makeText(
+                                    this@WatchListFragment.requireActivity(),
+                                    "Error fetching Catchup Link!",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            if (tvChannel.linkedEpgChannel?.target?.epgsource?.target?.isXtreamEpg == true) {
+                clickedEpgData.let { epgData ->
+                    getXtreamCatchup(tvChannelPos, epgData.startTime, epgData.endTime, clickedEpgData)
+                }
+            } else {
+                clickedEpgData.let { epgData ->
+                    getStalkerCatchupLink(tvChannelPos, epgData.epgId, clickedEpgData)
+                }
+            }
+        }
+    }
+
+    fun getXtreamCatchup(tvChannelPos: ChannelPositions, startTime: String, endTime: String, clickedEpgData: EpgDataOB) {
+        val account = tvChannelPos.tvchannel.target.account.target
+        if (account != null) {
+            val accountUrl = account.stalkerUrl
+            val accountUserName = account.username
+            val accountPassword = account.macAddress
+            val epgStart = startTime.substring(0, 10) + ":" + startTime.substring(
+                11,
+                13
+            ) + "-" + startTime.substring(14, 16)
+            val duration = calculateDurationInMinutes(startTime, endTime)
+            val url =
+                "$accountUrl/streaming/timeshift.php?username=$accountUserName&password=$accountPassword&stream=${tvChannelPos.tvchannel.target.channelId}&start=$epgStart&duration=$duration"
+            helpViewModel.globalSearchCatchupUrl = url
+            helpViewModel.isPlayingCatchup = true
+            helpViewModel.catchupEpgData = clickedEpgData
+            helpViewModel.catchupPlayingChannelPosition = tvChannelPos
+            helpViewModel.currentFocusedTvAccount = account
+            helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+            helpViewModel.currentFocusedChannPosition = tvChannelPos
+            helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
+            helpViewModel.channelFromSearchContainer = true
+            (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
+        }
+    }
+
+    fun calculateDurationInMinutes(startString: String, endString: String): Long {
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+        val startDateTime = LocalDateTime.parse(startString, formatter)
+        val endDateTime = LocalDateTime.parse(endString, formatter)
+        return Duration.between(startDateTime, endDateTime).toMinutes()
+    }
+
+    fun getStalkerCatchupLink(tvChannelPos: ChannelPositions, epgId: String, clickedEpgData: EpgDataOB) {
+        viewLifecycleOwner.lifecycleScope.launch {
+            val account = tvChannelPos.tvchannel.target.account.target
+            if (account != null) {
+                val catchUp = stalkerViewModel.getTvCatchupLink(
+                    account.stalkerUrl,
+                    cmd = "/media/$epgId.mpg",
+                    cookie = "mac=${account.macAddress}; stb_lang=en; timezone=${account.timezone};",
+                    token = "Bearer ${account.token}",
+                    account.userAgent
+                ).await()
+                when (catchUp) {
+                    is Resource.Success -> {
+                        Log.d("CATCHUP STALKER", "CATCHUPDATA: ${catchUp.data}")
+                        helpViewModel.isPlayingCatchup = true
+                        helpViewModel.catchupEpgData = clickedEpgData
+                        helpViewModel.catchupPlayingChannelPosition = tvChannelPos
+                        helpViewModel.currentFocusedTvAccount = account
+                        helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
+                        helpViewModel.channelFromSearchContainer = true
+                        helpViewModel.currentFocusedChannPosition = tvChannelPos
+                        helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
+                        helpViewModel.globalSearchCatchupUrl = catchUp.data?.removePrefix("ffmpeg")?.trim() ?: ""
+                        (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
+                    }
+                    is Resource.Error -> {
+                        Toast.makeText(
+                            this@WatchListFragment.requireActivity(),
+                            "Error fetching Catchup Link!\n${catchUp.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        binding.recyclerItems.requestFocus()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun checkReminder(programmItem: WatchlistDisplayItem.ProgramItem, channPos: ChannelPositions, view: View) {
+        val tvChannel = channPos.tvchannel.target
+        val epg = programmItem.programs.epgData.target
+        val isProgramme = programmeBox.query(Programme_.epgForCh.equal("${epg.idByAccountData}_${tvChannel.idByAccountData}")).build().findFirst()
+        if (isProgramme != null) {
+            programmeBox.remove(isProgramme)
+            epg.isRemembered = false
+            epgDataBox.put(epg)
+            val currentEpgPos = watchlistProgramsAdapter.currentList.indexOf(programmItem)
+            watchlistProgramsAdapter.notifyItemChanged(currentEpgPos)
+        } else {
+            val timeOffSet =
+                tvChannel.epgTimeOffSet ?: channPos.tvcategory.target?.epgTimeOffSet
+                ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+            val thisProgramme = Programme(
+                0,
+                "${epg.idByAccountData}_${tvChannel.idByAccountData}",
+                epg.startTimestamp ?: 0L,
+                epg.stopTimestamp ?: 0L,
+                helpViewModel.settings?.tvReminderTime ?: 10L
+            )
+            programmeBox.put(thisProgramme)
+            thisProgramme.apply {
+                epgData.target = epg
+                tvchannels.target = channPos
+            }
+            programmeBox.put(thisProgramme)
+            epg.isRemembered = true
+            epgDataBox.put(epg)
+            val currentEpgPos = watchlistProgramsAdapter.currentList.indexOf(programmItem)
+            watchlistProgramsAdapter.notifyItemChanged(currentEpgPos)
+            if (!android.provider.Settings.canDrawOverlays(view.context)) {
+                val intent = Intent(
+                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + this.requireContext().packageName)
+                )
+                this.requireActivity().startActivity(intent)
+            }
+            helpViewModel.setReminder(this.requireContext(), thisProgramme, timeOffSet)
+        }
     }
 
     fun openMovieDetailFragment() {
@@ -572,8 +1168,16 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             helpViewModel.selectedGlobalSearchAccount = account
             selectedAccount = account
             lastLoadedCategory = selectedWatchlistCategory
-            playlistAdapter.notifyItemChanged(oldPosition)
-            playlistAdapter.notifyItemChanged(newPosition)
+            if (binding.recyclerPlaylists.isComputingLayout) {
+                binding.recyclerPlaylists.post {
+                    playlistAdapter.notifyItemChanged(oldPosition)
+                    playlistAdapter.notifyItemChanged(newPosition)
+                }
+            } else {
+                playlistAdapter.notifyItemChanged(oldPosition)
+                playlistAdapter.notifyItemChanged(newPosition)
+            }
+
             val items = getDisplayableItemsFor(account, selectedWatchlistCategory!!)
             if (items.isNotEmpty()) {
                 when (selectedWatchlistCategory) {

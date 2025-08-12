@@ -518,7 +518,12 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
     }
 
     private fun onAccountClicked(position: Int) {
-        val item = seriesAccountCategoryAdapter.currentList[position] as AccountSeriesCategory.Account
+        val list = seriesAccountCategoryAdapter.currentList
+        if (position !in list.indices) {
+            // Position nicht gültig, evtl. ignore oder loggen
+            return
+        }
+        val item = list[position] as? AccountSeriesCategory.Account ?: return
 
         if (expandedAccountId == item.id) {
             expandedAccountId = null

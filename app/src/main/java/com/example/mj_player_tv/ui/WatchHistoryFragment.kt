@@ -316,14 +316,14 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     }
 
     private fun prepareItemsRecyclerView() {
-        statsItemsAdapter = StatsItemsAdapter(helpViewModel, this, accountBox, onItemClick =  { clickedItem, view, adapterPosition ->
+        statsItemsAdapter = StatsItemsAdapter(helpViewModel, this, accountBox, onItemClick =  { clickedItem, view ->
             when (clickedItem) {
                 is StatsDisplayItem.MovieItem -> {
                     val selectedAccount = clickedItem.movie.movieAccount.target
                     if (selectedAccount != null) {
                         if (selectedAccount.isXtream) {
                             viewLifecycleOwner.lifecycleScope.launch {
-                                val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(clickedItem.movie, selectedAccount!!)
+                                val xtreamMovie = xtreamViewModel.getXtreamMovieDetails(clickedItem.movie, selectedAccount)
                                 helpViewModel.currentFocusedMovie = xtreamMovie
                                 helpViewModel.currentMovieAccount = selectedAccount
                                 openMovieDetailFragment()
@@ -375,19 +375,19 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                     }
                 }
                 is StatsDisplayItem.TvChannelItem -> {
-                    showChannelPopUp(clickedItem.tvchannel, view, adapterPosition)
+                    showChannelPopUp(clickedItem.tvchannel, view)
                 }
             }
-        }, onLongItemClick = { longclickedItem, view, adapterPosition ->
+        }, onLongItemClick = { longclickedItem, view ->
             when (longclickedItem) {
                 is StatsDisplayItem.MovieItem -> {
-                    showMoviePopUp(longclickedItem.movie, view, adapterPosition)
+                    showMoviePopUp(longclickedItem.movie, view)
                 }
                 is StatsDisplayItem.SeriesItem -> {
-                    showSeriesPopUp(longclickedItem.series, view, adapterPosition)
+                    showSeriesPopUp(longclickedItem.series, view)
                 }
                 is StatsDisplayItem.TvChannelItem -> {
-                    showChannelPopUp(longclickedItem.tvchannel, view, adapterPosition)
+                    showChannelPopUp(longclickedItem.tvchannel, view)
                 }
             }
         })
@@ -441,7 +441,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         selectedStatsCategory = category
     }
 
-    private fun showChannelPopUp(tvchannel: TvChannelOB, anchor: View, adapterPosition: Int) {
+    private fun showChannelPopUp(tvchannel: TvChannelOB, anchor: View) {
         val context = anchor.context
         val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
         val widthInDp = 250
@@ -532,7 +532,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             }
         }
     }
-    private fun showMoviePopUp(movie: MovieOB, anchor: View, adapterPosition: Int) {
+    private fun showMoviePopUp(movie: MovieOB, anchor: View) {
         val context = anchor.context
         val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
         val widthInDp = 250
@@ -636,10 +636,10 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
 
     }
 
-    private fun showSeriesPopUp(serie: SeriesOB, anchor: View, adapterPosition: Int) {
+    private fun showSeriesPopUp(serie: SeriesOB, anchor: View) {
         val context = anchor.context
         val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup, null)
-        val widthInDp = 250
+        val widthInDp = 300
         val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
         val popupWindow = PopupWindow(
             popupView,
@@ -657,7 +657,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         itemName.text = serie.seriesName
         itemName.isSelected = true
         removeOption.text = "Remove / Reset Series"
-        fullWatchedOption.text = "Set Series as Watched"
+        fullWatchedOption.text = "Set Series as completely Watched"
         // Sichtbarkeit wie vorher bei PopupMenu
         fullWatchedOption.visibility = if (serie.isPartlyWatched) View.VISIBLE else View.GONE
 

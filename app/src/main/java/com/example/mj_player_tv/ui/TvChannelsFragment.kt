@@ -1207,16 +1207,19 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         if (!tvChannelsAdapter?.currentList.isNullOrEmpty()) {
                             tvChannelsAdapter?.submitList(sortedChannels)
                             tvChannelsAdapter?.submitListToUse(sortedChannels)
-                            if (helpViewModel.isChannelHide) {
+                            if (helpViewModel.isChannelHide || selectBeforeFilteredAssignEpgList) {
                                 val position =
                                     tvChannelsAdapter?.currentList?.indexOf(helpViewModel.currentFocusedChannPosition)
                                 if (position != null) {
                                     binding.rvLayoutTvChannels.post {
                                         binding.rvLayoutTvChannels.setSelectedPosition(position)
-                                        binding.rvLayoutTvChannels.requestFocus()
+                                        if (helpViewModel.isChannelHide) {
+                                            binding.rvLayoutTvChannels.requestFocus()
+                                        }
                                     }
                                 }
                                 helpViewModel.isChannelHide = false
+                                selectBeforeFilteredAssignEpgList = false
                             }
                             if (sortedChannels.isEmpty()) {
                                 setTvAccountsVisibilityAnimated(true)
@@ -1234,6 +1237,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             }
         }
     }
+
+    var selectBeforeFilteredAssignEpgList = false
 
     fun updateSingleChannel() {
         viewLifecycleOwner.lifecycleScope.launch {
@@ -2052,6 +2057,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
     private fun showHudContainer() {
         binding.hudLayout.visibility = VISIBLE
+        if (binding.rvLayoutScrollChannels.isVisible) {
+            binding.rvLayoutScrollChannels.visibility = View.GONE
+        }
         // Entferne vorherige geplante Ausführungen des Runnables, falls vorhanden
         handler.removeCallbacks(hideHudRunnable)
         isHudContainerOpened = true

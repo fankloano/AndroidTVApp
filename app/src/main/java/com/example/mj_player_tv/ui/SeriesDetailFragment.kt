@@ -1119,8 +1119,10 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     fun showDetailUi(serie: SeriesOB) {
         binding.tvSeriestitle.text = serie.seriesName
+        binding.tvSeriestitle.isSelected = true
+
         if (helpViewModel.isSearchContainerOpened || helpViewModel.watchstatsContainerOpened) {
-                getSeriesImage()
+            getSeriesImage()
         }
 
         binding.tvCategories.text = serie.genres_str?.ifEmpty {

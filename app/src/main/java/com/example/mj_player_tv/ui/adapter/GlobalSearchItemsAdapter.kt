@@ -10,7 +10,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.PopupMenu
+import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
@@ -41,6 +44,7 @@ class GlobalSearchItemsAdapter(
     private val programmeBox: Box<Programme>,
     private val epgDataBox: Box<EpgDataOB>,
     private val onItemClick: (GlobalSearchDisplayItem) -> Unit,
+    private val onItemLongClick: (GlobalSearchDisplayItem, View) -> Unit
 ) : ListAdapter<GlobalSearchDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
@@ -199,6 +203,11 @@ class GlobalSearchItemsAdapter(
                 cardviewTvchannel.setOnClickListener {
                     onItemClick(movieItem)
                 }
+
+                cardviewTvchannel.setOnLongClickListener {
+                    onItemLongClick(movieItem, cardviewTvchannel)
+                    true
+                }
             }
         }
     }
@@ -239,7 +248,10 @@ class GlobalSearchItemsAdapter(
                 cardviewSerie.setOnClickListener {
                     onItemClick(seriesItem)
                 }
-
+                cardviewSerie.setOnLongClickListener {
+                    onItemLongClick(seriesItem, cardviewSerie)
+                    true
+                }
             }
         }
     }
@@ -432,76 +444,138 @@ class GlobalSearchItemsAdapter(
             }
         }
 
-        private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, view: View) {
-            Log.d("POPUPMENU KLICK", "JA")
-            val popup = PopupMenu(view.context, view, Gravity.NO_GRAVITY, 0,R.style.CustomPopupMenu)
-            popup.menuInflater.inflate(R.menu.menu_search_program_options, popup.menu)
+        private fun showProgramPopup(program: EpgDataOB, tvchannelPos: ChannelPositions, anchor: View) {
+            val context = anchor.context
+            val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup_program, null)
+            val widthInDp = 400
+            val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+            val popupWindow = PopupWindow(
+                popupView,
+                widthInPx,
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+            )
+            popupWindow.elevation = 8f
+            val itemName = popupView.findViewById<TextView>(R.id.itemName)
+            itemName.text = tvchannelPos.tvchannel.target.showingName
+            itemName.isSelected = true
+            // Views aus dem Layout holen
+            val playOption = popupView.findViewById<TextView>(R.id.optionRemove)
+            val replayOption = popupView.findViewById<TextView>(R.id.optionReplay)
+            val reminderOption = popupView.findViewById<TextView>(R.id.optionFullWatched)
+            val epgName = popupView.findViewById<TextView>(R.id.programName)
+            val channelLogo = popupView.findViewById<ImageView>(R.id.itemLogo)
+            epgName.visibility = View.VISIBLE
+            epgName.text = program.name
+            epgName.isSelected = true
+
             val tvchannel = tvchannelPos.tvchannel.target
             val currentTime = System.currentTimeMillis() / 1000
             val isProgramFinished = (program.stopTimestamp ?: 0L) < currentTime
             val isProgramNotStarted = (program.startTimestamp ?: 0) > currentTime
             val isCatchupChannel = tvchannel.enable_tv_archive == 1
+            val linkedEpgChannel = tvchannel.linkedEpgChannel?.target
+            val image = tvchannel.logo
+            val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
+            if (tvchannel.account.target!!.useEpgLogos) {
+                if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvchannel.alwaysUsesExternalEpg)) {
+                    channelLogo.visibility = View.VISIBLE
+                    channelLogo.load(epgLogo)
+                } else {
+                    if (image.isNotEmpty()) {
+                        channelLogo.visibility = View.VISIBLE
+                        channelLogo.load(image)
+                    } else {
+                        channelLogo.visibility = View.INVISIBLE
+                    }
+                }
+            } else {
+                if (image.isNotEmpty()) {
+                    channelLogo.visibility = View.VISIBLE
+                    channelLogo.load(image)
+                } else {
+                    channelLogo.visibility = View.INVISIBLE
+                }
+            }
             if (isProgramFinished && !isCatchupChannel) {
                 return
             }
-            val isProgramCurrentlyPlaying = (((program.stopTimestamp
-                ?: 0L) > currentTime &&
+
+            val isProgramCurrentlyPlaying = (((program.stopTimestamp ?: 0L) > currentTime &&
                     currentTime >= (program.startTimestamp ?: 0)))
-            val playItem = popup.menu.findItem(R.id.mark_play)
-            val replayItem = popup.menu.findItem(R.id.mark_replay)
-            val reminderItem = popup.menu.findItem(R.id.mark_remember)
-            playItem.setVisible(isProgramCurrentlyPlaying)
-            replayItem.setVisible(isCatchupChannel && (isProgramCurrentlyPlaying || isProgramFinished))
-            reminderItem.setVisible(isProgramNotStarted)
-            val replayText = if (isProgramFinished) {
-                "Rewatch"
-            } else {
-                if (isProgramCurrentlyPlaying && isCatchupChannel) {
-                    "Play from beginning"
-                } else {
-                    ""
-                }
+
+            playOption.visibility = if (isProgramCurrentlyPlaying) View.VISIBLE else View.GONE
+            replayOption.visibility = if (isCatchupChannel && (isProgramCurrentlyPlaying || isProgramFinished)) View.VISIBLE else View.GONE
+            reminderOption.visibility = if (isProgramNotStarted) View.VISIBLE else View.GONE
+
+
+            replayOption.text = when {
+                isProgramFinished -> "Rewatch"
+                isProgramCurrentlyPlaying && isCatchupChannel -> "Play from beginning"
+                else -> ""
             }
-            replayItem.setTitle(replayText)
+
             val isProgrammReminded = programmeBox.query(
                 Programme_.epgForCh.equal("${program.idByAccountData}_${tvchannel.idByAccountData}")
             ).build().findFirst()
-            val remindText = if (isProgrammReminded != null) {
+
+            reminderOption.text = if (isProgrammReminded != null) {
                 "Remove reminder"
             } else {
                 "Set reminder"
             }
-            reminderItem.setTitle(remindText)
 
-            var wasItemClicked = false
-            popup.setOnMenuItemClickListener { item ->
-                when (item.itemId) {
-                    R.id.mark_play -> {
-                        wasItemClicked = true
-                        playProgram(tvchannelPos)
-                        true
+            if (isProgramCurrentlyPlaying) {
+                playOption.requestFocus()
+            } else {
+                if (isCatchupChannel && isProgramFinished) {
+                    replayOption.requestFocus()
+                } else {
+                    if (isProgramNotStarted) {
+                        reminderOption.requestFocus()
                     }
-                    R.id.mark_replay -> {
-                        wasItemClicked = true
-                        replayProgram(tvchannelPos, program)
-                        true
-                    }
-                    R.id.mark_remember -> {
-                        wasItemClicked = true
-                        checkReminder(program, tvchannelPos, view)
-                        true
-                    }
-                    else -> false
                 }
             }
-            popup.setOnDismissListener {
-                if (!wasItemClicked) {
-                    wasItemClicked = false
-                    binding.recyclerEpglist.requestFocus()
-                }
+
+            // Click Listener
+            playOption.setOnClickListener {
+                playProgram(tvchannelPos)
+                popupWindow.dismiss()
             }
-            popup.show()
+            replayOption.setOnClickListener {
+                replayProgram(tvchannelPos, program)
+                popupWindow.dismiss()
+            }
+            reminderOption.setOnClickListener {
+                checkReminder(program, tvchannelPos, anchor)
+                popupWindow.dismiss()
+            }
+
+            // Position mittig über dem Item
+            val location = IntArray(2)
+            anchor.getLocationOnScreen(location)
+            val anchorX = location[0]
+            val anchorY = location[1]
+            popupView.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            val popupWidth = popupView.measuredWidth
+            val popupHeight = popupView.measuredHeight
+
+            val xPos = anchorX + (anchor.width / 2) - (popupWidth / 2)
+            val yPos = anchorY + (anchor.height / 2) - (popupHeight / 2)
+
+            popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPos, yPos)
+
+            // Hintergrund abdunkeln
+            fragment.showDimOverlay()
+            popupWindow.setOnDismissListener {
+                fragment.removeDimOverlay()
+                binding.recyclerEpglist.requestFocus()
+            }
         }
+
 
         private fun playProgram(tvchannelPos: ChannelPositions) {
                 fragment.playChannel(tvchannelPos)
@@ -535,7 +609,7 @@ class GlobalSearchItemsAdapter(
                 programmeBox.put(thisProgramme)
                 thisProgramme.apply {
                     epgData.target = epg
-                    tvchannels.target = tvChannel
+                    tvchannels.target = tvChannelPos
                 }
                 programmeBox.put(thisProgramme)
                 epg.isRemembered = true
@@ -552,7 +626,6 @@ class GlobalSearchItemsAdapter(
                 helpViewModel.setReminder(fragment.requireContext(), thisProgramme, timeOffSet)
             }
         }
-
     }
 
     class DiffCallback : DiffUtil.ItemCallback<GlobalSearchDisplayItem>() {

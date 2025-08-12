@@ -2,7 +2,7 @@ package com.example.mj_player_tv.network.model.tmdb.imdb_id
 
 data class MovieResult(
     val adult: Boolean,
-    val backdrop_path: String,
+    var backdrop_path: String,
     val genre_ids: List<Int>,
     val id: Int,
     val media_type: String,

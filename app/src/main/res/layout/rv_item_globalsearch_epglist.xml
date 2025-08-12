@@ -129,6 +129,7 @@
             android:id="@+id/iv_play_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:src="@drawable/selector_play_tv_fullepg"
             android:padding="5dp"/>
 

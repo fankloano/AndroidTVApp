@@ -270,7 +270,6 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                     if (mainFragment is TvChannelsFragment) {
                         mainFragment.setVideoViewNotFullScreen()
                         mainFragment.makeFullEpgVisible()
-                        binding.rvFullepg.requestFocus()
                     }
                 }
             }
@@ -424,8 +423,8 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
 
         binding.remindProgram.setOnClickListener {
             helpViewModel.currentSelectedEpgForSelectedChannel?.let { epg ->
-                helpViewModel.currentFocusedChannel?.let { channel ->
-                    val isProgramme = programmeBox.query(Programme_.epgForCh.equal("${epg.idByAccountData}_${channel.idByAccountData}")).build().findFirst()
+                helpViewModel.currentFocusedChannPosition?.let { channel ->
+                    val isProgramme = programmeBox.query(Programme_.epgForCh.equal("${epg.idByAccountData}_${channel.tvchannel.target.idByAccountData}")).build().findFirst()
                     if (isProgramme != null) {
                         programmeBox.remove(isProgramme)
                         epg.isRemembered = false
@@ -442,7 +441,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                             ?: 0
                         val thisProgramme = Programme(
                             0,
-                            "${epg.idByAccountData}_${channel.idByAccountData}",
+                            "${epg.idByAccountData}_${channel.tvchannel.target.idByAccountData}",
                             epg.startTimestamp ?: 0L,
                             epg.stopTimestamp ?: 0L,
                             helpViewModel.settings?.tvReminderTime ?: 10L
@@ -450,7 +449,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                         programmeBox.put(thisProgramme)
                         thisProgramme.apply {
                             epgData.target = epg
-                            tvchannels.target = tvChannel
+                            tvchannels.target = channel
                         }
                         programmeBox.put(thisProgramme)
                         epg.isRemembered = true
@@ -1297,7 +1296,6 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             helpViewModel.currentFocusedChannPosition
         }
         if (focusedChannPos != null) {
-            Log.d("FOCUSEDFULLEPGDATA", "$epgData")
             binding.detailepgcontainerview.visibility = View.VISIBLE
             binding.relLayoutDetailEpg.visibility = View.VISIBLE
             val timeOffSet = focusedChannPos.tvchannel.target?.epgTimeOffSet ?: focusedChannPos.tvcategory.target?.epgTimeOffSet ?: focusedChannPos.tvchannel.target?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
@@ -1309,7 +1307,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
 
             if (epgData.name.isEmpty()) {
                 binding.tvCurrentProgram.text = resources.getString(R.string.no_information)
-                binding.tvCurrentSubtitle.isSelected = false
+                binding.tvCurrentProgram.isSelected = false
             } else {
                 binding.tvCurrentProgram.text = epgData.name
                 binding.tvCurrentProgram.isSelected = true
@@ -1323,6 +1321,8 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                 binding.tvCurrentSubtitle.text = epgData.sub_title
                 binding.tvCurrentSubtitle.isSelected = true
             }
+
+            Log.d("EPGDATENZEIGE", "${focusedChannPos.tvchannel.target.showingName} = ${binding.tvCurrentProgram.text} SUBT: ${binding.tvCurrentSubtitle.text}")
 
             if (epgData.category.isNullOrEmpty()) {
                 binding.tvCurrentCategory.visibility = View.GONE

@@ -732,6 +732,19 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
         }
     }
 
+    fun checkTvChannelsFragmentFromWatchlist() {
+        makeNavHostInvisible()
+        closeMenu()
+        hideMenu()
+        resetNavHostFragment()
+        toggleActivateOnMenu(activityMainBinding.btnTv)
+        viewModel.firstOpenTvChFrag = true
+        toggleVisibilityOfMainContainer(true)
+        viewModel.isTvAccountMenuOpened = true
+        lastOpenedFragment = Constants.FRAGMENT_TV
+        changeFragment(TvChannelsFragment())
+    }
+
     private fun makeNavHostInvisible() {
         activityMainBinding.navHostFragment.visibility = View.INVISIBLE
     }

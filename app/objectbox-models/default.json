@@ -1899,7 +1899,7 @@
           "indexId": "57:3546315773372490152",
           "type": 11,
           "flags": 520,
-          "relationTarget": "TvChannelOB"
+          "relationTarget": "ChannelPositions"
         }
       ],
       "relations": []

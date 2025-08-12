@@ -1,47 +1,49 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="wrap_content"
-    android:layout_width="250dp"
+    android:layout_width="300dp"
+    android:padding="10dp"
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    android:padding="2dp"
-    android:background="?attr/backgroundDark"
+    android:background="?attr/backgroundDarkDark"
     android:focusable="true"
     android:focusableInTouchMode="true">
 
     <TextView
         android:id="@+id/itemName"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:layout_height="50dp"
+        android:padding="16dp"
+        android:layout_marginBottom="10dp"
         android:background="?attr/backgroundDarkDark"
         tools:text="DE | DER HERR DER RINGE - DIE ZWEI TÜRME"
+        android:textColor="?attr/textMainColor"
         android:maxLines="1"
         android:ellipsize="marquee"
         android:scrollHorizontally="true"
-        android:textSize="15sp"
+        android:textSize="16sp"
         android:clickable="true" />
 
     <TextView
         android:id="@+id/optionRemove"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_marginTop="5dp"
+        android:padding="16dp"
         android:text="@string/reset_movie_watchtime"
-        android:background="@drawable/selector_fullepg_epgoptions_tv"
+        android:background="@drawable/selector_popup_options"
         android:focusable="true"
         android:focusableInTouchMode="true"
+        android:nextFocusUp="@id/optionRemove"
         android:textSize="15sp"
         android:clickable="true" />
+
 
     <TextView
         android:id="@+id/optionFullWatched"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:layout_marginTop="5dp"
+        android:padding="16dp"
         android:text="@string/set_movie_as_completely_watched"
-        android:background="@drawable/selector_fullepg_epgoptions_tv"
+        android:background="@drawable/selector_popup_options"
         android:textSize="15sp"
         android:focusable="true"
         android:focusableInTouchMode="true" />

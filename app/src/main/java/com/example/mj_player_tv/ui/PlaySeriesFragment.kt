@@ -1,28 +1,18 @@
 package com.example.mj_player_tv.ui
 
-import android.app.Dialog
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.Window
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.RelativeLayout
-import android.widget.TextView
 import android.widget.Toast
-import androidx.activity.addCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.media3.common.C
 import androidx.media3.common.Format
 import androidx.media3.common.MediaItem
@@ -46,7 +36,6 @@ import androidx.media3.exoplayer.drm.DrmSession.DrmSessionException
 import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.exoplayer.util.EventLogger
 import androidx.media3.exoplayer.video.VideoFrameMetadataListener
 import androidx.media3.extractor.DefaultExtractorsFactory
 import coil.load
@@ -54,14 +43,8 @@ import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
 import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.EpisodesOB
-import com.example.mj_player_tv.database.entity.EpisodesOB_
 import com.example.mj_player_tv.database.entity.SeasonsOB
-import com.example.mj_player_tv.database.entity.SeasonsOB_
 import com.example.mj_player_tv.database.entity.SeriesOB
-import com.example.mj_player_tv.database.entity.SeriesOB_
-import com.example.mj_player_tv.database.help.Episode
-import com.example.mj_player_tv.database.help.Season
-import com.example.mj_player_tv.database.help.Serie
 import com.example.mj_player_tv.database.help.TrackInfo
 import com.example.mj_player_tv.databinding.FragmentPlaySeriesBinding
 import com.example.mj_player_tv.ui.adapter.SeriesSelectionAdapter
@@ -76,12 +59,10 @@ import io.objectbox.Box
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.interfaces.IMedia
-import org.w3c.dom.Text
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
@@ -1049,6 +1030,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     private fun playPreviousEpisode() {
         val currentEpisodeIndex = helpViewModel.focusedEpisodes?.indexOf(helpViewModel.currentFocusedEpisode)
         val currentSeasonIndex = helpViewModel.focusedSeasons?.indexOf(helpViewModel.currentFocusedSeason)
+        updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
         if (currentEpisodeIndex != null && currentEpisodeIndex > 0) {
             player?.stop() ?: mediaPlayer?.stop()
             val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
@@ -1071,7 +1053,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         val currentSeasonIndex = helpViewModel.focusedSeasons?.indexOf(helpViewModel.currentFocusedSeason)
         val episodeIndexes = (helpViewModel.focusedEpisodes?.size?.minus(1)) ?: 0
         val seasonIndexes = (helpViewModel.focusedSeasons?.size?.minus(1)) ?: 0
-
+        updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
         if (currentEpisodeIndex != null && currentEpisodeIndex < episodeIndexes) {
             player?.stop() ?: mediaPlayer?.stop()
             val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
@@ -2276,10 +2258,10 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     }
 
 
-    private fun updateSerieSeasonEpisode() {
-        val episode = helpViewModel.currentFocusedEpisode ?: return
-        val season = helpViewModel.currentFocusedSeason ?: return
-        val serie = helpViewModel.currentFocusedSerie ?: return
+    private fun updateSerieSeasonEpisode(episode: EpisodesOB?, season: SeasonsOB?, serie: SeriesOB?) {
+        if (episode == null) return
+        if (season == null) return
+        if (serie == null) return
         val percentage = episode.episodePercentagePlayed
 
         if (percentage in 0.05..0.94) {
@@ -2291,7 +2273,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             episode.episodePercentagePlayed = 0.0
         }
 
-        updateCache()
+        updateCache(serie, helpViewModel.focusedSeasons, helpViewModel.focusedEpisodes)
 
         updateSeriesInRV()
     }
@@ -2382,10 +2364,10 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         persistAll(serie, season, episode)
     }
 
-    private fun updateCache() {
-        val serie = helpViewModel.currentFocusedSerie ?: return
-        val seasons = helpViewModel.focusedSeasons ?: mutableListOf()
-        val episodes = helpViewModel.focusedEpisodes ?: mutableListOf()
+    private fun updateCache(serie: SeriesOB?, seasons: MutableList<SeasonsOB>?, episodes: MutableList<EpisodesOB>?) {
+        if (serie == null) return
+        if (seasons == null) return
+        if (episodes == null) return
 
         if (helpViewModel.currentSeriesAccount?.isStalker == true) {
             val currentCache = stalkerViewModel.seriesCacheLive.value ?: mutableMapOf()
@@ -2420,7 +2402,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         mediaPlayer?.release()
         isVideoPlaying = false
         currentSeriesUrl = ""
-        updateSerieSeasonEpisode()
+        updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
         helpViewModel.playMovieSelectionModified = null
         helpViewModel.serieFullScreenOpened = false
         seriesViewModel.requestFocusOnNextEpisode()

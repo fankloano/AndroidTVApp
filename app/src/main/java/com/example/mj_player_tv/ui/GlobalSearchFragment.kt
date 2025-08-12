@@ -3,11 +3,13 @@ package com.example.mj_player_tv.ui
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
+import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
@@ -15,7 +17,10 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.PopupMenu
+import android.widget.PopupWindow
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.view.isInvisible
@@ -33,6 +38,8 @@ import com.example.mj_player_tv.database.ObjectBox
 import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
+import com.example.mj_player_tv.database.entity.MovieCategoryOB
+import com.example.mj_player_tv.database.entity.MovieCategoryOB_
 import com.example.mj_player_tv.database.entity.SeasonsOB
 import com.example.mj_player_tv.database.entity.Settings
 import com.example.mj_player_tv.databinding.FragmentSearchGlobalBinding
@@ -59,16 +66,20 @@ import kotlinx.coroutines.launch
 import com.example.mj_player_tv.database.entity.MovieOB
 import com.example.mj_player_tv.database.entity.Programme
 import com.example.mj_player_tv.database.entity.Programme_
+import com.example.mj_player_tv.database.entity.SeriesCategoryOB
+import com.example.mj_player_tv.database.entity.SeriesCategoryOB_
 import com.example.mj_player_tv.database.entity.SeriesOB
 import com.example.mj_player_tv.database.entity.TvCategoryOB
 import com.example.mj_player_tv.database.entity.TvChannelOB
 import com.example.mj_player_tv.database.help.GlobalSearchDisplayItem
 import com.example.mj_player_tv.database.help.GlobalSearchItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
+import com.example.mj_player_tv.database.help.WatchlistItem
 import com.example.mj_player_tv.ui.adapter.GlobalSearchItemsAdapter
 import com.example.mj_player_tv.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.withContext
 import org.threeten.bp.Duration
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
@@ -85,6 +96,10 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private val accountBox = ObjectBox.store.boxFor(Accounts::class.java)
 
     private val tvCatBox = ObjectBox.store.boxFor(TvCategoryOB::class.java)
+
+    private val movieCatBox = ObjectBox.store.boxFor(MovieCategoryOB::class.java)
+
+    private val seriesCatBox = ObjectBox.store.boxFor(SeriesCategoryOB::class.java)
 
     private val programmeBox = ObjectBox.store.boxFor(Programme::class.java)
 
@@ -389,9 +404,18 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     // 👉 Fokus-Setzen verzögert nach UI-Update
                     binding.root.post {
                         when (firstCategory) {
-                            GlobalSearchMainCategory.TV -> binding.tvCatTv.requestFocus()
-                            GlobalSearchMainCategory.MOVIES -> binding.tvCatMovies.requestFocus()
-                            GlobalSearchMainCategory.SERIES -> binding.tvCatSeries.requestFocus()
+                            GlobalSearchMainCategory.TV -> {
+                                binding.recyclerItems.setSpanCount(7)
+                                binding.tvCatTv.requestFocus()
+                            }
+                            GlobalSearchMainCategory.MOVIES -> {
+                                binding.recyclerItems.setSpanCount(7)
+                                binding.tvCatMovies.requestFocus()
+                            }
+                            GlobalSearchMainCategory.SERIES -> {
+                                binding.recyclerItems.setSpanCount(7)
+                                binding.tvCatSeries.requestFocus()
+                            }
                             GlobalSearchMainCategory.PROGRAMS -> {
                                 binding.recyclerItems.setSpanCount(1)
                                 binding.tvCatEpg.requestFocus()
@@ -803,7 +827,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     private fun prepareItemsRecyclerView() {
-        globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this, programmeBox, epgDataBox) { clickedItem ->
+        globalSearchItemAdapter = GlobalSearchItemsAdapter(helpViewModel, this, programmeBox, epgDataBox, onItemClick =  { clickedItem ->
             when (clickedItem) {
                 is GlobalSearchDisplayItem.ChannelItem -> {
                     playChannel(clickedItem.channel)
@@ -852,7 +876,22 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
                 }
             }
-        }
+        }, onItemLongClick = { onlongitemClicked, view ->
+            when (onlongitemClicked) {
+                is GlobalSearchDisplayItem.MovieItem -> {
+                    showMoviePopUp(onlongitemClicked.movie, view)
+                }
+                is GlobalSearchDisplayItem.SeriesItem -> {
+                    showSeriesPopUp(onlongitemClicked.series, view)
+                }
+                is GlobalSearchDisplayItem.ProgramItem -> {
+
+                }
+                is GlobalSearchDisplayItem.ChannelItem -> {
+
+                }
+            }
+        })
         binding.recyclerItems.apply {
             adapter = globalSearchItemAdapter
             setFocusableDirection(FocusableDirection.CONTINUOUS)
@@ -862,6 +901,103 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
     }
 
+    private fun showMoviePopUp(movie: MovieOB, anchor: View) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup_globalsearch_category, null)
+        val widthInDp = 400
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val heightInDp = 100
+        val heightInPx = (heightInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            heightInPx,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        val itemCategory = popupView.findViewById<TextView>(R.id.itemCategory)
+        val linlayout = popupView.findViewById<LinearLayout>(R.id.linLayout_category)
+        itemName.text = movie.movieName
+        itemName.isSelected = true
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            selectedAccount?.let { acc ->
+                val movieQuery = movieCatBox.query(
+                    MovieCategoryOB_.idByAccountData.equal("${movie.relatedMovieCategoryId}_${acc.id}")
+                ).build()
+                val movieCategory = movieQuery.findFirst()
+                movieQuery.close()
+                if (movieCategory != null) {
+                    withContext(Dispatchers.Main) {
+                        itemCategory.text = "in category:   ${movieCategory.showingName}"
+                    }
+                } else {
+                    return@launch
+                }
+            }
+        }
+
+        popupWindow.showAtLocation(anchor.rootView, Gravity.CENTER, 0, 0)
+
+        showDimOverlay()
+        linlayout.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
+
+    private fun showSeriesPopUp(serie: SeriesOB, anchor: View) {
+        val context = anchor.context
+        val popupView = LayoutInflater.from(context).inflate(R.layout.menu_popup_globalsearch_category, null)
+        val widthInDp = 400
+        val widthInPx = (widthInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val heightInDp = 100
+        val heightInPx = (heightInDp * popupView.context.resources.displayMetrics.density).toInt()
+        val popupWindow = PopupWindow(
+            popupView,
+            widthInPx,
+            heightInPx,
+            true
+        )
+
+        popupWindow.elevation = 8f
+
+        // Buttons holen
+        val itemName = popupView.findViewById<TextView>(R.id.itemName)
+        val itemCategory = popupView.findViewById<TextView>(R.id.itemCategory)
+        val linlayout = popupView.findViewById<LinearLayout>(R.id.linLayout_category)
+        itemName.text = serie.seriesName
+        itemName.isSelected = true
+        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            selectedAccount?.let { acc ->
+                val seriesQuery = seriesCatBox.query(
+                    SeriesCategoryOB_.idByAccountData.equal("${serie.relatedSeriesCategoryId}_${acc.id}")
+                ).build()
+                val seriesCategory = seriesQuery.findFirst()
+                seriesQuery.close()
+                if (seriesCategory != null) {
+                    withContext(Dispatchers.Main) {
+                        itemCategory.text = "in category:   ${seriesCategory.showingName}"
+                    }
+                } else {
+                    return@launch
+                }
+            }
+        }
+
+        popupWindow.showAtLocation(anchor.rootView, Gravity.CENTER, 0, 0)
+
+        showDimOverlay()
+        linlayout.requestFocus()
+
+        popupWindow.setOnDismissListener {
+            removeDimOverlay()
+        }
+    }
     fun playChannel(tvChannelPos: ChannelPositions) {
         helpViewModel.currentFocusedChannPosition = tvChannelPos
         helpViewModel.channelFromSearchContainer = true
@@ -1028,6 +1164,24 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 }
             }
         }
+    }
+
+    private var dimView: View? = null
+
+    fun showDimOverlay() {
+        dimView = View(requireContext()).apply {
+            setBackgroundColor(Color.parseColor("#B3000000")) // halbtransparent schwarz
+            isClickable = true // blockiert Klicks darunter
+        }
+        (requireActivity().window.decorView as ViewGroup).addView(
+            dimView,
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        )
+    }
+
+    fun removeDimOverlay() {
+        dimView?.let { (requireActivity().window.decorView as ViewGroup).removeView(it) }
     }
 
 

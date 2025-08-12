@@ -343,15 +343,15 @@
             android:paddingTop="6dp"
             android:textSize="23sp"
             android:singleLine="true"
-            android:scrollHorizontally="true"
             android:ellipsize="marquee"
+            android:scrollHorizontally="true"
             android:marqueeRepeatLimit="marquee_forever"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="@id/gradient_view"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintVertical_bias="0.58"
-            tools:text="Der Herr der Ringe: Die Rückkehr des Königs" />
+            tools:text="Der Herr der Ringe: Die Rückkehr des Königsasdfdsfsfsfsdfs" />
 
         <com.rubensousa.dpadrecyclerview.DpadRecyclerView
             android:id="@+id/rv_layout_series_episodes"

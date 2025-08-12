@@ -57,8 +57,8 @@ class StatsItemsAdapter(
     private val helpViewModel: HelpViewModel,
     private val fragment: WatchHistoryFragment,
     private val accountBox: Box<Accounts>,
-    private val onItemClick: (StatsDisplayItem, View, Int) -> Unit,
-    private val onLongItemClick: (StatsDisplayItem, View, Int) -> Unit
+    private val onItemClick: (StatsDisplayItem, View) -> Unit,
+    private val onLongItemClick: (StatsDisplayItem, View) -> Unit
 ) : ListAdapter<StatsDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
@@ -149,11 +149,11 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewVod.setOnClickListener {
-                    onItemClick.invoke(movieItem, itemView, bindingAdapterPosition)
+                    onItemClick.invoke(movieItem, itemView)
                 }
 
                 binding.cardViewVod.setOnLongClickListener {
-                    onLongItemClick.invoke(movieItem, itemView, bindingAdapterPosition)
+                    onLongItemClick.invoke(movieItem, itemView)
                     true
                 }
             }
@@ -345,11 +345,11 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewVod.setOnClickListener {
-                    onItemClick.invoke(seriesItem, itemView, bindingAdapterPosition)
+                    onItemClick.invoke(seriesItem, itemView)
                 }
 
                 binding.cardViewVod.setOnLongClickListener {
-                    onLongItemClick.invoke(seriesItem, itemView, bindingAdapterPosition)
+                    onLongItemClick.invoke(seriesItem, itemView)
                     true
                 }
             }
@@ -540,7 +540,7 @@ class StatsItemsAdapter(
                 }
 
                 binding.cardViewTv.setOnClickListener {
-                    onItemClick.invoke(channelItem, itemView, bindingAdapterPosition)
+                    onItemClick.invoke(channelItem, itemView)
                 }
             }
         }

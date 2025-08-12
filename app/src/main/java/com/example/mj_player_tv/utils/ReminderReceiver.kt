@@ -83,7 +83,8 @@ class ReminderReceiver : BroadcastReceiver() {
         val channelLogo = view.findViewById<ImageView>(R.id.iv_channelLogo)
         val closeBtn = view.findViewById<TextView>(R.id.iv_closeReminder)
         val playBtn = view.findViewById<TextView>(R.id.iv_playVideo)
-        val tvchannel = programme.tvchannels.target
+        val tvchannelPos = programme.tvchannels.target
+        val tvchannel = tvchannelPos.tvchannel.target
         val linkedEpgChannel = tvchannel.linkedEpgChannel?.target
         val image = tvchannel.logo
         val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
@@ -111,7 +112,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
 
         val title = programme.epgData.target?.name ?: "Program"
-        val channel = programme.tvchannels.target?.showingName ?: "Channel"
+        val channel = tvchannel.showingName
         tvReminderText.text = "$title"
         tvReminderTime.text = "starts in 5mins on: $channel"
 

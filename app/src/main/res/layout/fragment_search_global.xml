@@ -52,6 +52,7 @@
         android:background="@drawable/background_globalsearch_settings"
         android:focusable="true"
         android:focusableInTouchMode="true"
+        android:nextFocusLeft="@id/editText_search"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintWidth_percent="0.08"
         app:layout_constraintTop_toTopOf="parent">

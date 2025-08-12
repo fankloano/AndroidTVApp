@@ -2321,6 +2321,14 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             val movieItems = movieJob.await()
             val seriesItems = seriesJob.await()
             val programmeItems = programmesJob.await()
+            programmeItems.forEach { item ->
+                if (item is WatchlistItem.Programs) {
+                    item.programs.forEach { program ->
+                        val epg = program.epgData.target
+                        Log.d("WATCHLIST PROGRAMME", "Program for ${program.tvchannels.target.tvchannel.target.account.target.name }}: ${program.tvchannels.target.tvchannel.target.showingName} START: ${program.startTimeStamp} END: ${program.stopTimeStamp}")
+                    }
+                }
+            }
 
             // Alles kombinieren und nur EINMAL setzen
             _watchlistResults.value = movieItems + seriesItems + programmeItems
@@ -2399,8 +2407,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         if (programmes.isEmpty()) return emptyList()
 
         return programmes
-            .filter { it.tvchannels.target.account.target != null }
-            .groupBy { it.tvchannels.target.account.target }
+            .filter { it.tvchannels.target.tvchannel.target.account.target != null }
+            .groupBy { it.tvchannels.target.tvchannel.target.account.target }
             .map { (account, list) -> WatchlistItem.Programs(account, list) }
     }
 
@@ -2508,10 +2516,10 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     fun scheduleReminder(context: Context, programme: Programme) {
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val tvChannel = programme.tvchannels.target
-
+        val tvChannel = programme.tvchannels.target.tvchannel.target
+        val tvChannPos = programme.tvchannels.target
         val timeOffSet =
-            tvChannel.epgTimeOffSet ?: tvChannel.reltvcategory.target?.epgTimeOffSet
+            tvChannel.epgTimeOffSet ?: tvChannPos.tvcategory.target?.epgTimeOffSet
             ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
             ?: 0
         // Alarmzeit berechnen (Startzeit - Erinnerungsintervall)
@@ -2567,8 +2575,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
-
-        Log.d("REMIND INTERN EPG", "AFTER: $epg")
 
         val triggerAtMillis = getReminderTriggerTimeWithOffset(
             epg.startTimestamp ?: 0L,

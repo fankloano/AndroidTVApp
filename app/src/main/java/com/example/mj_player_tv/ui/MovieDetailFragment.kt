@@ -233,10 +233,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
         }
 
         binding.btnPlay.setOnLongClickListener {
-            if (helpViewModel.currentFocusedMovie != null) {
-                showPlayerSelectionDialog()
-            }
-            true
+            return@setOnLongClickListener true
         }
 
         binding.btnaddFavorite.setOnFocusChangeListener { _, hasFocus ->

@@ -43,7 +43,8 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
         fun bind(item: WatchlistDisplayItem.ProgramItem) {
             binding.apply {
                 val epgdata = item.programs.epgData.target
-                val tvChannel = item.programs.tvchannels.target
+                val tvChannelPos = item.programs.tvchannels.target
+                val tvChannel = tvChannelPos.tvchannel.target
                 val image = tvChannel.logo
                 val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
                 val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
@@ -81,7 +82,7 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
                     }
                 }
 
-                val timeOffSet = tvChannel.epgTimeOffSet ?: tvChannel.reltvcategory.target?.epgTimeOffSet ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
+                val timeOffSet = tvChannel.epgTimeOffSet ?: tvChannelPos.tvcategory.target?.epgTimeOffSet ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
 
                 val startTime = formatUnixTimestampToTime(epgdata.startTimestamp!!, timeOffSet)
                 val endTime = formatUnixTimestampToTime(epgdata.stopTimestamp!!, timeOffSet)
@@ -166,7 +167,7 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
             }
         }
         holder.binding.cardviewWlPr.setOnClickListener {
-            onClickListener.onClick(item)
+            onClickListener.onClick(item, holder.binding.cardviewWlPr)
         }
     }
 
@@ -182,8 +183,8 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
         }
     }
 
-    class OnClickListener(val clickListener: (programm: WatchlistDisplayItem.ProgramItem) -> Unit) {
-        fun onClick(programm: WatchlistDisplayItem.ProgramItem) = clickListener(programm)
+    class OnClickListener(val clickListener: (programm: WatchlistDisplayItem.ProgramItem, view: View) -> Unit) {
+        fun onClick(programm: WatchlistDisplayItem.ProgramItem, view: View) = clickListener(programm, view)
     }
 
 }

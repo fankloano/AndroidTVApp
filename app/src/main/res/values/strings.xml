@@ -157,6 +157,7 @@
     <string name="search_for">Search for...</string>
     <string name="no_data_found">No data found!</string>
     <string name="plex">Plex</string>
-    <string name="reset_movie_watchtime">Reset movie watchtime</string>
+    <string name="reset_movie_watchtime">Remove / Reset Movie</string>
     <string name="set_movie_as_completely_watched">Set movie as completely watched!</string>
+    <string name="tv_categories_editor">Tv Categories Editor</string>
 </resources>

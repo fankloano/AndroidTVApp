@@ -18,5 +18,5 @@ data class Programme(
 )
 {
     lateinit var epgData: ToOne<EpgDataOB>
-    lateinit var tvchannels: ToOne<TvChannelOB>
+    lateinit var tvchannels: ToOne<ChannelPositions>
 }

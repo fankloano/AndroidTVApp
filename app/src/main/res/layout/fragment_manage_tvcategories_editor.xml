@@ -5,19 +5,19 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/parentview"
-    android:foreground="@drawable/background_border_settings_right"
-    android:background="?attr/backgroundDarkLight">
+    android:foreground="@drawable/background_border_settings_left"
+    android:background="?attr/backgroundDarkDark">
 
     <TextView
         android:id="@+id/title_setting"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        tools:text="Copy DE: Sky Cinema Highlights FHD + LIVE to:"
-        android:textSize="14sp"
+        android:text="@string/tv_categories_editor"
+        android:textSize="18sp"
         android:paddingStart="10dp"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
-        android:background="?attr/backgroundLight"
+        android:background="?attr/backgroundDarkDark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
@@ -27,14 +27,12 @@
         android:id="@+id/rv_layout_TvCategories"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:paddingTop="5dp"
         android:paddingBottom="5dp"
-        android:background="?attr/backgroundDark"
+        android:background="?attr/backgroundDarkDark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title_setting"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintTop_toBottomOf="@id/title_setting"/>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

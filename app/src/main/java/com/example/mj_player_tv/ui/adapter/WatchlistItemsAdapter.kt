@@ -48,8 +48,8 @@ import java.util.Locale
 class WatchlistItemsAdapter(
     private val helpViewModel: HelpViewModel,
     private val fragment: WatchListFragment,
-    private val epgSourceBox: Box<EpgSource>,
-    private val onItemClick: (WatchlistDisplayItem) -> Unit
+    private val onItemClick: (WatchlistDisplayItem) -> Unit,
+    private val onLongItemClick: (WatchlistDisplayItem, View) -> Unit
 ) : ListAdapter<WatchlistDisplayItem, RecyclerView.ViewHolder>(DiffCallback()) {
 
     companion object {
@@ -130,6 +130,11 @@ class WatchlistItemsAdapter(
                     onItemClick(movieItem)
                 }
 
+                binding.cardviewTvchannel.setOnLongClickListener {
+                    onLongItemClick.invoke(movieItem, binding.cardviewTvchannel)
+                    true
+                }
+
                 binding.cardviewTvchannel.setOnFocusChangeListener { _, hasFocus ->
                     if (hasFocus) {
                         fragment.updateMovieUi(movie)
@@ -183,6 +188,10 @@ class WatchlistItemsAdapter(
                     }
                 }
 
+                binding.cardviewSerie.setOnLongClickListener {
+                    onLongItemClick.invoke(seriesItem, binding.cardviewSerie)
+                    true
+                }
             }
         }
     }
@@ -190,10 +199,12 @@ class WatchlistItemsAdapter(
     class DiffCallback : DiffUtil.ItemCallback<WatchlistDisplayItem>() {
         override fun areItemsTheSame(oldItem: WatchlistDisplayItem, newItem: WatchlistDisplayItem): Boolean {
             val result = when {
-                oldItem is WatchlistDisplayItem.MovieItem && newItem is WatchlistDisplayItem.MovieItem ->
+                oldItem is WatchlistDisplayItem.MovieItem && newItem is WatchlistDisplayItem.MovieItem -> {
                     oldItem.movie.idByAccountData == newItem.movie.idByAccountData
-                oldItem is WatchlistDisplayItem.SeriesItem && newItem is WatchlistDisplayItem.SeriesItem ->
+                }
+                oldItem is WatchlistDisplayItem.SeriesItem && newItem is WatchlistDisplayItem.SeriesItem -> {
                     oldItem.series.idByAccountData == newItem.series.idByAccountData
+                }
                 else -> false
             }
             return result

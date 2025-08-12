@@ -6,6 +6,7 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.RelativeLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
@@ -96,7 +97,7 @@ class CategoryOptionsFragment : Fragment(R.layout.fragment_category_options) {
         }
 
         helpViewModel.lastSelectedCategoryOptionsMenuId?.let {
-            view.findViewById<TextView>(it).requestFocus()
+            view.findViewById<RelativeLayout>(it).requestFocus()
         }
             ?: binding.relLayoutVisibility.requestFocus()
 
@@ -209,6 +210,15 @@ class CategoryOptionsFragment : Fragment(R.layout.fragment_category_options) {
         binding.relLayoutCategoryEditor.setOnClickListener {
             helpViewModel.lastSelectedCategoryOptionsMenuId = binding.relLayoutCategoryEditor.id
             changeFragment(CreateCategoryFragment())
+        }
+
+        binding.relLayoutManageCategories.setOnFocusChangeListener { _, hasFocus ->
+            binding.tvManageCategories.isSelected = hasFocus
+        }
+
+        binding.relLayoutManageCategories.setOnClickListener {
+            helpViewModel.lastSelectedCategoryOptionsMenuId = binding.relLayoutManageCategories.id
+            changeFragment(ManageTvCategoriesFragment())
         }
     }
 

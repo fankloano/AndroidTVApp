@@ -1015,6 +1015,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             mainFragment.resetFocusedAssignEpgChannel()
             mainFragment.makeChannelOptionsContainerVisible()
             if (helpViewModel.assignEpgChannelListFiltered) {
+                mainFragment.selectBeforeFilteredAssignEpgList = true
                 mainFragment.updateChannelList()
                 helpViewModel.assignEpgChannelListFiltered = false
             }
