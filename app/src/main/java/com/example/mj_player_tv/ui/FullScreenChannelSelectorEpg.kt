@@ -6,12 +6,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.addCallback
+import androidx.core.view.isInvisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
+import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgDataOB_
 import com.example.mj_player_tv.database.entity.TvChannelOB
@@ -59,35 +61,46 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
 
         if (helpViewModel.isPlayingCatchup) {
             helpViewModel.catchupPlayingChannelPosition?.let {
-                showEpgInfo(it.tvchannel.target)
+                showEpgInfo(it)
             }
         } else {
             if (helpViewModel.currentPlayingChannelPosition != null || helpViewModel.fullScreenFocusedChannel != null) {
                 binding.relLayoutPrograminfo.visibility = View.VISIBLE
                 showEpgInfo(
-                    helpViewModel.fullScreenFocusedChannel ?: helpViewModel.currentPlayingChannel!!
+                    helpViewModel.fullScreenFocusedChannelPosition ?: helpViewModel.catchupPlayingChannelPosition!!
                 )
             }
         }
     }
 
-    fun showEpgInfo(tvchannel: TvChannelOB) {
+    fun showEpgInfo(tvchannelPos: ChannelPositions) {
         resetInfos()
         binding.relLayoutPrograminfo.visibility = View.VISIBLE
+        val tvchannel = tvchannelPos.tvchannel.target
         val currentTime = System.currentTimeMillis()
         if (tvchannel.linkedEpgChannel?.target != null) {
             viewLifecycleOwner.lifecycleScope.launch {
-                val timeOffSet =
-                    tvchannel.epgTimeOffSet ?: tvchannel.reltvcategory.target?.epgTimeOffSet
-                    ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
-                val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
-                val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(timeOffSetSeconds)
+                val currentTimeSec = System.currentTimeMillis() / 1000
+
+                val timeOffSetSec = calculateTimeOffsetInSeconds(
+                    tvchannel.epgTimeOffSet
+                        ?: tvchannelPos.tvcategory.target.epgTimeOffSet
+                        ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                        ?: 0
+                )
+
+                // Hilfsfunktion für verschobene Zeiten
+                fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+                fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
                 val currentProgram = withContext(Dispatchers.IO) {
                     epgDataBox.query(EpgDataOB_.epgChId.equal(tvchannel.linkedEpgChannel!!.target.chEpgId)
-                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeMillis))
-                        .and(EpgDataOB_.startTimestamp.less(currentTimeMillis))).build().findFirst()
+                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec))
+                        .and(EpgDataOB_.startTimestamp.less(currentTimeSec - timeOffSetSec))).build().findFirst()
                 }
                 if (currentProgram != null) {
+
+                    val startTime = formatUnixTimestampToTime(currentProgram.shiftedStart())
+                    val endTime   = formatUnixTimestampToTime(currentProgram.shiftedStop())
                     binding.tvCurrentProgram.text = currentProgram.name
                     binding.tvCurrentProgram.visibility = View.VISIBLE
                     binding.tvCurrentSubtitle.visibility =
@@ -97,53 +110,44 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
                         } else {
                             View.GONE
                         }
-
-                    val startTime = formatUnixTimestampToTime(currentProgram.startTimestamp!!, timeOffSet)
-
-                    binding.tvCurrentStartTime.visibility = View.VISIBLE
-                    val endTime =
-                        formatUnixTimestampToTime(currentProgram.stopTimestamp!!, timeOffSet)
                     binding.tvCurrentEndTime.visibility = View.VISIBLE
                     binding.tvDescription.visibility = View.VISIBLE
                     binding.tvDescription.text = currentProgram.descr ?: ""
                     binding.tvCurrentStartTime.text = startTime
                     binding.tvCurrentEndTime.text = " - ${endTime}"
 
-                        val duration =
-                            ((currentProgram.stopTimestamp!! + timeOffSetSeconds).minus(
-                                currentProgram.startTimestamp!! + timeOffSetSeconds
-                            ))
-                        binding.progressBar.max = 100
-                        val progress =
-                            ((currentTimeMillis - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
-                        binding.progressBar.progress = progress
-                        binding.progressBar.visibility = View.VISIBLE
+                    val duration = currentProgram.shiftedStop() - currentProgram.shiftedStart()
+                    val progress = ((currentTimeSec - currentProgram.shiftedStart()) * 100 / duration).toInt()
+                    binding.progressBar.isInvisible = false
+                    binding.progressBar.max = 100
+                    binding.progressBar.progress = progress.coerceIn(0, 100)
+
+                    binding.progressBar.visibility = View.VISIBLE
                         // Berechne die verbleibende Zeit in Sekunden
-                        binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
-                        val remainingTimeInSeconds =
-                            (currentProgram.stopTimestamp!! + timeOffSetSeconds) - System.currentTimeMillis() / 1000
+                    binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
+
+                    val remainingTimeInSeconds = currentProgram.shiftedStop() - currentTimeSec
+
 // Formatiere die verbleibende Zeit
-                        val remainingTimeText = if (remainingTimeInSeconds > 3600) {
-                            String.format(
-                                "%dh %dmin",
-                                remainingTimeInSeconds / 3600,
-                                (remainingTimeInSeconds % 3600) / 60
-                            )
-                        } else {
-                            String.format("%dmin", remainingTimeInSeconds / 60)
-                        }
-// Setze den Text im TextView
-                        binding.tvRemainingTimeCurrentProgram.text = "$remainingTimeText remaining.."
-                        binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
+                    val remainingTimeText = if (remainingTimeInSeconds > 3600) {
+                        String.format(
+                            "%dh %dmin",
+                            remainingTimeInSeconds / 3600,
+                            (remainingTimeInSeconds % 3600) / 60
+                        )
                     } else {
-                        val currentTimeString =
-                            SimpleDateFormat("HH:mm", Locale.getDefault()).format(currentTime)
-                        val halfHourLaterTime = currentTime + (30 * 60 * 1000)
-                        val halfHourLaterTimeString =
-                            SimpleDateFormat("HH:mm", Locale.getDefault()).format(halfHourLaterTime)
-                        binding.tvCurrentProgram.text = resources.getString(R.string.no_information)
-                        binding.tvCurrentStartTime.text = currentTimeString
-                        binding.tvCurrentEndTime.text = " - $halfHourLaterTimeString"
+                        String.format("%dmin", remainingTimeInSeconds / 60)
+                    }
+
+// Setze den Text im TextView
+                    binding.tvRemainingTimeCurrentProgram.text = remainingTimeText
+
+                    binding.tvRemainingTimeCurrentProgram.visibility = View.VISIBLE
+                    } else {
+                        binding.tvCurrentProgram.text = binding.tvCurrentProgram.context.getString(R.string.no_information)
+                        binding.tvCurrentStartTime.text = formatUnixTimestampToTime(currentTimeSec)
+                        binding.tvCurrentEndTime.text = " - " + formatUnixTimestampToTime(currentTimeSec + 1800)
+                        binding.progressBar.progress = 0
                         binding.tvDescription.text = resources.getString(R.string.no_description)
                         binding.tvCurrentSubtitle.visibility = View.GONE
                         binding.progressBar.visibility = View.INVISIBLE
@@ -177,25 +181,15 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
         binding.tvRemainingTimeCurrentProgram.visibility = View.INVISIBLE
     }
 
-    fun formatUnixTimestampToTime(unixTimestamp: Long, timeOffset: Int): String {
-        try {
-            // Konvertiere den Unix-Zeitstempel in ein Date-Objekt
-            val date = Date(unixTimestamp * 1000)
-
-            // Erstelle ein SimpleDateFormat-Objekt für das gewünschte Zeitformat
+    fun formatUnixTimestampToTime(unixTimestamp: Long): String {
+        return try {
+            val date = Date(unixTimestamp * 1000) // Timestamp in Sekunden → ms
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Berechne den Zeitversatz in Stunden (positiv oder negativ)
-            val calendar = Calendar.getInstance()
-            calendar.time = date
-            calendar.add(Calendar.HOUR_OF_DAY, timeOffset)
-
-            // Gib das formatierte Datum und die Uhrzeit zurück
-            return timeFormat.format(calendar.time)
+            timeFormat.format(date)
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
-        return ""
     }
 
     fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {

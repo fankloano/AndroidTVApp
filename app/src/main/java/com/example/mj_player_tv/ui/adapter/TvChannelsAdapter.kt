@@ -11,6 +11,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import androidx.core.view.isInvisible
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -116,168 +117,132 @@ class TvChannelsAdapter(
                     if (tvchannel.enable_tv_archive == 1) View.VISIBLE else View.INVISIBLE
 
                 CoroutineScope(Dispatchers.IO).launch {
-                    val currentTimeMillis = System.currentTimeMillis() / 1000
-                    val currentTime = System.currentTimeMillis()// Zeit in Sekunden seit 1970
-                    val currentTimeString =
-                        SimpleDateFormat("HH:mm", Locale.getDefault()).format(currentTime)
-                    val halfHourLaterTime = currentTime + (30 * 60 * 1000)
-                    val halfHourLaterTimeString =
-                        SimpleDateFormat("HH:mm", Locale.getDefault()).format(halfHourLaterTime)
-                    // Filtere die EpgData-Liste für die aktuelle und die nächsten Sendungen
-                    tvchannel.account.target.epgsources.reset()
-                    val timeOffSet = tvchannel.epgTimeOffSet ?: tvchannel.reltvcategory.target.epgTimeOffSet ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
 
-                    val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
-                    val currenTimePlusTimeOffSet = currentTimeMillis.plus(timeOffSetSeconds)
+                    val currentTimeSec = System.currentTimeMillis() / 1000
+
+                    val timeOffSetSec = calculateTimeOffsetInSeconds(
+                        tvchannel.epgTimeOffSet
+                            ?: tvchannelPos.tvcategory.target.epgTimeOffSet
+                            ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                            ?: 0
+                    )
+
+                    // Hilfsfunktion für verschobene Zeiten
+                    fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+
+
+                    // EPG-ID bestimmen
                     val chEpgId = tvchannel.linkedEpgChannel?.target?.chEpgId ?: if (playlistEpgActive) {
                         tvchannel.epgChannel?.target?.chEpgId
-                    } else {
-                        null
-                    }
-                    val usedEpgData = if (
-                        !epgForChannelCache.containsKey(tvchannel.id) ||
-                        epgForChannelCache[tvchannel.id].isNullOrEmpty() ||
-                        epgForChannelCache[tvchannel.id]?.all { it.stopTimestamp?.let { timestamp -> timestamp > currenTimePlusTimeOffSet } == true } != true
-                    ) {
-                        if (tvchannel.account.target.isXtream) {
-                            val epg = chEpgId?.let {
-                                epgDataBox.query(EpgDataOB_.epgChId.equal(it)).order(EpgDataOB_.startTimestamp).build()
-                            }?.find()
+                    } else null
 
-
-                        }
-                        // Datenbankabruf durchführen, wenn der Key nicht existiert oder die stopTimestamp-Bedingung nicht erfüllt ist
-                        val epg = chEpgId?.let {
+                    // EPG-Daten laden (Filter basiert auf Offset-Zeit)
+                    val usedEpgData =  chEpgId?.let {
                             epgDataBox.query(
-                                EpgDataOB_.epgChId.equal(it).and(
-                                    EpgDataOB_.stopTimestamp.greater(currenTimePlusTimeOffSet)
-                                )
+                                EpgDataOB_.epgChId.equal(it)
+                                    .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec))
                             )
                                 .order(EpgDataOB_.startTimestamp)
                                 .build()
                                 .find(0, 3)
-                        }
-                        // Speichern der neuen EpgDaten im Cache
-                        epgForChannelCache[tvchannel.id] = epg?.toMutableList() ?: mutableListOf()
-                        epg
-                    } else {
-
-                        // Wenn der Cache gültige Daten hat, verwenden
-                        epgForChannelCache[tvchannel.id]
                     }
-
 
                     val currentProgram = usedEpgData?.firstOrNull()
-
-                    val nextEpgData = if (usedEpgData != null && usedEpgData.size > 1) {
-                        usedEpgData[1]
-                    } else {
-                        null
-                    }
+                    val nextProgram = usedEpgData?.getOrNull(1)
                     // Verarbeite die gefilterte EpgData-Liste nach Bedarf und binde sie an die UI
                     // Hier ist ein Beispiel, wie du die Informationen in die UI einbinden könntest:
                     withContext(Dispatchers.Main) {
-
                         if (currentProgram != null) {
+                            // --- Aktuelles Programm ---
+                            val startTime = formatUnixTimestampToTime(currentProgram.shiftedStart())
+                            val endTime   = formatUnixTimestampToTime(currentProgram.shiftedStop())
 
-                            val currentStartTime = formatUnixTimestampToTime(currentProgram.startTimestamp!!, timeOffSet)
-
-                            val currentEndTime = formatUnixTimestampToTime(currentProgram.stopTimestamp!!, timeOffSet)
-
-                            tvCurrentStartTime.text = currentStartTime
-                            tvCurrentEndTime.text = " - ${currentEndTime}"
+                            tvCurrentStartTime.text = startTime
+                            tvCurrentEndTime.text = " - $endTime"
                             tvCurrentProgram.text = currentProgram.name
-                            if (currentProgram.isRemembered) {
-                                ivReminder.visibility = View.VISIBLE
-                            } else {
-                                ivReminder.visibility = View.GONE
-                            }
-                            val duration =
-                                ((currentProgram.stopTimestamp!! + timeOffSetSeconds).minus(
-                                    currentProgram.startTimestamp!! + timeOffSetSeconds
-                                ))
+                            ivReminder.visibility = if (currentProgram.isRemembered) View.VISIBLE else View.GONE
+
+                            val duration = currentProgram.shiftedStop() - currentProgram.shiftedStart()
+                            val progress = ((currentTimeSec - currentProgram.shiftedStart()) * 100 / duration).toInt()
+                            progressBar.isInvisible = false
                             progressBar.max = 100
-                            val progress =
-                                ((currentTimeMillis - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
-                            progressBar.progress = progress
+                            progressBar.progress = progress.coerceIn(0, 100)
+
+                            // Progress-Updater
                             progressUpdater?.let {
                                 handler.removeCallbacks(it)
                                 progressUpdater = null
                             }
                             progressUpdater = object : Runnable {
                                 override fun run() {
-                                    val currentTimeRun = System.currentTimeMillis() / 1000
-                                    if (currentTimeRun >= (currentProgram.stopTimestamp!! + timeOffSetSeconds)) {
-                                        notifyItemChanged(bindingAdapterPosition)
-                                        fragmentRef.get()?.takeIf { it.isAdded && it.view != null }?.checkSingleChannelEpg(tvchannelPos)
-                                        if (helpViewModel.currentFocusedChannPosition?.catAndChannelAccount == tvchannelPos.catAndChannelAccount) {
+                                    val now = System.currentTimeMillis() / 1000
+                                    if (now >= currentProgram.shiftedStop()) {
+                                        if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                                            notifyItemChanged(bindingAdapterPosition)
+                                        }
+                                        if (tvchannelPos.catAndChannelAccount == helpViewModel.currentFocusedChannPosition?.catAndChannelAccount) {
                                             fragmentRef.get()?.takeIf { it.isAdded }
-                                                ?.showEpgPreview(tvchannel)
+                                                ?.showEpgPreview(tvchannelPos)
                                         }
                                     } else {
                                         val currentProgress = progressBar.progress
-                                        val altProgress =
-                                            ((currentTimeRun - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
-                                        progressBar.progress = altProgress
-                                        if (currentProgress != altProgress) {
+                                        val newProgress = ((now - currentProgram.shiftedStart()) * 100 /
+                                                (currentProgram.shiftedStop() - currentProgram.shiftedStart())).toInt()
+
+                                        // Sicherstellen, dass es im UI-Thread landet
+                                        if (currentProgress != newProgress) {
                                             notifyItemChanged(bindingAdapterPosition)
                                         }
                                     }
                                     handler.postDelayed(this, 10000)
                                 }
                             }
+
                             handler.post(progressUpdater!!)
+                            // Nächstes Programm anzeigen (falls vorhanden)
+                            tvNextProgram.text = nextProgram?.name ?: itemView.context.getString(R.string.no_information)
 
-                            if (nextEpgData != null) {
-                                tvNextProgram.text = nextEpgData.name
-                            } else {
-                                tvNextProgram.text =
-                                    itemView.context.getString(R.string.no_information)
-                            }
-                        } else {
-                            ivReminder.visibility = View.GONE
-                            tvCurrentProgram.text =
-                                itemView.context.getString(R.string.no_information)
-                            tvCurrentStartTime.text = currentTimeString
-                            if (nextEpgData != null) {
-                                tvNextProgram.text = nextEpgData.name
-                                val duration =
-                                    (currentTimeMillis - (nextEpgData.startTimestamp!! + timeOffSetSeconds))
-                                progressBar.max = 100
-                                val progress =
-                                    (((nextEpgData.startTimestamp!! + timeOffSetSeconds) - System.currentTimeMillis() / 1000) * 100 / duration).toInt()
-                                progressBar.progress = progress
+                        } else if (nextProgram != null) {
+                            // --- Kein aktuelles, aber ein nächstes Programm ---
+                            // --- Kein aktuelles, aber ein nächstes Programm ---
+                            val nextStartTime = formatUnixTimestampToTime(nextProgram.shiftedStart())
+                            val nextEndTime   = formatUnixTimestampToTime(nextProgram.shiftedStop())
 
-                                val nextStartTme = formatUnixTimestampToTime(nextEpgData.startTimestamp!!, timeOffSet)
+                            tvCurrentProgram.text = itemView.context.getString(R.string.no_information)
+                            tvCurrentStartTime.text = formatUnixTimestampToTime(currentTimeSec)
+                            tvCurrentEndTime.text = " - $nextStartTime"
+                            tvNextProgram.text = nextProgram.name
 
-                                tvCurrentEndTime.text = " - ${nextStartTme}"
-                                progressUpdater?.let {
-                                    handler.removeCallbacks(it)
-                                    progressUpdater = null
-                                }
-                                progressUpdater = object : Runnable {
-                                    override fun run() {
-                                        if (currentTimeMillis >= (nextEpgData.startTimestamp!! + timeOffSetSeconds)) {
-                                            notifyItemChanged(bindingAdapterPosition)
-                                            if (helpViewModel.currentFocusedChannPosition?.catAndChannelAccount == tvchannelPos.catAndChannelAccount) {
-                                                fragmentRef.get()?.takeIf { it.isAdded }
-                                                    ?.showEpgPreview(tvchannel)
-                                            }
-                                        }
-                                        handler.postDelayed(this, 10000)
+// Countdown bis nächstes Programm startet
+                            val untilNext = nextProgram.shiftedStart() - currentTimeSec
+                            val duration = nextProgram.shiftedStop() - nextProgram.shiftedStart()
+                            progressBar.max = 100
+                            progressBar.progress = (((currentTimeSec - nextProgram.shiftedStart()) * 100) / duration).toInt().coerceIn(0, 100)
+
+// Progress-Updater für den Countdown
+                            progressUpdater?.let { handler.removeCallbacks(it) }
+                            progressUpdater = object : Runnable {
+                                override fun run() {
+                                    val now = System.currentTimeMillis() / 1000
+                                    if (now >= nextProgram.shiftedStart()) {
+                                        notifyItemChanged(bindingAdapterPosition)
+                                        fragmentRef.get()?.takeIf { it.isAdded }?.showEpgPreview(tvchannelPos)
                                     }
+                                    handler.postDelayed(this, 10000)
                                 }
-                                handler.post(progressUpdater!!)
-                            } else {
-                                tvCurrentProgram.text =
-                                    itemView.context.getString(R.string.no_information)
-                                tvNextProgram.text =
-                                    itemView.context.getString(R.string.no_information)
-                                progressBar.progress = 0
-                                tvCurrentEndTime.text = " - $halfHourLaterTimeString"
                             }
+                            handler.post(progressUpdater!!)
+                        } else {
+                            // --- Weder aktuelles noch nächstes Programm ---
+                            tvCurrentProgram.text = itemView.context.getString(R.string.no_information)
+                            tvNextProgram.text = itemView.context.getString(R.string.no_information)
+                            tvCurrentStartTime.text = formatUnixTimestampToTime(currentTimeSec)
+                            tvCurrentEndTime.text = " - " + formatUnixTimestampToTime(currentTimeSec + 1800)
+                            progressBar.progress = 0
                         }
                     }
+
                 }
 
                 binding.cardViewTvchannel.setOnClickListener {
@@ -668,11 +633,11 @@ class TvChannelsAdapter(
                     helpViewModel.currentAssignChannelPosition = tvchannelPos
                     updateFocusedAssignChannel(tvchannelPos)
                     fragment.refreshEpgChannelListWithChannel(tvchannelPos)
-                    fragment.showEpgPreview(tvchannel)
+                    fragment.showEpgPreview(tvchannelPos)
                     holder.binding.borderAssignepgtoChannel.visibility = View.VISIBLE
                 } else {
                     fragment.setCurrentFocusedChannel(tvchannelPos)
-                    fragment.showEpgPreview(tvchannel)
+                    fragment.showEpgPreview(tvchannelPos)
                 }
             } else {
                 holder.binding.borderAssignepgtoChannel.visibility = View.INVISIBLE
@@ -684,7 +649,6 @@ class TvChannelsAdapter(
         private val MANAGE_TVCHANNELS_COMPERATOR = object : DiffUtil.ItemCallback<ChannelPositions>() {
             override fun areItemsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
                 oldItem.catAndChannelAccount == newItem.catAndChannelAccount
-
 
             @SuppressLint("DiffUtilEquals")
             override fun areContentsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
@@ -710,30 +674,19 @@ class TvChannelsAdapter(
         fun onLongClick(tvchannel: ChannelPositions, position: Int) = longClickListener(tvchannel, position)
     }
 
-    fun formatUnixTimestampToTime(unixTimestamp: Long, timeOffset: Int): String {
-        try {
-            // Konvertiere den Unix-Zeitstempel in ein Date-Objekt
-            val date = Date(unixTimestamp * 1000)
-
-            // Erstelle ein SimpleDateFormat-Objekt für das gewünschte Zeitformat
+    fun formatUnixTimestampToTime(unixTimestamp: Long): String {
+        return try {
+            val date = Date(unixTimestamp * 1000) // Timestamp in Sekunden → ms
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Berechne den Zeitversatz in Stunden (positiv oder negativ)
-            val calendar = Calendar.getInstance()
-            calendar.time = date
-            calendar.add(Calendar.HOUR_OF_DAY, timeOffset)
-
-            // Gib das formatierte Datum und die Uhrzeit zurück
-            return timeFormat.format(calendar.time)
+            timeFormat.format(date)
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
-        return ""
     }
 
-
-    fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {
-        return (timeOffset * 3600).toLong()
+    fun calculateTimeOffsetInSeconds(offset: Int): Int {
+        return offset * 3600
     }
 
     fun moveItemUp(position: Int) {

@@ -79,6 +79,8 @@ import com.example.mj_player_tv.viewmodel.MoviesViewModel
 import com.example.mj_player_tv.viewmodel.MoviesViewModelFactory
 import com.example.mj_player_tv.viewmodel.SeriesViewModel
 import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
+import com.example.mj_player_tv.viewmodel.WatchlistViewModel
+import com.example.mj_player_tv.viewmodel.WatchlistViewModelFactory
 import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.delay
@@ -155,6 +157,12 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         )
     }
 
+    private val watchlistViewModel: WatchlistViewModel by activityViewModels {
+        WatchlistViewModelFactory(
+            requireActivity().application
+        )
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -169,7 +177,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         super.onViewCreated(view, savedInstanceState)
 
 
-        helpViewModel.fetchWatchListData()
+        watchlistViewModel.fetchWatchListData()
         preparePlaylistRecyclerView()
         prepareItemsRecyclerView()
         prepareProgramsRecyclerview()
@@ -177,7 +185,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         parentFragmentManager.addOnBackStackChangedListener(backStackListener)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.watchlistResults.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { results ->
+            watchlistViewModel.watchlistResults.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { results ->
 
                 val movieResults = results.filterIsInstance<WatchlistItem.Movies>()
                 moviesByAccount = movieResults.groupBy(
@@ -209,6 +217,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
 
                     helpViewModel.selectedWatchlistCategory = firstCategory
                     selectedWatchlistCategory = firstCategory
+                    lastLoadedCategory = firstCategory
                     helpViewModel.selectedWatchlistAccount = firstAccount
                     selectedAccount = firstAccount
 
@@ -224,6 +233,10 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             firstMovie?.let {
                                 updateMovieUi(it)
                             }
+                            selectedAccount?.let {
+                                val items = getDisplayableItemsFor(it, WatchlistMainCategory.MOVIES)
+                                watchlistItemsAdapter.submitList(items)
+                            }
                         }
                         WatchlistMainCategory.SERIES -> {
                             binding.constraintVod.visibility = View.VISIBLE
@@ -231,13 +244,20 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                             firstSerie?.let {
                                 updateSeriesUi(it)
                             }
+                            selectedAccount?.let {
+                                val items = getDisplayableItemsFor(it, WatchlistMainCategory.SERIES)
+                                watchlistItemsAdapter.submitList(items)
+                            }
                         }
                         WatchlistMainCategory.PROGRAMS -> {
                             binding.constraintProgramme.visibility = View.VISIBLE
                             val firstProgram = programsByAccount?.get(firstAccount)?.firstOrNull()
                             firstProgram?.let {
                                 setProgramDetails(firstProgram)
-                                binding.recyclerProgramme.requestFocus()
+                            }
+                            selectedAccount?.let {
+                                val items = getDisplayableItemsFor(it, WatchlistMainCategory.PROGRAMS).filterIsInstance<WatchlistDisplayItem.ProgramItem>()
+                                watchlistProgramsAdapter.submitList(items)
                             }
                         }
                     }
@@ -253,9 +273,6 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                     }
                     isFirstOpenWatchlist = false
                 }
-
-
-
                 selectedAccount?.let { account ->
                     selectedWatchlistCategory?.let { cat ->
                         val playlists = when(cat) {
@@ -277,33 +294,46 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
                         }
                         if (playlists.isEmpty()) {
                             when (cat) {
-                                WatchlistMainCategory.PROGRAMS -> binding.rvWatchlistProgramme.requestFocus()
+                                WatchlistMainCategory.PROGRAMS -> {
+                                    watchlistProgramsAdapter.submitList(emptyList()) {
+                                        resetProgramDetails()
+                                        binding.tvNodatafound.visibility = View.VISIBLE
+                                        binding.rvWatchlistProgramme.requestFocus()
+                                    }
+                                }
                                 WatchlistMainCategory.MOVIES -> {
-                                    resetMovieDetailsUi()
-                                    binding.tvNodatafound.visibility = View.VISIBLE
-                                    binding.rvWatchlistMovies.requestFocus()
+                                    watchlistItemsAdapter.submitList(emptyList()) {
+                                        resetMovieDetailsUi()
+                                        binding.tvNodatafound.visibility = View.VISIBLE
+                                        if (!helpViewModel.isWatchlistContainerOpened) {
+                                            binding.rvWatchlistMovies.requestFocus()
+                                        }
+                                    }
                                 }
                                 WatchlistMainCategory.SERIES -> {
-                                    resetSeriesDetailsUi()
-                                    binding.tvNodatafound.visibility = View.VISIBLE
-                                    binding.rvWatchlistSeries.requestFocus()
+                                    watchlistItemsAdapter.submitList(emptyList()) {
+                                        resetSeriesDetailsUi()
+                                        binding.tvNodatafound.visibility = View.VISIBLE
+                                        if (!helpViewModel.isWatchlistContainerOpened) {
+                                            binding.rvWatchlistSeries.requestFocus()
+                                        }
+                                    }
                                 }
                             }
                         } else {
                             if (items.isEmpty()) {
-                                when (cat) {
-                                    WatchlistMainCategory.MOVIES -> {
-                                        resetMovieDetailsUi()
-                                    }
-                                    WatchlistMainCategory.SERIES -> {
-                                        resetSeriesDetailsUi()
-                                    }
-                                    WatchlistMainCategory.PROGRAMS -> {
-
-                                    }
-                                }
-                                binding.recyclerPlaylists.post {
+                                if (!helpViewModel.isWatchlistContainerOpened) {
                                     binding.recyclerPlaylists.requestFocus()
+                                }
+                            } else {
+                                when (cat) {
+                                    WatchlistMainCategory.PROGRAMS -> {
+                                        binding.recyclerProgramme.requestFocus()
+                                    } else -> {
+                                        if (!helpViewModel.isWatchlistContainerOpened) {
+                                            binding.recyclerItems.requestFocus()
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -313,13 +343,13 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            helpViewModel.watchlistSearching.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { searching ->
+            watchlistViewModel.watchlistSearching.flowWithLifecycle(viewLifecycleOwner.lifecycle, Lifecycle.State.STARTED).collectLatest { searching ->
                 if (searching) {
                     // Zeige z.B. ProgressBar, lade Spinner etc.
                     binding.tvNodatafound.visibility = View.GONE
                     binding.loadingprogressBar.visibility = View.VISIBLE
                 } else {
-                    if (!helpViewModel.hasFetchedWatchlist) {
+                    if (!watchlistViewModel.hasFetchedWatchlist) {
                         // Noch keine Suche gestartet -> kein "No Data" anzeigen
                         binding.tvNodatafound.visibility = View.GONE
                         return@collectLatest
@@ -440,7 +470,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         seriesViewModel.removeSeriesFromWatchlistOrStats.observe(viewLifecycleOwner) { request ->
             if (request != null) {
                 helpViewModel.currentFocusedSerie?.let {
-                    helpViewModel.removeSerieFromWatchlist(it)
+                    watchlistViewModel.removeSerieFromWatchlist(it)
                 }
                 seriesViewModel.clearRemoveSeriesFromWatchlistOrStats()
             }
@@ -466,7 +496,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         moviesViewModel.removeMovieFromWatchlistOrStats.observe(viewLifecycleOwner) { request ->
             if (request != null) {
                 helpViewModel.currentFocusedMovie?.let {
-                    helpViewModel.removeMovieFromWatchlist(it)
+                    watchlistViewModel.removeMovieFromWatchlist(it)
                 }
                 moviesViewModel.clearRemoveMovieFromWatchlistOrStats()
             }
@@ -655,7 +685,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         } else {
             movieBox.put(movie)
         }
-        helpViewModel.removeMovieFromWatchlist(movie)
+        watchlistViewModel.removeMovieFromWatchlist(movie)
     }
 
     fun removeMovieFromAccount(account: Accounts, moviesToRemove: MovieOB) {
@@ -742,11 +772,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         } else {
             seriesBox.put(serie)
         }
-        helpViewModel.removeSerieFromWatchlist(serie)
-    }
-
-    fun removeSeriesFromAccount(account: Accounts, seriesToRemove: SeriesOB) {
-        seriesByAccount?.get(account)?.remove(seriesToRemove)
+        watchlistViewModel.removeSerieFromWatchlist(serie)
     }
 
     private fun setSeriesAsCompletelyWatched(serie: SeriesOB) {
@@ -1097,8 +1123,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             programmeBox.remove(isProgramme)
             epg.isRemembered = false
             epgDataBox.put(epg)
-            val currentEpgPos = watchlistProgramsAdapter.currentList.indexOf(programmItem)
-            watchlistProgramsAdapter.notifyItemChanged(currentEpgPos)
+            watchlistViewModel.removeProgrammeFromWatchlist(programmItem.programs)
         } else {
             val timeOffSet =
                 tvChannel.epgTimeOffSet ?: channPos.tvcategory.target?.epgTimeOffSet
@@ -1224,6 +1249,7 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         }
         playlistAdapter.submitList(null)
         watchlistItemsAdapter.submitList(null)
+        watchlistProgramsAdapter.submitList(null)
         helpViewModel.selectedWatchlistCategory = category
         selectedWatchlistCategory = category
         val accounts = when (category) {
@@ -2007,21 +2033,23 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
             binding.relLayoutProgramdescr.visibility = View.VISIBLE
         }
         val epgDataOB = program.epgData.target
-        binding.tvCurrentProgram.text = epgDataOB.name
-        binding.tvCurrentSubtitle.text = epgDataOB.sub_title
-        binding.tvCurrentSubtitle.visibility = if (epgDataOB.sub_title.isNotEmpty()) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
+        if (epgDataOB != null) {
+            binding.tvCurrentProgram.text = epgDataOB.name
+            binding.tvCurrentSubtitle.text = epgDataOB.sub_title
+            binding.tvCurrentSubtitle.visibility = if (epgDataOB.sub_title.isNotEmpty()) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
 
-        binding.tvDescription.text = epgDataOB.descr.ifEmpty {
-            "no description available.."
+            binding.tvDescription.text = epgDataOB.descr.ifEmpty {
+                "no description available.."
+            }
         }
-
     }
 
     fun resetProgramDetails() {
+        binding.relLayoutProgramdescr.visibility = View.INVISIBLE
         binding.tvCurrentProgram.text = ""
         binding.tvCurrentSubtitle.text = ""
         binding.tvCurrentCategory.text = ""
@@ -2080,8 +2108,8 @@ class WatchListFragment : Fragment(R.layout.fragment_watchlist) {
         selectedAccount = null
         selectedWatchlistCategory = null
         seriesDetailJob?.cancel()
-        helpViewModel.resetWatchlistData()
-        helpViewModel.cancelWatchlistJob()
+        watchlistViewModel.resetWatchlistData()
+        watchlistViewModel.cancelWatchlistJob()
         _binding = null
     }
 }

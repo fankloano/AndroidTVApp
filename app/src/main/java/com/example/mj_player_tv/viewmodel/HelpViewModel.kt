@@ -451,10 +451,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     private var plexaccountSubscription: DataSubscription? = null
 
-    val tvAccountsLiveData = MutableLiveData<List<Accounts>>()
-
-    val movieAccountsLiveData = MutableLiveData<List<Accounts>>()
-
     val plexAccountsLiveData = MutableLiveData<List<Accounts>>()
 
     fun updateFocusedChannel(tvChannelPos: ChannelPositions) {
@@ -462,15 +458,17 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         currentFocusedChannPosition = tvChannelPos
     }
 
-    fun updateFocusedTvCategory(tvCategoryOB: TvCategoryOB) {
-        currentFocusedTvCategory = tvCategoryOB
+    private val _updateShowEpgPreview = MutableLiveData<Unit?>()
+    val updateShowEpgPreview: LiveData<Unit?> = _updateShowEpgPreview
+
+    fun requestUpdateShowEpgPreview() {
+        _updateShowEpgPreview.value = Unit
     }
 
-    fun updateFocusedTvAccount(tvAccountOB: Accounts) {
-        currentFocusedTvAccount = tvAccountOB
+    fun clearUpdateShowEpgPreview() {
+        _updateShowEpgPreview.value = null
     }
 
-    var lastAccounts: List<Accounts>? = null
 
     val tvAccountsWithCategoriesLiveData = MutableLiveData<List<AccountTvCategory>>()
 
@@ -2285,131 +2283,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     fun clearFocusOnWatchlListCard() {
         _focusToWatchlistCard.value = null
-    }
-
-    private val _watchlistResults = MutableStateFlow<List<WatchlistItem>>(emptyList())
-    val watchlistResults: StateFlow<List<WatchlistItem>> = _watchlistResults.asStateFlow()
-
-    fun resetWatchlistData() {
-        _watchlistResults.value = emptyList()
-        _watchlistSearching.value = false
-        hasFetchedWatchlist = false
-    }
-
-    var hasFetchedWatchlist = false
-
-    private val _watchlistSearching = MutableStateFlow(false)
-    val watchlistSearching: StateFlow<Boolean> = _watchlistSearching.asStateFlow()
-
-    private var watchlistJob: Job? = null
-
-    fun cancelWatchlistJob() {
-        watchlistJob?.cancel()
-        _watchlistSearching.value = false
-    }
-
-    fun fetchWatchListData() {
-        watchlistJob?.cancel()
-
-        watchlistJob = viewModelScope.launch(Dispatchers.IO) {
-            _watchlistSearching.value = true
-
-            val movieJob = async { getWatchlistMovies() }
-            val seriesJob = async { getWatchlistSeries() }
-            val programmesJob = async { getWatchlistProgrammes() }
-
-            val movieItems = movieJob.await()
-            val seriesItems = seriesJob.await()
-            val programmeItems = programmesJob.await()
-            programmeItems.forEach { item ->
-                if (item is WatchlistItem.Programs) {
-                    item.programs.forEach { program ->
-                        val epg = program.epgData.target
-                        Log.d("WATCHLIST PROGRAMME", "Program for ${program.tvchannels.target.tvchannel.target.account.target.name }}: ${program.tvchannels.target.tvchannel.target.showingName} START: ${program.startTimeStamp} END: ${program.stopTimeStamp}")
-                    }
-                }
-            }
-
-            // Alles kombinieren und nur EINMAL setzen
-            _watchlistResults.value = movieItems + seriesItems + programmeItems
-
-            _watchlistSearching.value = false
-            hasFetchedWatchlist = true
-        }
-    }
-
-    fun removeMovieFromWatchlist(movie: MovieOB) {
-        val currentList = _watchlistResults.value.toMutableList()
-
-        val updatedList = currentList.mapNotNull { item ->
-            when (item) {
-                is WatchlistItem.Movies -> {
-                    if (item.movies.contains(movie)) {
-                        val newMovies = item.movies - movie
-                        if (newMovies.isEmpty()) {
-                            null // Account hat keine Filme mehr → entferne ihn komplett
-                        } else {
-                            WatchlistItem.Movies(item.account, newMovies)
-                        }
-                    } else item
-                }
-
-                else -> item
-            }
-        }
-        _watchlistResults.value = updatedList
-    }
-
-    fun removeSerieFromWatchlist(serie: SeriesOB) {
-        val currentList = _watchlistResults.value.toMutableList()
-
-        val updatedList = currentList.mapNotNull { item ->
-            when (item) {
-                is WatchlistItem.Series -> {
-                    if (item.series.contains(serie)) {
-                        val newSeries = item.series - serie
-                        if (newSeries.isEmpty()) {
-                            null // Account hat keine Serien mehr → entferne ihn komplett
-                        } else {
-                            WatchlistItem.Series(item.account, newSeries)
-                        }
-                    } else item
-                }
-                else -> item
-            }
-        }
-        _watchlistResults.value = updatedList
-    }
-
-
-    fun getWatchlistMovies(): List<WatchlistItem> {
-        val movies = movieBox.query(MovieOB_.isFavorite.equal(true)).build().use { it.find() }
-        if (movies.isEmpty()) return emptyList()
-
-        return movies
-            .filter { it.movieAccount.target != null }
-            .groupBy { it.movieAccount.target }
-            .map { (account, list) -> WatchlistItem.Movies(account, list) }
-    }
-
-    fun getWatchlistSeries(): List<WatchlistItem> {
-        val series = seriesBox.query(SeriesOB_.isFavorite.equal(true)).build().use { it.find() }
-        if (series.isEmpty()) return emptyList()
-
-        return series
-            .filter { it.seriesAccount.target != null }
-            .groupBy { it.seriesAccount.target }
-            .map { (account, list) -> WatchlistItem.Series(account, list) }
-    }
-
-    fun getWatchlistProgrammes(): List<WatchlistItem> {
-        val programmes = programmeBox.all
-        if (programmes.isEmpty()) return emptyList()
-
-        return programmes
-            .filter { it.tvchannels.target.tvchannel.target.account.target != null }
-            .groupBy { it.tvchannels.target.tvchannel.target.account.target }
-            .map { (account, list) -> WatchlistItem.Programs(account, list) }
     }
 
     private val _statsResults = MutableStateFlow<List<StatsDisplayItem>>(emptyList())

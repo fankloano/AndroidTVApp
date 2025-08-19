@@ -36,6 +36,8 @@ import com.example.mj_player_tv.viewmodel.SeriesViewModel
 import com.example.mj_player_tv.viewmodel.SeriesViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
+import com.example.mj_player_tv.viewmodel.WatchlistViewModel
+import com.example.mj_player_tv.viewmodel.WatchlistViewModelFactory
 import com.example.mj_player_tv.viewmodel.XtreamViewModel
 import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
@@ -94,6 +96,12 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
     private val seriesViewModel: SeriesViewModel by activityViewModels {
         SeriesViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val watchlistViewModel: WatchlistViewModel by activityViewModels {
+        WatchlistViewModelFactory(
             requireActivity().application
         )
     }

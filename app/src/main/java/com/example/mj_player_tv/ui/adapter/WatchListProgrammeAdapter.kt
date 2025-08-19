@@ -43,28 +43,37 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
         fun bind(item: WatchlistDisplayItem.ProgramItem) {
             binding.apply {
                 val epgdata = item.programs.epgData.target
-                val tvChannelPos = item.programs.tvchannels.target
-                val tvChannel = tvChannelPos.tvchannel.target
-                val image = tvChannel.logo
-                val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
-                val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
-                tvProgram.text = epgdata.name
+                if (epgdata != null) {
+                    val tvChannelPos = item.programs.tvchannels.target
+                    val tvChannel = tvChannelPos.tvchannel.target
+                    val image = tvChannel.logo
+                    val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
+                    val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
+                    tvProgram.text = epgdata.name
 
-                tvChannelName.text = tvChannel.showingName
+                    tvChannelName.text = tvChannel.showingName
 
-                if (epgdata.sub_title.isNotEmpty()) {
-                    tvSubTitleProgram.visibility = View.VISIBLE
-                    tvSubTitleProgram.text = epgdata.sub_title
-                } else {
-                    tvSubTitleProgram.visibility = View.GONE
-                    tvSubTitleProgram.text = ""
-                }
+                    if (epgdata.sub_title.isNotEmpty()) {
+                        tvSubTitleProgram.visibility = View.VISIBLE
+                        tvSubTitleProgram.text = epgdata.sub_title
+                    } else {
+                        tvSubTitleProgram.visibility = View.GONE
+                        tvSubTitleProgram.text = ""
+                    }
 
 
-                if (tvChannel.account.target!!.useEpgLogos) {
-                    if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvChannel.alwaysUsesExternalEpg)) {
-                        ivTvchannelLogo.visibility = View.VISIBLE
-                        ivTvchannelLogo.load(epgLogo)
+                    if (tvChannel.account.target!!.useEpgLogos) {
+                        if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvChannel.alwaysUsesExternalEpg)) {
+                            ivTvchannelLogo.visibility = View.VISIBLE
+                            ivTvchannelLogo.load(epgLogo)
+                        } else {
+                            if (image.isNotEmpty()) {
+                                ivTvchannelLogo.visibility = View.VISIBLE
+                                ivTvchannelLogo.load(image)
+                            } else {
+                                ivTvchannelLogo.visibility = View.INVISIBLE
+                            }
+                        }
                     } else {
                         if (image.isNotEmpty()) {
                             ivTvchannelLogo.visibility = View.VISIBLE
@@ -73,23 +82,18 @@ class WatchListProgrammeAdapter(private val onClickListener: WatchListProgrammeA
                             ivTvchannelLogo.visibility = View.INVISIBLE
                         }
                     }
-                } else {
-                    if (image.isNotEmpty()) {
-                        ivTvchannelLogo.visibility = View.VISIBLE
-                        ivTvchannelLogo.load(image)
-                    } else {
-                        ivTvchannelLogo.visibility = View.INVISIBLE
-                    }
+
+                    val timeOffSet =
+                        tvChannel.epgTimeOffSet ?: tvChannelPos.tvcategory.target?.epgTimeOffSet
+                        ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
+
+                    val startTime = formatUnixTimestampToTime(epgdata.startTimestamp!!, timeOffSet)
+                    val endTime = formatUnixTimestampToTime(epgdata.stopTimestamp!!, timeOffSet)
+                    binding.tvStartTime.text = startTime
+                    binding.tvEndTime.text = " - ${endTime}"
+
+                    binding.tvDate.text = formatDate(epgdata.datum)
                 }
-
-                val timeOffSet = tvChannel.epgTimeOffSet ?: tvChannelPos.tvcategory.target?.epgTimeOffSet ?: tvChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
-
-                val startTime = formatUnixTimestampToTime(epgdata.startTimestamp!!, timeOffSet)
-                val endTime = formatUnixTimestampToTime(epgdata.stopTimestamp!!, timeOffSet)
-                binding.tvStartTime.text = startTime
-                binding.tvEndTime.text = " - ${endTime}"
-
-                binding.tvDate.text = formatDate(epgdata.datum)
 
                 binding.cardviewWlPr.setOnKeyListener { _, keyCode, event ->
                     if ((keyCode == KeyEvent.KEYCODE_BACK) && event.action == KeyEvent.ACTION_DOWN) {

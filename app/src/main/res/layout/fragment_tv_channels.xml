@@ -803,6 +803,17 @@
             app:layout_constraintStart_toEndOf="@id/relLayout_hudchannellogo"
             tools:text="DE | SKY CINEMA Bundesliga 1 FHD (play only live events)" />
 
+        <ImageView
+            android:id="@+id/iv_playcatchup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="invisible"
+            app:layout_constraintStart_toEndOf="@id/tv_hud_channelname"
+            app:layout_constraintTop_toTopOf="@id/tv_hud_channelname"
+            app:layout_constraintBottom_toBottomOf="@id/tv_hud_channelname"
+            android:src="@drawable/ic_catchup"
+            android:tint="@color/white"/>
+
         <!-- Channel-Quality-Info oben -->
         <LinearLayout
             android:id="@+id/channel_quality_info_fullscreen"

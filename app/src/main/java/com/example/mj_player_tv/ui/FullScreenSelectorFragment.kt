@@ -458,13 +458,13 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
         }
     }
 
-    fun showChannelEpg(tvChannelOB: TvChannelOB) {
-        if (helpViewModel.fullScreenFocusedChannel != tvChannelOB) {
-            helpViewModel.fullScreenFocusedChannel = tvChannelOB
+    fun showChannelEpg(tvchannelPos: ChannelPositions) {
+        if (helpViewModel.fullScreenFocusedChannel != tvchannelPos.tvchannel.target) {
+            helpViewModel.fullScreenFocusedChannel = tvchannelPos.tvchannel.target
             val epgContainerFragment =
                 parentFragmentManager.findFragmentById(R.id.container_fullscreen_epgInfo)
             if (epgContainerFragment is FullScreenChannelSelectorEpg) {
-                epgContainerFragment.showEpgInfo(tvChannelOB)
+                epgContainerFragment.showEpgInfo(tvchannelPos)
             }
         }
     }
@@ -584,8 +584,10 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
                             val position = fullscreenChannelsAdapter?.currentList?.indexOf(it)
                             if (position != null) {
                                 withContext(Dispatchers.Main) {
-                                    if (matchedChannel == helpViewModel.currentFocusedChannPosition?.tvchannel?.target) {
-                                        showChannelEpg(matchedChannel)
+                                    if (matchedChannel == helpViewModel.currentFocusedChannPosition) {
+                                        helpViewModel.currentFocusedChannPosition?.let {
+                                            showChannelEpg(it)
+                                        }
                                     }
                                     fullscreenChannelsAdapter?.notifyItemChanged(position)
                                 }
@@ -595,8 +597,10 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
                         val position = fullscreenChannelsAdapter?.currentList?.indexOf(it)
                         if (position != null) {
                             withContext(Dispatchers.Main) {
-                                if (newChannel == helpViewModel.currentFocusedChannPosition?.tvchannel?.target) {
-                                    showChannelEpg(newChannel)
+                                if (newChannel == helpViewModel.currentFocusedChannPosition) {
+                                    helpViewModel.currentFocusedChannPosition?.let {
+                                        showChannelEpg(it)
+                                    }
                                 }
                                 fullscreenChannelsAdapter?.notifyItemChanged(position)
                             }

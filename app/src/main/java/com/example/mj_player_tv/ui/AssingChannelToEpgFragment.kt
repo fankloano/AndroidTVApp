@@ -412,7 +412,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                 updateChannelList()
                 val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (mainContainer is TvChannelsFragment) {
-                    mainContainer.showEpgPreview(helpViewModel.currentAssignEpgChannel!!)
+                    mainContainer.showEpgPreview(helpViewModel.currentAssignChannelPosition!!)
                 }
                 epgChannelListAdapter.updateChannel(helpViewModel.currentAssignEpgChannel!!)
                 binding.rvEpgList.requestFocus()
@@ -495,7 +495,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                 val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (mainContainer is TvChannelsFragment) {
                     mainContainer.updateSingleChannel()
-                    helpViewModel.currentAssignEpgChannel?.let { mainContainer.showEpgPreview(it) }
+                    helpViewModel.currentAssignChannelPosition?.let { mainContainer.showEpgPreview(it) }
                 }
             }
         } else {
@@ -512,7 +512,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                     val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                     if (mainContainer is TvChannelsFragment) {
                         mainContainer.updateSingleChannel()
-                        helpViewModel.currentAssignEpgChannel?.let { mainContainer.showEpgPreview(it) }
+                        helpViewModel.currentAssignChannelPosition?.let { mainContainer.showEpgPreview(it) }
                     }
                 }
             } else {
@@ -523,7 +523,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
                 helpViewModel.currentAssignEpgChannel?.let { tvChannBox.put(it) }
                 val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                 if (mainContainer is TvChannelsFragment) {
-                    helpViewModel.currentAssignEpgChannel?.let { mainContainer.showEpgPreview(it) }
+                    helpViewModel.currentAssignChannelPosition?.let { mainContainer.showEpgPreview(it) }
                 }
             }
         }
@@ -548,7 +548,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             updateChannelList()
             val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
             if (mainContainer is TvChannelsFragment) {
-                helpViewModel.currentAssignEpgChannel?.let { mainContainer.showEpgPreview(it) }
+                helpViewModel.currentAssignChannelPosition?.let { mainContainer.showEpgPreview(it) }
             }
             epgChannelListAdapter.notifyDataSetChanged()
         }
@@ -560,7 +560,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
             updateChannelList()
             val mainContainer = parentFragmentManager.findFragmentById(R.id.navHostFragment)
             if (mainContainer is TvChannelsFragment) {
-                helpViewModel.currentAssignEpgChannel?.let { mainContainer.showEpgPreview(it) }
+                helpViewModel.currentAssignChannelPosition?.let { mainContainer.showEpgPreview(it) }
             }
             dialog.dismiss()
             val epgChannel =

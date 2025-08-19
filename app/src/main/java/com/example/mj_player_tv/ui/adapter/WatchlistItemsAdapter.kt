@@ -103,10 +103,7 @@ class WatchlistItemsAdapter(
 
                 val image = movie.screenshot_uri
                 if (!image.isNullOrEmpty()) {
-                    Log.d("GLOBIMOVIEBILDI", "${movie.movieName} = $image")
                     ivMovies.load(image)
-                } else {
-                    Log.d("GLOBIMOVIEBILDI", "${movie.movieName} ||| NO IMAGE")
                 }
 
                 binding.tvIsFavorite.visibility = if (movie.isFavorite) View.VISIBLE else View.INVISIBLE

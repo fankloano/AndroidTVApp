@@ -7,11 +7,13 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isInvisible
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgDataOB_
@@ -69,48 +71,49 @@ class ScrollTvChannelAdapter(
                     binding.ivChannelLogo.visibility = View.INVISIBLE
                 }
             }
-            val timeOffSet = helpViewModel.currentFocusedChannel?.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: helpViewModel.currentFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
-            val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
-            val currentTimeMillis =
-                (System.currentTimeMillis() / 1000).plus(calculateTimeOffsetInSeconds(timeOffSet))
-            val currentTime = System.currentTimeMillis()
-            val currentTimeString =
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(currentTime)
-            val halfHourLaterTime = currentTime + (30 * 60 * 1000)
-            val halfHourLaterTimeString =
-                SimpleDateFormat("HH:mm", Locale.getDefault()).format(halfHourLaterTime)
+            val currentTimeSec = System.currentTimeMillis() / 1000
+
+            val timeOffSetSec = calculateTimeOffsetInSeconds(
+                tvChannel.epgTimeOffSet
+                    ?: tvchannelpos.tvcategory.target.epgTimeOffSet
+                    ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                    ?: 0
+            )
+
+            // Hilfsfunktion für verschobene Zeiten
+            fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+            fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+
             binding.progressBar.max = 100
             if (epgChId != null) {
                 val currentProgram = epgDataBox.query(
                     EpgDataOB_.epgChId.equal(epgChId)
-                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeMillis)
-                            .and(EpgDataOB_.startTimestamp.less(currentTimeMillis)))
+                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec)
+                            .and(EpgDataOB_.startTimestamp.less(currentTimeSec - timeOffSetSec)))
                 ).build().findFirst()
                 if (currentProgram != null) {
-                    val currentStartTime = formatUnixTimestampToTime(currentProgram.startTimestamp!!, timeOffSet)
-                    val currentEndTime = formatUnixTimestampToTime(currentProgram.stopTimestamp!!, timeOffSet)
+                    val startTime = formatUnixTimestampToTime(currentProgram.shiftedStart())
+                    val endTime   = formatUnixTimestampToTime(currentProgram.shiftedStop())
+                    binding.tvStartTime.text = startTime
+                    binding.tvEndTime.text = " - $endTime"
                     binding.tvProgram.text = currentProgram.name
-                    binding.tvStartTime.text = currentStartTime
-                    binding.tvEndTime.text = " - ${currentEndTime}"
 
-                    val duration =
-                        ((currentProgram.stopTimestamp!! + timeOffSetSeconds).minus(
-                            currentProgram.startTimestamp!! + timeOffSetSeconds
-                        ))
-                    val progress =
-                        ((currentTimeMillis - (currentProgram.startTimestamp!! + timeOffSetSeconds)) * 100 / duration).toInt()
-                    binding.progressBar.progress = progress
+                    val duration = currentProgram.shiftedStop() - currentProgram.shiftedStart()
+                    val progress = ((currentTimeSec - currentProgram.shiftedStart()) * 100 / duration).toInt()
+                    binding.progressBar.isInvisible = false
+                    binding.progressBar.max = 100
+                    binding.progressBar.progress = progress.coerceIn(0, 100)
                 } else {
-                    binding.progressBar.progress = 0
-                    binding.tvProgram.text = "No information"
-                    binding.tvStartTime.text = currentTimeString
-                    binding.tvEndTime.text = " - $halfHourLaterTimeString"
+                    binding.tvProgram.text = itemView.context.getString(R.string.no_information)
+                    binding.tvStartTime.text = formatUnixTimestampToTime(currentTimeSec)
+                    binding.tvEndTime.text = " - " + formatUnixTimestampToTime(currentTimeSec + 1800)
+                    binding. progressBar.progress = 0
                 }
             } else {
-                binding.progressBar.progress = 0
-                binding.tvProgram.text = "No information"
-                binding.tvStartTime.text = currentTimeString
-                binding.tvEndTime.text = " - $halfHourLaterTimeString"
+                binding.tvProgram.text = itemView.context.getString(R.string.no_information)
+                binding.tvStartTime.text = formatUnixTimestampToTime(currentTimeSec)
+                binding.tvEndTime.text = " - " + formatUnixTimestampToTime(currentTimeSec + 1800)
+                binding. progressBar.progress = 0
             }
 
             binding.relLayoutScrollTvchannel.setOnKeyListener { _, keyCode, event ->
@@ -183,24 +186,14 @@ class ScrollTvChannelAdapter(
         fun onClick(tvchannelpos: ChannelPositions) = clickListener(tvchannelpos)
     }
 
-    fun formatUnixTimestampToTime(unixTimestamp: Long, timeOffset: Int): String {
-        try {
-            // Konvertiere den Unix-Zeitstempel in ein Date-Objekt
-            val date = Date(unixTimestamp * 1000)
-
-            // Erstelle ein SimpleDateFormat-Objekt für das gewünschte Zeitformat
+    fun formatUnixTimestampToTime(unixTimestamp: Long): String {
+        return try {
+            val date = Date(unixTimestamp * 1000) // Timestamp in Sekunden → ms
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Berechne den Zeitversatz in Stunden (positiv oder negativ)
-            val calendar = Calendar.getInstance()
-            calendar.time = date
-            calendar.add(Calendar.HOUR_OF_DAY, timeOffset)
-
-            // Gib das formatierte Datum und die Uhrzeit zurück
-            return timeFormat.format(calendar.time)
+            timeFormat.format(date)
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
-        return ""
     }
 }

@@ -152,7 +152,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                 tvchannelsList = results.filterIsInstance<StatsDisplayItem.TvChannelItem>()
                 moviesList = results.filterIsInstance<StatsDisplayItem.MovieItem>()
                 seriesList = results.filterIsInstance<StatsDisplayItem.SeriesItem>()
-                if (isFirstOpenStats) {
+                if (isFirstOpenStats && results.isNotEmpty()) {
                     if (!tvchannelsList.isNullOrEmpty()) {
                         binding.recyclerItems.setSpanCount(5)
                         helpViewModel.selectedStatsCategory = StatsMainCategory.TVCHANNELS
@@ -198,9 +198,7 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
                     }
 
                     binding.progressBar.visibility = View.GONE
-                    val hasResults = !(moviesList?.isEmpty() == true &&
-                            seriesList?.isEmpty() == true &&
-                            tvchannelsList?.isEmpty() == true)
+                    val hasResults = !(moviesList.isNullOrEmpty() && seriesList.isNullOrEmpty() && tvchannelsList.isNullOrEmpty())
 
                     if (hasResults) {
                         binding.tvNodatafound.visibility = View.GONE
@@ -512,7 +510,14 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
     private fun removeChannelFromList(tvchannel: TvChannelOB) {
         tvchannelsList = tvchannelsList?.filter { it.tvchannel.id != tvchannel.id }?.toMutableList()
         statsItemsAdapter.submitList(tvchannelsList?.sortedByDescending { it.tvchannel.timeWatched } )
-        binding.recyclerItems.requestFocus()
+        binding.recyclerItems.post {
+            if (tvchannelsList.isNullOrEmpty()) {
+                binding.tvNodatafound.visibility = View.VISIBLE
+                binding.rvHistoryTvchannels.requestFocus()
+            } else {
+                binding.recyclerItems.requestFocus()
+            }
+        }
         tvchannel.timeWatched = 0L
         tvchBox.put(tvchannel)
     }
@@ -606,7 +611,14 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
             movie.percentagePlayed = 0.0
             moviesList = moviesList?.filter { it.movie.id != movie.id }?.toMutableList()
             statsItemsAdapter.submitList(moviesList?.sortedByDescending { it.movie.percentagePlayed } )
-            binding.recyclerItems.requestFocus()
+            binding.recyclerItems.post {
+                if (moviesList.isNullOrEmpty()) {
+                    binding.tvNodatafound.visibility = View.VISIBLE
+                    binding.rvHistoryMovies.requestFocus()
+                } else {
+                    binding.recyclerItems.requestFocus()
+                }
+            }
             if (!movie.isFavorite) {
                 movieBox.remove(movie)
             } else {
@@ -713,7 +725,14 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         serie.seriesPercentagePlayed = 0.0
         seriesList = seriesList?.filter { it.series.id != serie.id }?.toMutableList()
         statsItemsAdapter.submitList(seriesList?.sortedByDescending { it.series.seriesPercentagePlayed } )
-        binding.recyclerItems.requestFocus()
+        binding.recyclerItems.post {
+            if (seriesList.isNullOrEmpty()) {
+                binding.tvNodatafound.visibility = View.VISIBLE
+                binding.rvHistorySeries.requestFocus()
+            } else {
+                binding.recyclerItems.requestFocus()
+            }
+        }
         seasonsBox.query(
             SeasonsOB_.seriesIdByAccount.equal(serie.idByAccountData)
         ).build().remove()

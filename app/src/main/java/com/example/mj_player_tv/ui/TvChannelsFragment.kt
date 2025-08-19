@@ -366,13 +366,19 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 handler.removeCallbacks(hideHudRunnable)
                 if (!helpViewModel.isPlayingCatchup) {
                     val hudtvchannel = helpViewModel.currentHudFocusedChannel
-                    val timeOffSet = hudtvchannel?.epgTimeOffSet
-                        ?: helpViewModel.currentHudFocusedChannelPosition?.tvcategory?.target?.epgTimeOffSet
-                        ?: hudtvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
-                        ?: 0
-                    val currentNextEpgStartTime = hudcurrentNextEpg?.startTimestamp?.plus(
-                        calculateTimeOffsetInSeconds(timeOffSet)
+                    val hudtvchannelPos = helpViewModel.currentHudFocusedChannelPosition
+                    val timeOffSetSec = calculateTimeOffsetInSeconds(
+                        hudtvchannel?.epgTimeOffSet
+                            ?: hudtvchannelPos?.tvcategory?.target?.epgTimeOffSet
+                            ?: hudtvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                            ?: 0
                     )
+
+                    // Hilfsfunktion für verschobene Zeiten
+                    fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+
+                    val currentNextEpgStartTime = hudcurrentNextEpg?.shiftedStart()
                     if (currentNextEpgStartTime != null) {
                         if (hudtvchannel != null) {
                             viewLifecycleOwner.lifecycleScope.launch {
@@ -445,15 +451,20 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             } else if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && event.action == KeyEvent.ACTION_DOWN) {
                 handler.removeCallbacks(hideHudRunnable)
                 if (!helpViewModel.isPlayingCatchup) {
-                    val hudtvchannel = helpViewModel.currentHudFocusedChannel
-                    val timeOffSet = hudtvchannel?.epgTimeOffSet
-                        ?: helpViewModel.currentHudFocusedChannelPosition?.tvcategory?.target?.epgTimeOffSet
-                        ?: hudtvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
-                        ?: 0
 
-                    val currentNextEpgEndTimeStamp = hudcurrentNextEpg?.stopTimestamp?.plus(
-                        calculateTimeOffsetInSeconds(timeOffSet)
+                    val hudtvchannel = helpViewModel.currentHudFocusedChannel
+                    val hudttvchannelpos = helpViewModel.currentHudFocusedChannelPosition
+                    val timeOffSetSec = calculateTimeOffsetInSeconds(
+                        hudtvchannel?.epgTimeOffSet
+                            ?: hudttvchannelpos?.tvcategory?.target?.epgTimeOffSet
+                            ?: hudtvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                            ?: 0
                     )
+
+                    // Hilfsfunktion für verschobene Zeiten
+                    fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+                    val currentNextEpgEndTimeStamp = hudcurrentNextEpg?.shiftedStop()
 
                     if (currentNextEpgEndTimeStamp != null) {
                         if (hudtvchannel != null) {
@@ -537,6 +548,14 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex - 1)
                         if (previousChannelPosition != null) {
                             val previousChannel = previousChannelPosition.tvchannel.target
+                            val currentTimeSec = System.currentTimeMillis() / 1000
+                            val timeOffSetSec = calculateTimeOffsetInSeconds(
+                                previousChannel.epgTimeOffSet
+                                    ?: previousChannelPosition.tvcategory.target.epgTimeOffSet
+                                    ?: previousChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                                    ?: 0
+                            )
+
                             if (previousChannelPosition.id == tvChannelsAdapter?.currentList?.firstOrNull()?.id) {
                                 binding.fullscreenChannelprevious.visibility = View.INVISIBLE
                             } else {
@@ -545,21 +564,14 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             binding.fullscreenChannelnext.visibility = VISIBLE
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val epgChannelId = previousChannel.linkedEpgChannel?.target?.chEpgId
-                                val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(
-                                    calculateTimeOffsetInSeconds(
-                                        previousChannel.epgTimeOffSet
-                                            ?: previousChannelPosition.tvcategory.target.epgTimeOffSet
-                                            ?: previousChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
-                                            ?: 0
-                                    )
-                                )
+
                                 val currentAndNextEpg = epgChannelId?.let {
                                     withContext(Dispatchers.IO) {
                                         epgDataBox.query(
                                             EpgDataOB_.epgChId.equal(it)
                                                 .and(
                                                     EpgDataOB_.stopTimestamp.greater(
-                                                        currentTimeMillis
+                                                        currentTimeSec - timeOffSetSec
                                                     )
                                                 )
                                         ).order(EpgDataOB_.startTimestamp).build().find(0, 2)
@@ -597,6 +609,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             tvChannelsAdapter?.currentList?.get(currentPlayingChannelIndex + 1)
                         if (nextChannelPosition != null) {
                             val nextChannel = nextChannelPosition.tvchannel.target
+                            val currentTimeSec = System.currentTimeMillis() / 1000
+                            val timeOffSetSec = calculateTimeOffsetInSeconds(
+                                nextChannel.epgTimeOffSet
+                                    ?: nextChannelPosition?.tvcategory?.target?.epgTimeOffSet
+                                    ?: nextChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                                    ?: 0
+                            )
                             if (nextChannelPosition.id == tvChannelsAdapter?.currentList?.lastOrNull()?.id) {
                                 binding.fullscreenChannelnext.visibility = View.INVISIBLE
                             } else {
@@ -605,21 +624,14 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             binding.fullscreenChannelprevious.visibility = VISIBLE
                             viewLifecycleOwner.lifecycleScope.launch {
                                 val epgChannelId = nextChannel.linkedEpgChannel?.target?.chEpgId
-                                val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(
-                                    calculateTimeOffsetInSeconds(
-                                        nextChannel.epgTimeOffSet
-                                            ?: nextChannelPosition.tvcategory.target.epgTimeOffSet
-                                            ?: nextChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
-                                            ?: 0
-                                    )
-                                )
+
                                 val currentAndNextEpg = epgChannelId?.let {
                                     withContext(Dispatchers.IO) {
                                         epgDataBox.query(
                                             EpgDataOB_.epgChId.equal(it)
                                                 .and(
                                                     EpgDataOB_.stopTimestamp.greater(
-                                                        currentTimeMillis
+                                                        currentTimeSec - timeOffSetSec
                                                     )
                                                 )
                                         ).order(EpgDataOB_.startTimestamp).build().find(0, 2)
@@ -832,6 +844,15 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 }
             }
             false
+        }
+
+        helpViewModel.updateShowEpgPreview.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                helpViewModel.currentFocusedChannPosition?.let {
+                    showEpgPreview(it)
+                }
+                helpViewModel.clearUpdateShowEpgPreview()
+            }
         }
     }
 
@@ -1377,7 +1398,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             tvChannelsAdapter?.submitListToUse(sortedChannels)
                             val firstChannel = sortedChannels.firstOrNull()
                             if (firstChannel != null) {
-                                showEpgPreview(firstChannel.tvchannel.target)
+                                showEpgPreview(firstChannel)
                             }
                         }
                         if (firstOpenTvCategory || helpViewModel.wasTvSectionOpened) {
@@ -1394,7 +1415,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 val lastChannel = tvChannelsAdapter?.currentList?.firstOrNull { it.catAndChannelAccount == helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount }
                                 if (lastChannel != null) {
                                     withContext(Dispatchers.Main) {
-                                        showEpgPreview(lastChannel.tvchannel.target)
+                                        showEpgPreview(lastChannel)
                                         val lastChannelPosition =
                                             tvChannelsAdapter?.currentList?.indexOf(lastChannel)
                                         if (lastChannelPosition != null) {
@@ -1409,7 +1430,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                     val firstChannel = tvChannelsAdapter?.currentList?.firstOrNull()
                                     if (firstChannel != null) {
                                         withContext(Dispatchers.Main) {
-                                            showEpgPreview(firstChannel.tvchannel.target)
+                                            showEpgPreview(firstChannel)
                                         }
                                     }
                                 }
@@ -1457,44 +1478,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
     }
 
-    fun checkSingleChannelEpg(channelPos: ChannelPositions) {
-        viewLifecycleOwner.lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                val tvChannel = channelPos.tvchannel.target ?: return@withContext
-                val account = tvChannel.account.target ?: return@withContext
-                val epgChannel = tvChannel.epgChannel?.target
-                val epgSource = epgChannel?.epgsource?.target
-
-                val selectedEpgSources = account.epgsources.filter { it.isSelected }
-
-                if (epgSource?.isPlaylistEpg == true && selectedEpgSources.any { it.isPlaylistEpg }) {
-                    val newChannel = if (account.isStalker) {
-                        stalkerViewModel.checkChannelsAndShortEpg(tvChannel)
-                    } else {
-                        xtreamViewModel.checkChannelsAndShortEpg(tvChannel)
-                    }
-
-                    val position = tvChannelsAdapter?.currentList?.indexOf(channelPos) ?: -1
-                    if (position != -1) {
-                        // Vor dem Zugriff sicherstellen, dass das Fragment noch existiert und die Referenzen gültig sind
-                        withContext(Dispatchers.Main) {
-                            // Prüfen, ob das Fragment noch existiert und der Adapter nicht null ist
-                            if (!isAdded || _binding == null || tvChannelsAdapter == null) {
-                                return@withContext
-                            }
-
-                            // Sicher auf die UI zugreifen
-                            if (newChannel.idByAccountData == helpViewModel.currentFocusedChannPosition?.tvchannel?.target?.idByAccountData) {
-                                showEpgPreview(newChannel)
-                            }
-                            tvChannelsAdapter?.notifyItemChanged(position)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     fun checkChannelEpg(channelPositions: List<ChannelPositions>) {
         val currentTime = System.currentTimeMillis() / 1000
         currentEpgJob?.cancel()
@@ -1536,7 +1519,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             if (position != null) {
                                 withContext(Dispatchers.Main) {
                                     if (matchedChannel == helpViewModel.currentFocusedChannPosition?.tvchannel?.target) {
-                                        showEpgPreview(matchedChannel)
+                                        helpViewModel.currentFocusedChannPosition?.let {
+                                            showEpgPreview(it)
+                                        }
                                     }
                                     tvChannelsAdapter?.notifyItemChanged(position)
                                 }
@@ -1547,7 +1532,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         if (position != null) {
                             withContext(Dispatchers.Main) {
                                 if (newChannel == helpViewModel.currentFocusedChannPosition?.tvchannel?.target) {
-                                    showEpgPreview(newChannel)
+                                    helpViewModel.currentFocusedChannPosition?.let {
+                                        showEpgPreview(it)
+                                    }
                                 }
                                 tvChannelsAdapter?.notifyItemChanged(position)
                             }
@@ -1685,15 +1672,23 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.tvHudNextProgramName.text = ""
         binding.tvHudNextProgramSubtitle.text = ""
         binding.tvHudNextProgramSubtitle.visibility = View.INVISIBLE
-        val timeOffSet = helpViewModel.currentHudFocusedChannel?.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: helpViewModel.currentHudFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
+        val currentTimeSec = System.currentTimeMillis() / 1000
 
+        val timeOffSetSec = calculateTimeOffsetInSeconds(
+            helpViewModel.currentHudFocusedChannel?.epgTimeOffSet
+                ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet
+                ?: helpViewModel.currentHudFocusedChannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+        )
+        // Hilfsfunktion für verschobene Zeiten
+        fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+        fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
         if (epgDataOB != null) {
             val datum = reformatDate(epgDataOB.datum)
-            val currentTime = (System.currentTimeMillis() / 1000).plus(calculateTimeOffsetInSeconds(timeOffSet))
-            if (epgDataOB.startTimestamp!! >= currentTime) {
+            if (epgDataOB.shiftedStart() >= System.currentTimeMillis() / 1000) {
                 binding.tvHudPrograminfo.text = "$datum"
             } else {
-                if (epgDataOB.stopTimestamp!! <= currentTime) {
+                if (epgDataOB.shiftedStop() <= System.currentTimeMillis() / 1000) {
                     binding.tvHudPrograminfo.text = "$datum"
                 }
             }
@@ -1706,9 +1701,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.tvHudNextProgramSubtitle.visibility = View.INVISIBLE
                 binding.tvHudNextProgramSubtitle.text = ""
             }
-            val startTime = formatUnixTimestampToTime(epgDataOB.startTimestamp!!, timeOffSet)
 
-            val endTime = formatUnixTimestampToTime(epgDataOB.stopTimestamp!!, timeOffSet)
+            val startTime = formatUnixTimestampToTime(epgDataOB.shiftedStart())
+            val endTime   = formatUnixTimestampToTime(epgDataOB.shiftedStop())
 
             binding.tvHudNextProgramTime.text =
                 "${startTime} - ${endTime}"
@@ -1717,7 +1712,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.tvHudNextProgramName.text = "No Information"
             binding.tvHudNextProgramSubtitle.text = ""
             if (hudcurrentNextEpg != null) {
-                val startTime = formatUnixTimestampToTime(hudcurrentNextEpg?.startTimestamp ?: 0, timeOffSet)
+                val startTime = formatUnixTimestampToTime(hudcurrentNextEpg?.shiftedStart() ?: 0)
 
                 binding.tvHudNextProgramTime.text = "$startTime - "
             } else {
@@ -1762,15 +1757,27 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private fun updateCatchupProgressAndRemainingTime() {
         val channelPos = helpViewModel.catchupPlayingChannelPosition
         val tvchannel = channelPos?.tvchannel?.target
-        val startTimestamp = helpViewModel.catchupEpgData?.startTimestamp ?: 0
-        val stopTimestamp = helpViewModel.catchupEpgData?.stopTimestamp ?: 0
+
+        val currentTimeSec = System.currentTimeMillis() / 1000
+
+        val timeOffSetSec = calculateTimeOffsetInSeconds(
+            tvchannel?.epgTimeOffSet
+                ?: channelPos?.tvcategory?.target?.epgTimeOffSet
+                ?: tvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+        )
+        fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+        fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+
+        val startTimestamp = helpViewModel.catchupEpgData?.shiftedStart() ?: 0
+        val stopTimestamp = helpViewModel.catchupEpgData?.shiftedStop() ?: 0
         val datum = helpViewModel.catchupEpgData?.datum?.let {
             reformatDate(it)
         }
         val timeOffSet = tvchannel?.epgTimeOffSet ?: channelPos?.tvcategory?.target?.epgTimeOffSet ?: tvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
 
-        val catchupStartTime = formatUnixTimestampToTime(startTimestamp, timeOffSet)
-        val catchupEndTime = formatUnixTimestampToTime(stopTimestamp, timeOffSet)
+        val catchupStartTime = formatUnixTimestampToTime(startTimestamp)
+        val catchupEndTime = formatUnixTimestampToTime(stopTimestamp)
         val totalDuration = player?.duration ?: 0L
         val currentPosition = player?.currentPosition ?: 0L
 
@@ -1826,13 +1833,25 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             binding.channelQualityInfoFullscreen.visibility = View.GONE
         }
 
-        val timeOffSet = tvchannel.epgTimeOffSet ?: channelPos.tvcategory.target?.epgTimeOffSet ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
+        val currentTimeSec = System.currentTimeMillis() / 1000
+
+        val timeOffSetSec = calculateTimeOffsetInSeconds(
+            tvchannel.epgTimeOffSet
+                ?: channelPos.tvcategory.target.epgTimeOffSet
+                ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+        )
+
+        // Hilfsfunktion für verschobene Zeiten
+        fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+        fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
 
         val currentAccount = helpViewModel.currentPlayingTvAccount
-        binding.tvHudChannelname.text = if (helpViewModel.isPlayingCatchup) {
-            "${tvchannel.showingName} [REPLAY]"
+        binding.tvHudChannelname.text = tvchannel.showingName
+        if (helpViewModel.isPlayingCatchup) {
+            binding.ivPlaycatchup.visibility = View.VISIBLE
         } else {
-            tvchannel.showingName
+            binding.ivPlaycatchup.visibility = View.INVISIBLE
         }
         binding.tvHudChannelname.isSelected = true
         val image = tvchannel.logo
@@ -1885,22 +1904,16 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     binding.tvHudCurrenProgramSubtitle.visibility = VISIBLE
                     binding.tvHudCurrenProgramSubtitle.text = firstEpgDataOB.sub_title
                 }
-                val startTime = formatUnixTimestampToTime(firstEpgDataOB.startTimestamp ?: 0, timeOffSet)
-                val endTime = formatUnixTimestampToTime(firstEpgDataOB.stopTimestamp ?: 0, timeOffSet)
+                val startTime = formatUnixTimestampToTime(firstEpgDataOB.shiftedStart())
+                val endTime = formatUnixTimestampToTime(firstEpgDataOB.shiftedStop())
                 binding.tvHudCurrentProgramTime.text =
                     "${startTime} - ${endTime}"
-                val duration =
-                    ((firstEpgDataOB.stopTimestamp!! + calculateTimeOffsetInSeconds(
-                        timeOffSet
-                    )).minus(firstEpgDataOB.startTimestamp!! + calculateTimeOffsetInSeconds(timeOffSet)))
+                val duration = firstEpgDataOB.shiftedStop() - firstEpgDataOB.shiftedStart()
                 binding.hudprogressBar.max = 100
                 val progress =
-                    ((System.currentTimeMillis() / 1000 - (firstEpgDataOB.startTimestamp!!+ calculateTimeOffsetInSeconds(
-                        timeOffSet
-                    ))) * 100 / duration).toInt()
+                    ((currentTimeSec - firstEpgDataOB.shiftedStart()) * 100 / duration).toInt()
                 binding.hudprogressBar.progress = progress
-                val timeOffSetSeconds = calculateTimeOffsetInSeconds(timeOffSet)
-                val remainingTimeInSeconds = (firstEpgDataOB.stopTimestamp!! + timeOffSetSeconds) - (System.currentTimeMillis() / 1000)
+                val remainingTimeInSeconds = (firstEpgDataOB.shiftedStop()) - (System.currentTimeMillis() / 1000)
 // Formatiere die verbleibende Zeit
                 val remainingTimeText = if (remainingTimeInSeconds > 3600) {
                     String.format(
@@ -1933,8 +1946,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.fullscreenChannelpreviousepg.visibility = VISIBLE
                 binding.fullscreenChannelnextepg.visibility = VISIBLE
                 hudcurrentNextEpg = nextEpgDataOB
-                val nextStartTime = formatUnixTimestampToTime(nextEpgDataOB.startTimestamp ?: 0, timeOffSet)
-                val nextEndTime = formatUnixTimestampToTime(nextEpgDataOB.stopTimestamp ?: 0, timeOffSet)
+                val nextStartTime = formatUnixTimestampToTime(nextEpgDataOB.shiftedStart())
+                val nextEndTime = formatUnixTimestampToTime(nextEpgDataOB.shiftedStop())
                 binding.tvHudNextProgramName.text = nextEpgDataOB.name
                 binding.tvHudNextProgramName.visibility = VISIBLE
                 binding.tvHudNextProgramTime.text =
@@ -1957,13 +1970,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         } else {
             binding.tvHudPrograminfo.visibility = View.INVISIBLE
             binding.relLayoutSeekbar.visibility = VISIBLE
-            val startTimestamp = helpViewModel.catchupEpgData?.startTimestamp ?: 0
-            val stopTimestamp = helpViewModel.catchupEpgData?.stopTimestamp ?: 0
+            val startTimestamp = helpViewModel.catchupEpgData?.shiftedStart() ?: 0
+            val stopTimestamp = helpViewModel.catchupEpgData?.shiftedStop() ?: 0
             val datum = helpViewModel.catchupEpgData?.datum?.let {
                 reformatDate(it)
             }
-            val catchupStartTime = formatUnixTimestampToTime(startTimestamp, timeOffSet)
-            val catchupEndTime = formatUnixTimestampToTime(stopTimestamp, timeOffSet)
+            val catchupStartTime = formatUnixTimestampToTime(startTimestamp)
+            val catchupEndTime = formatUnixTimestampToTime(stopTimestamp)
             binding.tvHudCurrenProgramName.text = helpViewModel.catchupEpgData?.name ?: "No Information"
             if (helpViewModel.catchupEpgData?.sub_title != null) {
                 binding.tvHudCurrenProgramSubtitle.visibility = VISIBLE
@@ -2067,22 +2080,25 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             if (!helpViewModel.isPlayingCatchup) {
                 helpViewModel.currentPlayingChannelPosition?.let { channPos ->
                     val tvchannel = channPos.tvchannel.target
-                    val timeOffSet = helpViewModel.currentFocusedChannel?.epgTimeOffSet
-                        ?: channPos.tvcategory.target?.epgTimeOffSet
-                        ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
-                    val currentTimeMillis =
-                        (System.currentTimeMillis() / 1000).plus(
-                            calculateTimeOffsetInSeconds(
-                                timeOffSet
-                            )
-                        )
+                    val currentTimeSec = System.currentTimeMillis() / 1000
+
+                    val timeOffSetSec = calculateTimeOffsetInSeconds(
+                        tvchannel.epgTimeOffSet
+                            ?: channPos.tvcategory.target.epgTimeOffSet
+                            ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                            ?: 0
+                    )
+
+                    // Hilfsfunktion für verschobene Zeiten
+                    fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
                     val epgChId = tvchannel.linkedEpgChannel?.target?.chEpgId
                     if (epgChId != null) {
                         val currentAndNextEpg =
                             withContext(Dispatchers.IO) {
                                 epgDataBox.query(
                                     EpgDataOB_.epgChId.equal(epgChId)
-                                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeMillis))
+                                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec))
                                 )
                                     .order(EpgDataOB_.startTimestamp)
                                     .build().find(0, 2)
@@ -2468,14 +2484,26 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         }
     }
 
-    fun showEpgPreview(tvChannel: TvChannelOB) {
+    fun showEpgPreview(tvChannPos: ChannelPositions) {
         if (binding.relLayoutEpg.isInvisible && !helpViewModel.isTvFullScreen && !helpViewModel.channelFromSearchContainer) {
             binding.relLayoutEpg.visibility = VISIBLE
         }
+        val tvChannel = tvChannPos.tvchannel.target
         tvChannel.account.target.epgsources.reset()
         resetEpgPreview()
+        val currentTimeSec = System.currentTimeMillis() / 1000
+
+        val timeOffSetSec = calculateTimeOffsetInSeconds(
+            tvChannel.epgTimeOffSet
+                ?: tvChannPos.tvcategory.target.epgTimeOffSet
+                ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
+                ?: 0
+        )
         val timeOffSet = tvChannel.epgTimeOffSet ?: helpViewModel.currentFocusedChannPosition?.tvcategory?.target?.epgTimeOffSet ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
-        val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(calculateTimeOffsetInSeconds(timeOffSet))
+
+        // Hilfsfunktion für verschobene Zeiten
+        fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
+        fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
 
         binding.tvEpgTvchannelname.text = tvChannel.showingName
         val epgChId = tvChannel.linkedEpgChannel?.target?.chEpgId ?: if (tvChannel.account.target.usePlaylistEpg) {
@@ -2488,10 +2516,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 val heuteListe = withContext(Dispatchers.IO) {
                     epgDataBox.query(
                         EpgDataOB_.epgChId.equal(epgChId)
-                            .and(EpgDataOB_.stopTimestamp.greater(currentTimeMillis))
+                            .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec))
                     )
                         .order(EpgDataOB_.startTimestamp)
-                        .build().find(0, 4)
+                        .build()
+                        .find(0, 4)
                 }
                 val currentProgram =
                     heuteListe.firstOrNull()
@@ -2514,12 +2543,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     binding.tvCurrentEndTime.visibility = VISIBLE
                     binding.tvCurrentProgram.visibility = VISIBLE
                     binding.tvDescription.visibility = VISIBLE
-                    // Verarbeite currentEpgData und nextEpgData nach Bedarf und binde sie an die UI
-                    // Zum Beispiel: tvProgramInfo.text = "${currentEpgData.name} - ${currentEpgData.descr}"
-                    binding.tvCurrentStartTime.text =
-                        formatUnixTimestampToTime(currentProgram.startTimestamp ?: 0, timeOffSet)
-                    val endTime =
-                        formatUnixTimestampToTime(currentProgram.stopTimestamp ?: 0, timeOffSet)
+
+                    val startTime = formatUnixTimestampToTime(currentProgram.shiftedStart())
+                    val endTime   = formatUnixTimestampToTime(currentProgram.shiftedStop())
+
+                    binding.tvCurrentStartTime.text = startTime
                     binding.tvCurrentEndTime.text = " - ${endTime}"
                     binding.tvCurrentProgram.text = currentProgram.name
                     binding.tvCurrentProgram.isSelected = true
@@ -2540,10 +2568,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                         binding.tvNextEndTime.visibility = VISIBLE
                         binding.tvNextProgram.visibility = VISIBLE
                         binding.tvNextStartTime.text =
-                            formatUnixTimestampToTime(nextEpgData.startTimestamp ?: 0, timeOffSet)
+                            formatUnixTimestampToTime(nextEpgData.shiftedStart())
 
                         val nextEndTime =
-                            formatUnixTimestampToTime(nextEpgData.stopTimestamp ?: 0, timeOffSet)
+                            formatUnixTimestampToTime(nextEpgData.shiftedStop())
                         binding.tvNextEndTime.text = " - ${nextEndTime}"
                         binding.tvNextProgram.text = if (nextEpgData.name.isNullOrEmpty()) {
                             resources.getString(R.string.no_information)
@@ -2567,12 +2595,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             binding.tvOvernextEndTime.visibility = VISIBLE
                             binding.tvOvernextProgram.visibility = VISIBLE
                             binding.tvOvernextStartTime.text = formatUnixTimestampToTime(
-                                overnextProgam.startTimestamp ?: 0,
-                                timeOffSet
+                                overnextProgam.shiftedStart()
                             )
                             val overnextEndTime = formatUnixTimestampToTime(
-                                overnextProgam.stopTimestamp ?: 0,
-                                timeOffSet
+                                overnextProgam.shiftedStop()
                             )
                             binding.tvOvernextEndTime.text = " - ${overnextEndTime}"
                             binding.tvOvernextProgram.text =
@@ -2648,25 +2674,15 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.tvNextStartTime.visibility = View.GONE
     }
 
-    fun formatUnixTimestampToTime(unixTimestamp: Long, timeOffset: Int): String {
-        try {
-            // Konvertiere den Unix-Zeitstempel in ein Date-Objekt
-            val date = Date(unixTimestamp * 1000)
-
-            // Erstelle ein SimpleDateFormat-Objekt für das gewünschte Zeitformat
+    fun formatUnixTimestampToTime(unixTimestamp: Long): String {
+        return try {
+            val date = Date(unixTimestamp * 1000) // Timestamp in Sekunden → ms
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-
-            // Berechne den Zeitversatz in Stunden (positiv oder negativ)
-            val calendar = Calendar.getInstance()
-            calendar.time = date
-            calendar.add(Calendar.HOUR_OF_DAY, timeOffset)
-
-            // Gib das formatierte Datum und die Uhrzeit zurück
-            return timeFormat.format(calendar.time)
+            timeFormat.format(date)
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
-        return ""
     }
 
     fun removeFocusFromShortEpg() {
@@ -3502,7 +3518,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         val currentChannelPosition = tvChannelsAdapter?.currentList?.indexOf(helpViewModel.currentFocusedChannPosition)
         if (currentChannelPosition != null) {
             binding.rvLayoutTvChannels.setSelectedPosition(currentChannelPosition)
-            helpViewModel.currentFocusedChannPosition?.let { showEpgPreview(it.tvchannel.target) }
+            helpViewModel.currentFocusedChannPosition?.let { showEpgPreview(it) }
             tvChannelsAdapter?.notifyItemChanged(currentChannelPosition)
         }
         binding.containerChannelOptions.visibility = VISIBLE
