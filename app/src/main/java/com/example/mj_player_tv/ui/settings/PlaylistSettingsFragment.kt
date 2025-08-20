@@ -281,7 +281,7 @@ class PlaylistSettingsFragment : Fragment(R.layout.fragment_playlist_settings), 
 
         binding.relLayoutDelete.setOnClickListener {
             helpViewModel.lastSelectedPlaylistOptionsId = it.id
-            val alertDialogBuilder = AlertDialog.Builder(requireContext())
+            val alertDialogBuilder = AlertDialog.Builder(requireContext(),R.style.CustomAlertDialog)
 
             alertDialogBuilder.setMessage("Delete Playlist?")
 

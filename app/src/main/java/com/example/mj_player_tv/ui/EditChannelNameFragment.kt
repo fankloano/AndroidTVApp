@@ -89,7 +89,7 @@ class EditChannelNameFragment : Fragment(R.layout.fragment_edit_channel_name) {
 
 
             binding.btnResetChannelName.setOnClickListener {
-                val alertDialogBuilder = AlertDialog.Builder(requireContext())
+                val alertDialogBuilder = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
 
                 alertDialogBuilder.setMessage("Reset current channel name to original name?")
 

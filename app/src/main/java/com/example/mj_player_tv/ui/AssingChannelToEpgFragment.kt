@@ -530,7 +530,7 @@ class AssingChannelToEpgFragment: Fragment(R.layout.fragment_assign_channel_to_e
     }
 
     fun openResetEpgDialog() {
-        val alertDialogBuilder = AlertDialog.Builder(this@AssingChannelToEpgFragment.requireActivity())
+        val alertDialogBuilder = AlertDialog.Builder(this@AssingChannelToEpgFragment.requireActivity(), R.style.CustomAlertDialog)
 
         alertDialogBuilder.setMessage("Reset to Playlist-Epg?")
 

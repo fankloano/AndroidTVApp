@@ -105,7 +105,7 @@ class CreateCategoryFragment : Fragment(R.layout.fragment_create_category) {
             }
 
             binding.btnSaveCategory.setOnClickListener {
-                val alertDialogBuilder = AlertDialog.Builder(requireContext())
+                val alertDialogBuilder = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
 
                 alertDialogBuilder.setMessage("Do you want to add channels to the new category?")
 

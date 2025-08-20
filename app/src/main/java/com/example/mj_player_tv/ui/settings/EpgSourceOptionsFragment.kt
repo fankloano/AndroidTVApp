@@ -167,7 +167,7 @@ class EpgSourceOptionsFragment : Fragment(R.layout.fragment_epgsource_options) {
         binding.relLayoutDeleteSource.setOnClickListener {
             if (epgSource != null) {
                 if (epgSource.isExternalEpg) {
-                    val alertDialogBuilder = AlertDialog.Builder(requireContext())
+                    val alertDialogBuilder = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
 
                     alertDialogBuilder.setMessage("Delete EPG-source?")
 

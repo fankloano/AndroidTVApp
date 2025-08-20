@@ -142,7 +142,7 @@ class AddTvChannelsToCategoryAdapter(private val onClickListener: AddTvChannelsT
     }
 
     fun openRemoveChannelDialog(tvChannelPos: ChannelPositions) {
-        val alertDialogBuilder = AlertDialog.Builder(fragment.requireActivity())
+        val alertDialogBuilder = AlertDialog.Builder(fragment.requireActivity(), R.style.CustomAlertDialog)
 
         alertDialogBuilder.setMessage("Remove channel from ${helpViewModel.categoryToAddChannelsInto?.showingName} ?")
 

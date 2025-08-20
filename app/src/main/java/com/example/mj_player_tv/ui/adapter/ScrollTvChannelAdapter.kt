@@ -150,7 +150,6 @@ class ScrollTvChannelAdapter(
                 focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls vorher noch aktiv
                 focusRunnable = Runnable {
                     if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
-                        holder.binding.relLayoutScrollTvchannel.isPressed = true
                         onClickListener.onClick(tvChannPos)
                     }
                     fragment.closeScrollTvChannelRV()

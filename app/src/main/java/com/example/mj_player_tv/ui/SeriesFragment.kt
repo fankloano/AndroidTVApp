@@ -1,5 +1,6 @@
 package com.example.mj_player_tv.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.util.TypedValue
@@ -26,6 +27,7 @@ import com.example.mj_player_tv.MainActivity
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
 import com.example.mj_player_tv.database.entity.Accounts
+import com.example.mj_player_tv.database.entity.MovieCategoryOB
 import com.example.mj_player_tv.database.entity.SeasonsOB
 import com.example.mj_player_tv.database.entity.SeriesCategoryOB
 import com.example.mj_player_tv.database.entity.SeriesOB
@@ -48,6 +50,7 @@ import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
 import com.rubensousa.dpadrecyclerview.FocusableDirection
 import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import io.objectbox.Box
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -1263,6 +1266,42 @@ class SeriesFragment : Fragment(R.layout.fragment_series) {
             }
         }
     }
+
+    fun showSeriesCategoryHideDialog(seriesCategoryId: Long) {
+        val seriesCategory = seriesCatBox.get(seriesCategoryId)
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+            .setMessage("Hide category: ${seriesCategory.showingName}?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    seriesCategory.favorite = false
+                    seriesCatBox.put(seriesCategory)
+                }
+                helpViewModel.currentSeriesAccount?.seriescategories?.reset()
+                if (helpViewModel.currentSeriesAccount?.seriescategories?.filter { it.favorite }.isNullOrEmpty()) {
+                    binding.loadSeriesProgressBar.visibility = View.GONE
+                    if (helpViewModel.currentSeriesAccount?.isStalker == true) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            stalkerSeriesdapter.submitData(PagingData.from(emptyList()))
+                        }
+                    } else {
+                        seriesAdapter.submitList(null)
+                    }
+                    resetDetailsUi()
+                    binding.tvSeriesQuantity.text = ""
+                    binding.tvSeriesTotalQuantity.text = ""
+                    binding.tvSeriesCategoryName.text = ""
+                    binding.rvLayoutSeriesAccountsMenu.requestFocus()
+                    Toast.makeText(this@SeriesFragment.requireActivity(), "No series found!", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+                binding.rvLayoutSeriesAccountsMenu.requestFocus()
+            }
+            .show()
+    }
+
 
     fun openSeriesSearchFragment() {
         val transaction = parentFragmentManager.beginTransaction()

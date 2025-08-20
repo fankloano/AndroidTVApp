@@ -896,7 +896,7 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
             }
         }.toTypedArray()
 
-        AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext(),R.style.CustomAlertDialog)
             .setTitle("Select Version")
             .setItems(titles) { _, which ->
                 val selectedItem = items[which]

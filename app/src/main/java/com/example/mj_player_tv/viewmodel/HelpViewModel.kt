@@ -647,6 +647,44 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    fun checkifFirstFavoriteChannel(account: Accounts, added: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val isFavoriteActive = tvCatBox.query(
+                TvCategoryOB_.isFavoriteCategory.equal(true)
+                    .and(TvCategoryOB_.favorite.equal(true))
+            ).build().count() > 0
+
+            val favoriteChannelsSize = tvChannBox.query(
+                TvChannelOB_.playlistId.equal(account.id)
+                    .and(TvChannelOB_.isFavorite.equal(true))
+            ).build().count().toInt()
+            val favoriteChannels = favoriteChannelsSize > 0
+            if (added) {
+                if (favoriteChannelsSize == 1) {
+                    val favoriteCategory = tvCatBox.query(
+                        TvCategoryOB_.isFavoriteCategory.equal(true)
+                    ).build().findFirst()
+                    if (favoriteCategory != null) {
+                        favoriteCategory.favorite = true
+                        tvCatBox.put(favoriteCategory)
+                    }
+                } else {
+                    return@launch
+                }
+            } else {
+                if (!favoriteChannels && isFavoriteActive) {
+                    val favoriteCategory = tvCatBox.query(
+                        TvCategoryOB_.isFavoriteCategory.equal(true)
+                    ).build().findFirst()
+                    if (favoriteCategory != null) {
+                        favoriteCategory.favorite = false
+                        tvCatBox.put(favoriteCategory)
+                    }
+                }
+            }
+        }
+    }
+
     fun checkForUpdates() {
         viewModelScope.launch(Dispatchers.IO) {
             val accountQuery = accountBox.query(
@@ -884,16 +922,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         _matchAndUpdateComplete.postValue(2)
     }
 
-    private val _updateTvCategoriesComplete = MutableLiveData<Int>(2)
-    var updateTvCategoriesComplete: LiveData<Int> = _updateTvCategoriesComplete
 
-    fun updateTvCategoriesCompleteSuccessful() {
-        _updateTvCategoriesComplete.postValue(1)
-    }
-
-    fun updateTvCategoriesCompleteReset() {
-        _updateTvCategoriesComplete.postValue(2)
-    }
 
     private val _updateNamesTvCategoriesComplete = MutableLiveData<Int>(2)
     var updateNamesTvCategoriesComplete: LiveData<Int> = _updateNamesTvCategoriesComplete
@@ -1585,7 +1614,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
     fun makeGlobalSearch(showFilteredCategories: Boolean, searchString: String) {
         globalSearchJob?.cancel()
         globalSearchJob = viewModelScope.launch {
-            Log.d("GLOBALSEARCHFOR", "$showFilteredCategories")
             _isSearching.value = true
             withContext(Dispatchers.IO) {
 
@@ -1674,9 +1702,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
-    fun searchPrograms(searchQuery: String, showFilteredCategories: Boolean) {
-        viewModelScope.launch(Dispatchers.IO) {
-
+    private suspend fun searchPrograms(searchQuery: String, showFilteredCategories: Boolean) {
             val matchingEpgEntries = epgDataBox
                 .query(EpgDataOB_.name.contains(searchQuery, QueryBuilder.StringOrder.CASE_INSENSITIVE))
                 .build()
@@ -1743,8 +1769,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 }
 
             } else {
-                return@launch
-            }
+                return
         }
     }
 

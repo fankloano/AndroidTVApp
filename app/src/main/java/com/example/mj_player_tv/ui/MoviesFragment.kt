@@ -1,6 +1,8 @@
 package com.example.mj_player_tv.ui
 
+import android.app.AlertDialog
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -20,6 +22,7 @@ import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import coil.load
+import coil.size.Dimension
 import com.example.mj_player_tv.MainActivity
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
@@ -44,9 +47,11 @@ import com.rubensousa.dpadrecyclerview.FocusableDirection
 import com.rubensousa.dpadrecyclerview.ParentAlignment
 import com.rubensousa.dpadrecyclerview.spacing.DpadGridSpacingDecoration
 import io.objectbox.Box
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @UnstableApi
 class MoviesFragment : Fragment(R.layout.fragment_movies) {
@@ -1294,13 +1299,45 @@ class MoviesFragment : Fragment(R.layout.fragment_movies) {
         }
     }
 
-    fun setFullVisibility() {
-        binding.overlayLayout.visibility = View.GONE
-        if (helpViewModel.currentMovieAccount!!.isStalker) {
-            binding.rvLayoutStalkerMovies.requestFocus()
-        } else {
-            binding.rvLayoutMovies.requestFocus()
-        }
+    fun showMovieCategoryHideDialog(movieCategoryId: Long) {
+        val movieCategory = movieCatBox.get(movieCategoryId)
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
+            .setMessage("Hide category: ${movieCategory.showingName}?")
+            .setPositiveButton("Yes") { dialog, _ ->
+                viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+                    movieCategory.favorite = false
+                    movieCatBox.put(movieCategory)
+                    helpViewModel.currentMovieAccount?.moviecategories?.reset()
+
+                    withContext(Dispatchers.Main) {
+                        if (helpViewModel.currentMovieAccount?.moviecategories?.filter { it.favorite }
+                                .isNullOrEmpty()) {
+                            binding.loadMoviesProgressBar.visibility = View.GONE
+                            if (helpViewModel.currentMovieAccount?.isStalker == true) {
+                                stalkerMoviesAdapter.submitData(PagingData.from(emptyList()))
+                            } else {
+                                moviesAdapter.submitList(null)
+                            }
+                            resetDetailsUi()
+                            binding.tvMovieQuantity.text = ""
+                            binding.tvMovieTotalQuantity.text = ""
+                            binding.tvMovieCategoryName.text = ""
+                            binding.rvLayoutMovieAccountsMenu.requestFocus()
+                            Toast.makeText(
+                                this@MoviesFragment.requireActivity(),
+                                "No movies found!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("No") { dialog, _ ->
+                dialog.dismiss()
+                binding.rvLayoutMovieAccountsMenu.requestFocus()
+            }
+            .show()
     }
 
     fun openMovieDetailFragment() {

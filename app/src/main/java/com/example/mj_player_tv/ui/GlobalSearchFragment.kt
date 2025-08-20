@@ -245,7 +245,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 // Deine Funktion aufrufen
                 if (currentText != lastSearchQuery && currentText.isNotEmpty()) {
                     lastSearchQuery = currentText
-                    Log.d("EDITTEXTNAME","START SEARCH: $lastSearchQuery")
                     searchFor(binding.editTextSearch.text.toString())
 
                     // Virtuelle Tastatur ausblenden
@@ -322,7 +321,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         }
 
         binding.relLayoutClearhistory.setOnClickListener {
-            AlertDialog.Builder(requireContext())
+            AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
                 .setMessage("Are you sure you want to clear your search history?")
                 .setPositiveButton("Yes") { dialog, _ ->
                     helpViewModel.settings?.searchString = mutableListOf()
@@ -380,7 +379,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 ).mapValues { it.value.flatten() }
                 binding.tvCatEpg.visibility =
                     if (programsByAccount?.values?.flatten().isNullOrEmpty()) View.GONE else View.VISIBLE
-                if (isFirstOpenGlobalSearch) {
+                if (isFirstOpenGlobalSearch && results.isNotEmpty()) {
                     val (firstCategory, firstMap) = listOf(
                         GlobalSearchMainCategory.TV to channelsByAccount,
                         GlobalSearchMainCategory.MOVIES to moviesByAccount,
@@ -395,6 +394,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                     selectedGlobalSearchCategory = firstCategory
                     helpViewModel.selectedGlobalSearchAccount = firstAccount
                     selectedAccount = firstAccount
+                    lastLoadedCategory = firstCategory
 
                     // 👉 Playlists setzen
                     val initialPlaylists = firstMap.keys.toList().sortedBy { it.name }
@@ -463,14 +463,17 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
 
                     // Verberge ProgressBar, zeige UI mit Ergebnissen
                     binding.progressBar.visibility = View.GONE
-                    val hasResults = !(channelsByAccount?.values?.flatten().isNullOrEmpty()
-                            && moviesByAccount?.values?.flatten().isNullOrEmpty()
-                            && seriesByAccount?.values?.flatten().isNullOrEmpty()
-                            && programsByAccount?.values?.flatten().isNullOrEmpty())
+                    val hasResults = listOf(
+                        channelsByAccount?.values?.flatten()?.isNotEmpty() ?: false,
+                        moviesByAccount?.values?.flatten()?.isNotEmpty() ?: false,
+                        seriesByAccount?.values?.flatten()?.isNotEmpty() ?: false,
+                        programsByAccount?.values?.flatten()?.any { it.second.isNotEmpty() } ?: false
+                    ).any { it }
 
                     if (hasResults) {
                         binding.tvNodatafound.visibility = View.GONE
                     } else {
+
                         showSearchBarHideArrow()
                         binding.tvNodatafound.visibility = View.VISIBLE
                     }
@@ -621,7 +624,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 val thisSerie = globalSearchItemAdapter.currentList.firstOrNull { it is GlobalSearchDisplayItem.SeriesItem && it.series.idByAccountData == helpViewModel.currentFocusedSerie?.idByAccountData }
                 val position = globalSearchItemAdapter.currentList.indexOf(thisSerie)
                 globalSearchItemAdapter.notifyItemChanged(position)
-                Log.d("UPDATEGLOBALSEARCHITEM", "SERIE: $position")
                 seriesViewModel.clearUpdateSerieInRV()
             }
         }
@@ -631,7 +633,6 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                 val thisMovie = globalSearchItemAdapter.currentList.firstOrNull { it is GlobalSearchDisplayItem.MovieItem && it.movie.idByAccountData == helpViewModel.currentFocusedMovie?.idByAccountData }
                 val position = globalSearchItemAdapter.currentList.indexOf(thisMovie)
                 globalSearchItemAdapter.notifyItemChanged(position)
-                Log.d("UPDATEGLOBALSEARCHITEM", "MOVIE: $position")
                 moviesViewModel.clearUpdateOnMovieRV()
             }
         }
@@ -745,9 +746,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     private fun showSearchBarHideArrow() {
         binding.ivShowSearch.visibility = View.GONE
         binding.relLayoutSearchMovie.visibility = View.VISIBLE
-        Log.d("EDITTEXTNAME", "IS: $lastSearchQuery")
         binding.editTextSearch.setText(lastSearchQuery)
-        Log.d("EDITTEXTNAME", "NOW: ${binding.editTextSearch.text.toString()}")
         binding.backgroundDarker.visibility = View.VISIBLE
         // Fokus setzen
         binding.editTextSearch.post { // Sicherstellen, dass die UI bereit ist
@@ -1004,7 +1003,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         helpViewModel.currentFocusedTvAccount = tvChannelPos.tvcategory.target.tvaccount.target
         helpViewModel.currentFocusedTvCategory = tvChannelPos.tvcategory.target
         helpViewModel.checkCategoryActivated(tvChannelPos.tvcategory.target)
-        Log.d("CLICKEDFROMGLOBALSEARCH", "${helpViewModel.currentFocusedChannPosition?.tvchannel?.target?.showingName} IN ${helpViewModel.currentFocusedTvCategory?.showingName} FROM ACC: ${helpViewModel.currentFocusedTvAccount?.name}")
+        removeDimOverlay()
         (requireActivity() as? MainActivity)?.checkTvChannelsFragmentFromGlobalSearch()
     }
 
@@ -1117,6 +1116,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             helpViewModel.currentFocusedChannPosition = tvChannelPos
             helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
             helpViewModel.channelFromSearchContainer = true
+            removeDimOverlay()
             (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
         }
     }
@@ -1151,6 +1151,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                         helpViewModel.currentFocusedChannPosition = tvChannelPos
                         helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
                         helpViewModel.globalSearchCatchupUrl = catchUp.data?.removePrefix("ffmpeg")?.trim() ?: ""
+                        removeDimOverlay()
                         (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
                     }
                     is Resource.Error -> {
@@ -1181,6 +1182,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     fun removeDimOverlay() {
+        if (!isAdded || activity == null) return
         dimView?.let { (requireActivity().window.decorView as ViewGroup).removeView(it) }
     }
 
@@ -1193,7 +1195,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
     }
 
     private val onSearchHistoryLongClickListener = GlobalSearchHistoryAdapter.OnLongClickListener { searchTerm ->
-        AlertDialog.Builder(requireContext())
+        AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
             .setMessage("Delete search term?")
             .setPositiveButton("Yes") { dialog, _ ->
                 helpViewModel.settings?.let { settings ->

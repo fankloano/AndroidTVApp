@@ -592,7 +592,6 @@ class WatchHistoryFragment : Fragment(R.layout.fragment_history) {
         val xPosition = centerX - (popupWidth / 2)
         val yPosition = centerY - (popupHeight / 2)
 
-        popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
 
         popupWindow.showAtLocation(anchor, Gravity.NO_GRAVITY, xPosition, yPosition)
         showDimOverlay()

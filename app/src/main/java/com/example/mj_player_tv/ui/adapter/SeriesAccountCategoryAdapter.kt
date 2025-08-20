@@ -179,13 +179,18 @@ class SeriesAccountCategoryAdapter(
                         fragment.setFocusToSeries()
                         true
                     }
-                    KeyEvent.KEYCODE_DPAD_CENTER -> {
-                        fragment.setSeriesAccountsVisibilityAnimated(false)
-                        fragment.setFocusToSeries()
-                        true
-                    }
                     else -> false
                 }
+            }
+
+            binding.rvLinearSeriesCategory.setOnClickListener {
+                fragment.setSeriesAccountsVisibilityAnimated(false)
+                fragment.setFocusToSeries()
+            }
+
+            binding.rvLinearSeriesCategory.setOnLongClickListener {
+                fragment.showSeriesCategoryHideDialog(seriesCategory.id)
+                true
             }
 
             binding.rvLinearSeriesCategory.setOnFocusChangeListener { _, hasFocus ->

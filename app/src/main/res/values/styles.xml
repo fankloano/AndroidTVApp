@@ -25,4 +25,17 @@
         <item name="android:dropDownSelector">@drawable/popup_menu_item_selector</item>
     </style>
 
+    <style name="CustomAlertDialog" parent="Theme.AppCompat.Dialog.Alert">
+        <!-- Hintergrundfarbe -->
+        <item name="android:background">@color/background_dark_dark</item>
+        <!-- Titel Textfarbe -->
+        <item name="android:textColorPrimary">@color/white</item>
+        <!-- Nachricht Textfarbe -->
+        <!-- Buttons Textfarbe -->
+        <item name="android:colorAccent">@color/light_blue</item>
+        <item name="android:dialogCornerRadius">12dp</item>
+        <item name="android:buttonCornerRadius">12dp</item>
+    </style>
+
+
 </resources>

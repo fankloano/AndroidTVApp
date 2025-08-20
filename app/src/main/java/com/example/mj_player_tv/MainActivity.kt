@@ -731,20 +731,6 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
             changeFragment(TvChannelsFragment())
         }
     }
-
-    fun checkTvChannelsFragmentFromWatchlist() {
-        makeNavHostInvisible()
-        closeMenu()
-        hideMenu()
-        resetNavHostFragment()
-        toggleActivateOnMenu(activityMainBinding.btnTv)
-        viewModel.firstOpenTvChFrag = true
-        toggleVisibilityOfMainContainer(true)
-        viewModel.isTvAccountMenuOpened = true
-        lastOpenedFragment = Constants.FRAGMENT_TV
-        changeFragment(TvChannelsFragment())
-    }
-
     private fun makeNavHostInvisible() {
         activityMainBinding.navHostFragment.visibility = View.INVISIBLE
     }
@@ -912,7 +898,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
 
 
     fun openClosingDialog() {
-        val alertDialogBuilder = AlertDialog.Builder(this)
+        val alertDialogBuilder = AlertDialog.Builder(this, R.style.CustomAlertDialog)
 
         alertDialogBuilder.setMessage("Close App?")
 

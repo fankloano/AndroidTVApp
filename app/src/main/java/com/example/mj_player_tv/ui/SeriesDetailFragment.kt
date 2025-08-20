@@ -726,16 +726,6 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
         popup.show()
     }
 
-
-    private fun showConfirmMarkAllAsSeenDialog(onConfirm: () -> Unit) {
-        AlertDialog.Builder(requireContext())
-            .setMessage("Mark all unseen seasons as seen?")
-            .setPositiveButton("Yes") { _, _ -> onConfirm() }
-            .setNegativeButton("No", null)
-            .show()
-    }
-
-
     private fun showEpisodePopup(episode: EpisodesOB, view: View, position: Int) {
         val popup = PopupMenu(view.context, view)
         popup.menuInflater.inflate(R.menu.menu_episode_options, popup.menu)
@@ -791,7 +781,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             "Start from beginning"
         )
 
-        AlertDialog.Builder(context)
+        AlertDialog.Builder(context, R.style.CustomAlertDialog)
             .setTitle("Play episode")
             .setItems(options) { _, which ->
                 when (which) {

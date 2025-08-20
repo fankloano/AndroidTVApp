@@ -113,35 +113,33 @@ class ManageTvCategoryFragment: Fragment(R.layout.fragment_manage_tvcategory), V
 
             binding.btnSelectAll.setOnClickListener {
                 helpViewModel.selectedAccountData?.let { account ->
+                    manageTvCategoryAdapter.currentList.forEach {
+                        it.favorite = true
+                    }
+                    manageTvCategoryAdapter.notifyDataSetChanged()
                     val categoriesQuery = tvCatBox.query(TvCategoryOB_.playlistId.equal(account.id)).build()
                     categoriesQuery.find().forEach {
                         it.favorite = true
                         tvCatBox.put(it)
                     }
                     categoriesQuery.close()
-                    manageTvCategoryAdapter.currentList.forEach {
-                        it.favorite = true
-                    }
                     account.tvcategories.reset()
-                    manageTvCategoryAdapter.notifyDataSetChanged()
-                    helpViewModel.updateTvCategoriesCompleteSuccessful()
                 }
             }
 
             binding.btnDeselectAll.setOnClickListener {
                 helpViewModel.selectedAccountData?.let { account ->
+                    manageTvCategoryAdapter.currentList.forEach {
+                        it.favorite = false
+                    }
+                    manageTvCategoryAdapter.notifyDataSetChanged()
                     val categoriesQuery = tvCatBox.query(TvCategoryOB_.playlistId.equal(account.id)).build()
                     categoriesQuery.find().forEach {
                         it.favorite = false
                         tvCatBox.put(it)
                     }
                     categoriesQuery.close()
-                    manageTvCategoryAdapter.currentList.forEach {
-                        it.favorite = false
-                    }
                     account.tvcategories.reset()
-                    manageTvCategoryAdapter.notifyDataSetChanged()
-                    helpViewModel.updateTvCategoriesCompleteSuccessful()
                 }
             }
         }
@@ -177,7 +175,6 @@ class ManageTvCategoryFragment: Fragment(R.layout.fragment_manage_tvcategory), V
         val position = manageTvCategoryAdapter.currentList.indexOf(it)
         manageTvCategoryAdapter.notifyItemChanged(position)
         helpViewModel.changedTvCategoriesAccountId = it.playlistId
-        helpViewModel.updateTvCategoriesCompleteSuccessful()
         helpViewModel.selectedAccountData?.let { account ->
             account.tvcategories.reset()
             accountBox.put(account) }

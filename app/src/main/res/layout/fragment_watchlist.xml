@@ -159,10 +159,9 @@
         <ImageView
             android:id="@+id/iv_movieposter"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHeight_percent="0.7"
             app:layout_constraintWidth_percent="0.7"
             android:adjustViewBounds="true"
             android:scaleType="centerCrop"
@@ -173,20 +172,18 @@
         <View
             android:id="@+id/gradient_view_up"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             app:layout_constraintStart_toStartOf="@id/iv_movieposter"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHeight_percent="0.8"
             app:layout_constraintWidth_percent="0.7"
             android:background="@drawable/gradient_overlay_fromup"/>
 
         <View
             android:id="@+id/gradient_view"
             android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_height="match_parent"
             app:layout_constraintStart_toStartOf="@id/iv_movieposter"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintHeight_percent="0.8"
             app:layout_constraintWidth_percent="0.7"
             android:background="@drawable/gradient_overlay_fromleft_down"/>
 

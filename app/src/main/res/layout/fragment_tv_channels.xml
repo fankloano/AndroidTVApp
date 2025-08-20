@@ -803,17 +803,6 @@
             app:layout_constraintStart_toEndOf="@id/relLayout_hudchannellogo"
             tools:text="DE | SKY CINEMA Bundesliga 1 FHD (play only live events)" />
 
-        <ImageView
-            android:id="@+id/iv_playcatchup"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="invisible"
-            app:layout_constraintStart_toEndOf="@id/tv_hud_channelname"
-            app:layout_constraintTop_toTopOf="@id/tv_hud_channelname"
-            app:layout_constraintBottom_toBottomOf="@id/tv_hud_channelname"
-            android:src="@drawable/ic_catchup"
-            android:tint="@color/white"/>
-
         <!-- Channel-Quality-Info oben -->
         <LinearLayout
             android:id="@+id/channel_quality_info_fullscreen"
@@ -938,6 +927,16 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     tools:text="Der Herr der Ringe: Die Rückkehr des Königssad asdasdadasdsadasdadasdsa" />
+
+                <ImageView
+                    android:id="@+id/iv_playcatchup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_alignParentEnd="true"
+                    android:visibility="invisible"
+                    android:layout_below="@id/linLayout_hud_currentTime"
+                    android:src="@drawable/ic_catchup"
+                    android:tint="@color/light_blue"/>
 
                 <TextView
                     android:id="@+id/tv_hud_currenProgramSubtitle"

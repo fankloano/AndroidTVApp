@@ -180,13 +180,18 @@ class MovieAccountCategoryAdapter(
                         fragment.setFocusToMovies()
                         true
                     }
-                    KeyEvent.KEYCODE_DPAD_CENTER -> {
-                        fragment.setMovieAccountsVisibilityAnimated(false)
-                        fragment.setFocusToMovies()
-                        true
-                    }
                     else -> false
                 }
+            }
+
+            binding.rvLinearMovieCategory.setOnClickListener {
+                fragment.setMovieAccountsVisibilityAnimated(false)
+                fragment.setFocusToMovies()
+            }
+
+            binding.rvLinearMovieCategory.setOnLongClickListener {
+                fragment.showMovieCategoryHideDialog(movieCategory.id)
+                true
             }
 
             binding.rvLinearMovieCategory.setOnFocusChangeListener { _, hasFocus ->

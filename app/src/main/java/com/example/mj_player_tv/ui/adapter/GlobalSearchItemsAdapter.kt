@@ -274,12 +274,16 @@ class GlobalSearchItemsAdapter(
             // 1. Kanal-RecyclerView (links)
             channelAdapter = GlobalSearchProgramsChannelAdapter (
                 onChannelFocused = { selectedChannel ->
-                    val epgs= programMap[selectedChannel] ?: emptyList()
-                    epgAdapter.submitList(epgs.sortedBy { it.startTimestamp })
-                    binding.tvSelectedChannel.text = selectedChannel.tvchannel.target.showingName
-                    binding.tvSelectedTvCategory.text = "in ${selectedChannel.tvcategory.target.showingName}"
-                    updateDetail(epgs.firstOrNull())
-                    currentChannel = selectedChannel
+                    if (currentChannel != selectedChannel) {
+                        val epgs = programMap[selectedChannel] ?: emptyList()
+                        epgAdapter.submitList(epgs.sortedBy { it.startTimestamp })
+                        binding.tvSelectedChannel.text =
+                            selectedChannel.tvchannel.target.showingName
+                        binding.tvSelectedTvCategory.text =
+                            "in ${selectedChannel.tvcategory.target.showingName}"
+                        updateDetail(epgs.firstOrNull())
+                        currentChannel = selectedChannel
+                    }
                 },
                 onRightClicked = {
                     focusToEpglist()

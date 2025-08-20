@@ -782,39 +782,42 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             when (keyCode) {
                 KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
                     val isForward = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
-                    var increment = 10000L // 60 Sekunden Schritte
-                    val maxPosition = player?.duration ?: 0
-
+                    var increment = 10_000L // 10 Sekunden Schritte (kannst du anpassen)
+                    val startMs = (helpViewModel.catchupEpgData?.startTimestamp ?: 0L) * 1000L
+                    val stopMs  = (helpViewModel.catchupEpgData?.stopTimestamp ?: 0L) * 1000L
+                    val duration = stopMs - startMs
                     when (event.action) {
                         KeyEvent.ACTION_DOWN -> {
-                            if (isSpooling) return@setOnKeyListener true // Verhindere doppelte ACTION_DOWN-Ereignisse
+                            if (isSpooling) return@setOnKeyListener true // Doppelte Events blocken
 
                             handler.removeCallbacks(hideHudRunnable)
                             isSpooling = true
 
-                            // Initiale Position setzen
-                            spoolPosition = player?.currentPosition ?: 0
+                            spoolPosition = player?.currentPosition ?: 0L
 
-                            // Vorherige Callbacks entfernen (wenn vorhanden)
                             spoolHandler.removeCallbacksAndMessages(null)
 
                             spoolRunnable = object : Runnable {
                                 override fun run() {
                                     if (isSpooling) {
-                                        // Simuliertes Spulen durch Änderung des SeekBar-Werts
+                                        // Neue Spulposition berechnen, innerhalb des Events deckeln
                                         spoolPosition = if (isForward) {
-                                            (spoolPosition + increment).coerceAtMost(maxPosition)
+                                            (spoolPosition + increment).coerceAtMost(duration)
                                         } else {
-                                            (spoolPosition - increment).coerceAtLeast(0)
+                                            (spoolPosition - increment).coerceAtLeast(0L)
                                         }
 
                                         binding.seekBar.setPosition(spoolPosition)
+                                        Log.d("CATCHUP SPULEN", "DURATION: $duration SPOOLPOS: $spoolPosition CURRPOS: ${player?.currentPosition}")
                                         binding.tvCurrentTimeCatchup.text = formatTime(spoolPosition)
+
+                                        // Schrittweite langsam erhöhen
                                         spoolHandler.postDelayed({
-                                            increment = (increment + 10000L).coerceAtMost(maxIncrement)
+                                            increment = (increment + 10_000L).coerceAtMost(maxIncrement)
                                         }, incrementChangeDelay)
-                                        // Wiederhole den Vorgang alle 100ms für eine weichere Animation
-                                        spoolHandler.postDelayed(this, 10)
+
+                                        // Wiederholen (flüssiges Scrollen)
+                                        spoolHandler.postDelayed(this, 100)
                                     }
                                 }
                             }
@@ -826,16 +829,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             isSpooling = false
                             spoolHandler.removeCallbacksAndMessages(null)
 
-                            // Nach dem Spulen zur neuen Position springen
+                            // Tatsächlich an die Spulposition springen
                             player?.seekTo(spoolPosition)
 
-                            // UI aktualisieren
+                            // UI danach aktualisieren
                             updateSeekbarUI()
                             handler.postDelayed(hideHudRunnable, 8000)
                             return@setOnKeyListener true
                         }
                     }
                 }
+
                 KeyEvent.KEYCODE_BACK -> {
                     if (event.action == KeyEvent.ACTION_DOWN) {
                         hideHudContainer()
@@ -1008,8 +1012,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
 
         val item = tvAccountCategoryAdapter.currentList[position] as AccountTvCategory.Account
 
-        Log.d("CLICKEDFROMGLOBALSEARCH", "ITEM: ${item.name}")
-
 
         if (expandedAccountId == item.id) {
             expandedAccountId = null
@@ -1062,17 +1064,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 val clickedAccountPosition = tvAccountCategoryAdapter.currentList.indexOf(clickedAccount)
                 // Scroll zu Account, falls notwendig
                 binding.rvLayoutTvAccountsMenu.scrollToPosition(clickedAccountPosition)
-                thisList.forEachIndexed { index, item ->
-                    when (item) {
-                        is AccountTvCategory.Account -> {
-                            Log.d("CLICKEDFROMGLOBALSEARCH", "POS $index -> ACCOUNT: ${item.name} (ID: ${item.id})")
-                        }
-                        is AccountTvCategory.TvCategory -> {
-                            Log.d("CLICKEDFROMGLOBALSEARCH", "POS $index -> CATEGORY: ${item.name} (ID: ${item.id} (AccountID: ${item.parentId})")
-                        }
-                    }
-                }
-
 
                 // WICHTIG: Stelle sicher, dass die Kategorie darunter aufgebaut wird
                 if (position + 1 < thisList.size &&
@@ -1089,7 +1080,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 if (isFirstOpen) {
                     val focusedCategoryId = helpViewModel.currentFocusedTvCategory?.id ?: 0L
                     if (focusedCategoryId != 0L) {
-                        Log.d("CLICKEDFROMGLOBALSEARCH", "FOCUSEDCATEGORYID: $focusedCategoryId")
 
                         val categoryPosition = thisList.indexOfFirst {
                             it is AccountTvCategory.TvCategory && it.id == focusedCategoryId
@@ -1124,6 +1114,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 "No categories enabled!",
                 Toast.LENGTH_SHORT
             ).show()
+            binding.rvLayoutTvAccountsMenu.requestFocus()
         }
     }
 
@@ -1303,13 +1294,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private var currentTvChannelsJob: Job? = null
     private var firstOpenTvChannels = true
 
-    fun selectLastCategory(position: Int, catId: Long) {
-        if (!helpViewModel.isTvAccountFocused) {
-            tvAccountCategoryAdapter.selectedTvCategoryId = catId
-            tvAccountCategoryAdapter.notifyItemChanged(position)
-        }
-    }
-
     fun resetSelectedTvCategory(position: Int) {
         tvAccountCategoryAdapter.selectedTvCategoryId = 0L
         tvAccountCategoryAdapter.notifyItemChanged(position)
@@ -1436,8 +1420,8 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 }
                                 helpViewModel.wasTvSectionOpened = false
                                 if (helpViewModel.channelFromSearchContainer) {
+                                    setTvAccountsVisibilityAnimated(false)
                                     withContext(Dispatchers.Main) {
-                                        helpViewModel.channelFromSearchContainer = false
                                         if (helpViewModel.isPlayingCatchup) {
                                             val currChPos = tvChannelsAdapter?.currentList?.firstOrNull { it.catAndChannelAccount == helpViewModel.catchupPlayingChannelPosition?.catAndChannelAccount }
                                             val pos = tvChannelsAdapter?.currentList?.indexOf(currChPos)
@@ -1448,13 +1432,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                             helpViewModel.currentPlayingChannelPosition = null
                                         }
                                         setVideoViewFullScreen()
-                                        (requireActivity() as? MainActivity)?.makeNavHostVisible()
                                     }
                                 }
                             }
-                        }
-                        withContext(Dispatchers.Main) {
-                            binding.tvNoTvCategories.visibility = View.INVISIBLE
                         }
                     } else {
                         binding.tvLoadEpg.visibility = View.INVISIBLE
@@ -1634,7 +1614,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     fun setTvAccountsVisibilityAnimated(isVisible: Boolean) {
         val accountsRecyclerView = binding.linLayoutTvAccountsMenu
         val constraintSet = ConstraintSet()
-        constraintSet.clone(binding.constTv.findViewById<ConstraintLayout>(R.id.const_tv))
+        val constTvLayout = binding.constTv.findViewById<ConstraintLayout>(R.id.const_tv)
+        constraintSet.clone(constTvLayout)
+
         if (isVisible) {
             constraintSet.clear(accountsRecyclerView.id, ConstraintSet.END)
             constraintSet.connect(accountsRecyclerView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
@@ -1652,12 +1634,17 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             constraintSet.connect(accountsRecyclerView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.START)
         }
 
-        val transition = ChangeBounds()
-        transition.duration = 250 // Ändere die Dauer nach Bedarf
-
-        TransitionManager.beginDelayedTransition(binding.constTv.findViewById(R.id.const_tv), transition)
-        constraintSet.applyTo(binding.constTv.findViewById(R.id.const_tv))
+        // Wenn channelfromsearchcontainer true → keine Animation, sofort anwenden
+        if (helpViewModel.channelFromSearchContainer) {
+            constraintSet.applyTo(constTvLayout)
+        } else {
+            val transition = ChangeBounds()
+            transition.duration = 250 // Dauer nach Bedarf
+            TransitionManager.beginDelayedTransition(constTvLayout, transition)
+            constraintSet.applyTo(constTvLayout)
+        }
     }
+
 
 
     fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {
@@ -1774,20 +1761,19 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         val datum = helpViewModel.catchupEpgData?.datum?.let {
             reformatDate(it)
         }
-        val timeOffSet = tvchannel?.epgTimeOffSet ?: channelPos?.tvcategory?.target?.epgTimeOffSet ?: tvchannel?.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0
 
         val catchupStartTime = formatUnixTimestampToTime(startTimestamp)
         val catchupEndTime = formatUnixTimestampToTime(stopTimestamp)
-        val totalDuration = player?.duration ?: 0L
+        val totalDuration = ((stopTimestamp - startTimestamp) * 1000L)
         val currentPosition = player?.currentPosition ?: 0L
+
 
         val progress = if (totalDuration > 0) {
             (currentPosition * 100 / totalDuration).toInt()
         } else {
             0
         }
-        binding.tvHudCurrentProgramTime.text = "$catchupStartTime - $catchupEndTime  |  $datum"
-        binding.hudprogressBar.progress = progress.toInt()
+
         val remainingTimeInSeconds = maxOf(0, (totalDuration - currentPosition) / 1000)
 
 // Formatiere die verbleibende Zeit
@@ -1800,6 +1786,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         } else {
             String.format("%dmin", remainingTimeInSeconds / 60)
         }
+        binding.tvHudCurrentProgramTime.text = "$catchupStartTime - $catchupEndTime  |  $datum"
+        binding.hudprogressBar.progress = progress
+
+        Log.d("CATCHUP STREAM", "JA: ${helpViewModel.catchupEpgData?.name} = TOTDUR: $totalDuration PROGR: $progress REMAININGSECONS: $remainingTimeInSeconds REMAININGTEXT: $remainingTimeText")
         // Setze den Text im TextView
         binding.tvRemainingTimeCurrentProgram.text = "$remainingTimeText remaining.."
         binding.tvRemainingTimeCurrentProgram.visibility = VISIBLE
@@ -1985,7 +1975,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 binding.tvHudCurrenProgramSubtitle.visibility = View.INVISIBLE
             }
             binding.hudprogressBar.max = 100
-            val totalDuration = player?.duration ?: 0L
+            val totalDuration = ((stopTimestamp - startTimestamp) * 1000L)
             val currentPosition = player?.currentPosition ?: 0L
 
             val progress = if (totalDuration > 0) {
@@ -1995,6 +1985,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             }
             binding.tvHudCurrentProgramTime.text = "$catchupStartTime - $catchupEndTime  |  $datum"
             binding.hudprogressBar.progress = progress
+            binding.seekBar.setDuration(totalDuration)
             binding.seekBar.visibility = View.VISIBLE
             // Dauer in Sekunden berechnen
             val remainingTimeInSeconds = maxOf(0, (totalDuration - currentPosition) / 1000)
@@ -2192,6 +2183,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         binding.videoView.visibility = VISIBLE
         binding.videoView.isFocusable = true
         binding.videoView.isFocusableInTouchMode = true
+        if (helpViewModel.channelFromSearchContainer) {
+            helpViewModel.channelFromSearchContainer = false
+            (requireActivity() as? MainActivity)?.makeNavHostVisible()
+        }
         binding.videoView.requestFocus()
         if (isFirstPlayingChannel) {
             showHudContainer()
@@ -2296,6 +2291,9 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             isFirstPlayingChannel = true
             setVideoViewFullScreen()
         } else {
+            if (player == null) {
+                initializePlayer()
+            }
             changingPlayingChannel(channelPosition)
         }
     }
@@ -3446,8 +3444,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private val updateCatchupRunnable = object : Runnable {
         override fun run() {
             player?.let {
-                binding.tvCurrentTimeCatchup.text = formatTime(it.currentPosition)
-                binding.seekBar.setPosition(it.currentPosition)
+                if (!isSpooling) {
+                    binding.tvCurrentTimeCatchup.text = formatTime(it.currentPosition)
+                    binding.seekBar.setPosition(it.currentPosition)
+                }
             }
             updateCatchupHandler.postDelayed(this, 500) // alle 500ms aktualisieren
         }
@@ -3464,6 +3464,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     fun releasePlayer() {
         helpViewModel.isCurrentlyPlayingTv = false
         player?.release()
+        player = null
     }
 
     fun showFullEpgContainer() {
@@ -3540,7 +3541,29 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         showMainMenu()
         if (helpViewModel.currentFocusedTvAccount?.tvcategories?.filter { it.favorite }.isNullOrEmpty()) {
             helpViewModel.isTvAccountMenuOpened = true
-            binding.tvNoTvCategories.visibility = VISIBLE
+            binding.tvLoadEpg.visibility = View.INVISIBLE
+            binding.relLayoutEpg.visibility = View.INVISIBLE
+            binding.tvCatChannelSize.visibility = View.INVISIBLE
+            binding.tvSelectedTvCategory.text = ""
+            tvChannelsAdapter?.submitList(null)
+            tvChannelsAdapter?.submitListToUse(null)
+            helpViewModel.currentFocusedTvCategory = null
+            helpViewModel.currentFocusedChannel = null
+            helpViewModel.currentFocusedChannPosition = null
+            binding.tvTvchannelname.text = ""
+            stopWatchTimer()
+            helpViewModel.currentPlayingChannelPosition = null
+            helpViewModel.currentPlayingChannel = null
+            helpViewModel.catchupPlayingChannelPosition = null
+            helpViewModel.catchupEpgData = null
+            helpViewModel.currentlyPlayingUrl = ""
+            helpViewModel.isCurrentlyPlayingTv = false
+            binding.tvFps.visibility = View.INVISIBLE
+            binding.tvChannelQuality.visibility = View.INVISIBLE
+            binding.tvAudio.visibility = View.INVISIBLE
+            releasePlayer()
+            binding.videoView.visibility = View.INVISIBLE
+            resetEpgPreview()
             val userAccountQuery = accountBox.query(Accounts_.isUserCategories.equal(true)).build()
             val userAccount = userAccountQuery.findFirst()
             userAccountQuery.close()
@@ -3811,7 +3834,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         super.onStop()
         stopWatchTimer()
         releasePlayer()
-        player = null
         helpViewModel.currentPlayingEpgProgramId = ""
     }
 

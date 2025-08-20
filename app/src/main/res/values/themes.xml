@@ -20,6 +20,7 @@
         <item name="backgroundFocusSelectedDark">@color/light_light_grey</item>
         <item name="transparentColor">@color/transparent</item>
         <item name="android:fontFamily">@font/roboto_condensed_regular</item>
+        <item name="alertDialogTheme">@style/CustomAlertDialog</item>
     </style>
 
     <style name="Theme.MJ_Player_TV_Light" parent="@style/Theme.Leanback">

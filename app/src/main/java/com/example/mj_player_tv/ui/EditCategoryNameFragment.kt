@@ -95,7 +95,7 @@ class EditCategoryNameFragment : Fragment(R.layout.fragment_edit_category_name) 
 
 
             binding.btnResetCategoryName.setOnClickListener {
-                val alertDialogBuilder = AlertDialog.Builder(requireContext())
+                val alertDialogBuilder = AlertDialog.Builder(requireContext(), R.style.CustomAlertDialog)
 
                 alertDialogBuilder.setMessage("Reset current category name to original name?")
 

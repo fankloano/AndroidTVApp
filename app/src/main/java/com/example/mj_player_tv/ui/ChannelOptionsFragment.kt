@@ -130,6 +130,9 @@ class ChannelOptionsFragment : Fragment(R.layout.fragment_channel_options) {
                             updateChannelList()
                         }
                         binding.tvFavorite.text = "Add to Favorites"
+                        helpViewModel.currentFocusedChannel?.let {
+                            helpViewModel.checkifFirstFavoriteChannel(it.account.target, false)
+                        }
                         val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                         if (mainFragment is TvChannelsFragment) {
                             mainFragment.closeChannelOptionsContainer()
@@ -163,6 +166,9 @@ class ChannelOptionsFragment : Fragment(R.layout.fragment_channel_options) {
                             updateChannelList()
                         }
                         binding.tvFavorite.text = "Remove from Favorites"
+                        helpViewModel.currentFocusedChannel?.let {
+                            helpViewModel.checkifFirstFavoriteChannel(it.account.target, true)
+                        }
                         val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                         if (mainFragment is TvChannelsFragment) {
                             mainFragment.closeChannelOptionsContainer()
