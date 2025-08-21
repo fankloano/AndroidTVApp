@@ -2,6 +2,7 @@ package com.example.mj_player_tv.ui
 
 import android.animation.ObjectAnimator
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -120,6 +121,8 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
         prepareTvChannelsRecyclerView()
 
         viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
+            Log.d("FULLSCREENCHANNELCHANGE", "OPEN: acc = ${helpViewModel.fullScreenFocusedAccount?.name} cat: ${helpViewModel.fullScreenFocusedTvCategory?.showingName} chann = ${helpViewModel.fullScreenClickedChannel?.showingName}")
+
             val sortedChannels = when {
                 helpViewModel.fullScreenFocusedTvCategory?.isAllChannelsCategory == true -> {
                     helpViewModel.fullScreenFocusedAccount?.channels?.reset()
@@ -175,8 +178,9 @@ class FullScreenSelectorFragment : Fragment(R.layout.fragment_fullscreen_selecto
             }
             withContext(Dispatchers.Main) {
                 fullscreenChannelsAdapter?.submitList(sortedChannels)
+                val currentPlayingChannel = fullscreenChannelsAdapter?.currentList?.firstOrNull { it.id == helpViewModel.currentPlayingChannelPosition?.id }
                 val currentPlayingPosition =
-                    fullscreenChannelsAdapter?.currentList!!.indexOf(helpViewModel.currentPlayingChannelPosition)
+                    fullscreenChannelsAdapter?.currentList!!.indexOf(currentPlayingChannel)
                 binding.rvLayoutChangeTvChannels.post {
                     binding.rvLayoutChangeTvChannels.setSelectedPosition(currentPlayingPosition)
                     binding.rvLayoutChangeTvChannels.requestFocus()

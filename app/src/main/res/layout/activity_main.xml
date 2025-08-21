@@ -250,6 +250,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:weightSum="1"
+        android:focusableInTouchMode="false"
+        android:focusable="false"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -262,6 +264,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:visibility="gone"
+            android:focusableInTouchMode="false"
+            android:focusable="false"
             tools:listitem="@layout/rv_item_playlistupdate"
             android:gravity="center_vertical"/>
 
@@ -272,6 +276,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:visibility="gone"
+            android:focusableInTouchMode="false"
+            android:focusable="false"
             android:layout_marginStart="6dp"
             tools:listitem="@layout/rv_item_playlistupdate"
             android:gravity="center_vertical"/>

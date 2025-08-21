@@ -34,6 +34,7 @@ import com.example.mj_player_tv.databinding.RvItemGlobalsearchseriesBinding
 import com.example.mj_player_tv.ui.FullEpgFragment
 import com.example.mj_player_tv.ui.GlobalSearchFragment
 import com.example.mj_player_tv.ui.TvChannelsFragment
+import com.example.mj_player_tv.utils.LoadingDialogHelper
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import io.objectbox.Box
 

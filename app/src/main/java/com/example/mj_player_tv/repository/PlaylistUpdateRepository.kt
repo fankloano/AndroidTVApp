@@ -525,23 +525,14 @@ object PlaylistUpdateRepository {
                             thisChannel.account.target = accountData
                             thisChannel
                         }
-                        Log.d("STALKERWORKER", "UPDATING: tvch: ${networkTvChannels.size}")
                         updateTvChannelsInDatabase(accountData, networkTvChannels)
                         true
                     }
 
                     is Resource.Error -> {
-                        Log.d(
-                            "UPDATE STALKER",
-                            "${accountData.name} = ERROR GET THEM: ${response.message}"
-                        )
                         false
                     }
                     else -> {
-                        Log.d(
-                            "UPDATE STALKER",
-                            "${accountData.name} = ELSEEE"
-                        )
                         false
                     }
                 }
@@ -571,7 +562,6 @@ object PlaylistUpdateRepository {
 
                 if (channelsToDelete.isNotEmpty() && networkChannels.isNotEmpty()) {
                     channelsToDelete.forEach { tvChannel ->
-                        Log.d("UPDATE CHANN: DELETE", "${accountData.name} = ${tvChannel.showingName}")
                         // Hole die zugehörigen ChannelPosition-Einträge
                         val channelPositionsToDelete = tvChannel.tvcategoryLink
 

@@ -1418,6 +1418,29 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    private val _epgSourceTimeOffSetUpdated = MutableLiveData<Unit?>()
+    val epgSourceTimeOffSetUpdated: LiveData<Unit?> = _epgSourceTimeOffSetUpdated
+
+    fun requestEpgTimeOffsetUpdatedFragment() {
+        _epgSourceTimeOffSetUpdated.value = Unit
+    }
+
+    fun clearEpgTimeOffsetUpdatedFragment() {
+        _epgSourceTimeOffSetUpdated.value = null
+    }
+
+
+    fun updateEpgSource(epgSource: EpgSource, currentTimeOffSet: Int, newTimeOffSet: Int) {
+        viewModelScope.launch(Dispatchers.IO) {
+            epgSource.timeOffSet = newTimeOffSet
+            epgSource.previousTimeOffSet = currentTimeOffSet
+            epgSourceBox.put(epgSource)
+            withContext(Dispatchers.Main) {
+                requestEpgTimeOffsetUpdatedFragment()
+            }
+        }
+    }
+
     fun deletePlaylist(accountData: Accounts) {
         viewModelScope.launch(Dispatchers.IO) {
             cancelAutomaticWorker(accountData.id)
@@ -2593,4 +2616,47 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                 }
             }
         }
+
+    private val _epgMap = MutableLiveData<Map<Long, List<EpgDataOB>>>()
+    val epgMap: LiveData<Map<Long, List<EpgDataOB>>> = _epgMap
+
+    fun loadEpgForChannels(channels: List<Pair<Long, String?>>, currentTimeSec: Long, timeOffsetSec: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val map = mutableMapOf<Long, List<EpgDataOB>>()
+
+            channels.forEach { (chId, chEpgId) ->
+                if (chEpgId == null) return@forEach
+                val epgList = epgDataBox.query(
+                    EpgDataOB_.epgChId.equal(chEpgId)
+                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffsetSec))
+                )
+                    .order(EpgDataOB_.startTimestamp)
+                    .build()
+                    .find(0, 6)
+                map[chId] = epgList
+            }
+
+            _epgMap.postValue(map)
+        }
+    }
+
+    fun addEpgToSingleChannel(tvChannel: TvChannelOB, currentTimeSec: Long, timeOffsetSec: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
+                ?: tvChannel.epgChannel?.target?.chEpgId
+            if (chEpgId == null) return@launch
+
+            val epgList = epgDataBox.query(
+                EpgDataOB_.epgChId.equal(chEpgId)
+                    .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffsetSec))
+            )
+                .order(EpgDataOB_.startTimestamp)
+                .build()
+                .find(0, 6)
+
+            val updatedMap = (_epgMap.value ?: emptyMap()).toMutableMap()
+            updatedMap[tvChannel.id] = epgList
+            _epgMap.postValue(updatedMap)
+        }
+    }
 }

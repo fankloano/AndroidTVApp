@@ -327,6 +327,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     helpViewModel.fullScreenFocusedTvCategory =
                         helpViewModel.currentPlayingTvCategory
                     helpViewModel.fullScreenClickedChannel = helpViewModel.currentPlayingChannel
+                    Log.d("FULLSCREENCHANNELCHANGE", "START: acc = ${helpViewModel.fullScreenFocusedAccount?.name} cat: ${helpViewModel.fullScreenFocusedTvCategory?.showingName} chann = ${helpViewModel.fullScreenClickedChannel?.showingName}")
                     showChangeFragmentInFullscreen(FullScreenSelectorFragment())
                     isFirstOpenDetailEpgFullScreen = true
                 }
@@ -858,6 +859,37 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 helpViewModel.clearUpdateShowEpgPreview()
             }
         }
+
+        helpViewModel.epgSourceTimeOffSetUpdated.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                updateChannelList()
+                helpViewModel.clearEpgTimeOffsetUpdatedFragment()
+            }
+        }
+
+        helpViewModel.epgMap.observe(viewLifecycleOwner) { map ->
+            tvChannelsAdapter?.updateEpg(map)
+        }
+
+        binding.rvLayoutTvChannels.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager
+                if (layoutManager is PivotLayoutManager) {
+                    val first = layoutManager.findFirstVisibleItemPosition()
+                    val last = layoutManager.findLastVisibleItemPosition()
+
+                    val visibleChannels = tvChannelsAdapter?.getChannelIdsAndEpgIdsInRange(first, last) ?: emptyList()
+
+                    helpViewModel.loadEpgForChannels(
+                        visibleChannels,
+                        System.currentTimeMillis() / 1000,
+                        0
+                    )
+                }
+            }
+        })
     }
 
     // Aktualisiere UI nach dem Spulen
@@ -1476,7 +1508,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                             tvChannel.linkedEpgChannel?.target?.isExternalEpg == false
                 }.forEach {
                     val tvChannel = it.tvchannel.target
-                    Log.d("GETEPGFORCHANNELS", "${tvChannel.showingName}")
                     val newChannel = if (tvChannel.account.target.isStalker) {
                         stalkerViewModel.checkChannelsAndShortEpg(tvChannel)
                     } else if (tvChannel.account.target.isXtream) {
@@ -1503,21 +1534,20 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                             showEpgPreview(it)
                                         }
                                     }
-                                    tvChannelsAdapter?.notifyItemChanged(position)
+                                    val currentTimeSec = System.currentTimeMillis() / 1000
+                                    helpViewModel.addEpgToSingleChannel(tvChannel, currentTimeSec, 0)
                                 }
                             }
                         }
                     } else {
-                        val position = tvChannelsAdapter?.currentList?.indexOf(it)
-                        if (position != null) {
                             withContext(Dispatchers.Main) {
                                 if (newChannel == helpViewModel.currentFocusedChannPosition?.tvchannel?.target) {
                                     helpViewModel.currentFocusedChannPosition?.let {
                                         showEpgPreview(it)
                                     }
                                 }
-                                tvChannelsAdapter?.notifyItemChanged(position)
-                            }
+                                val currentTimeSec = System.currentTimeMillis() / 1000
+                                helpViewModel.addEpgToSingleChannel(tvChannel, currentTimeSec, 0)
                         }
                     }
                 }
@@ -1841,7 +1871,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         if (helpViewModel.isPlayingCatchup) {
             binding.ivPlaycatchup.visibility = View.VISIBLE
         } else {
-            binding.ivPlaycatchup.visibility = View.INVISIBLE
+            binding.ivPlaycatchup.visibility = View.GONE
         }
         binding.tvHudChannelname.isSelected = true
         val image = tvchannel.logo
@@ -2935,7 +2965,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             val accountposition = tvAccountCategoryAdapter.currentList.indexOf(currAccount)
             helpViewModel.fullScreenFocusedAccount?.id?.let { updateAccount(it) }
             onAccountClicked(accountposition)
-
             binding.rvLayoutTvAccountsMenu.setSelectedPosition(accountposition)
             val currentPosition = tvChannelsAdapter?.currentList!!.indexOf(helpViewModel.currentPlayingChannelPosition)
             if (currentPosition != -1) {
@@ -2947,6 +2976,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             helpViewModel.currentPlayingChannel = helpViewModel.fullScreenFocusedChannel
             helpViewModel.currentFocusedChannPosition = helpViewModel.fullScreenFocusedChannelPosition
             helpViewModel.currentFocusedChannel = helpViewModel.fullScreenFocusedChannel
+            helpViewModel.currentPlayingTvCategory = helpViewModel.fullScreenFocusedTvCategory
             helpViewModel.currentPlayingTvAccount = helpViewModel.fullScreenFocusedAccount
         } else {
             if (helpViewModel.currentFocusedTvCategory != helpViewModel.fullScreenFocusedTvCategory) {

@@ -76,6 +76,7 @@ import com.example.mj_player_tv.database.help.GlobalSearchItem
 import com.example.mj_player_tv.database.help.GlobalSearchMainCategory
 import com.example.mj_player_tv.database.help.WatchlistItem
 import com.example.mj_player_tv.ui.adapter.GlobalSearchItemsAdapter
+import com.example.mj_player_tv.utils.LoadingDialogHelper
 import com.example.mj_player_tv.utils.Resource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -1014,6 +1015,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
         helpViewModel.currentFocusedChannPosition = tvChannelPos
         helpViewModel.currentFocusedChannel = tvChannel
         helpViewModel.currentFocusedTvCategory = tvCategory
+        LoadingDialogHelper.show(parentFragmentManager)
         if (tvChannel.linkedEpgChannel?.target?.isExternalEpg == true) {
             if (tvChannel.account.target.isXtream) {
                 clickedEpgData.let { epgData ->
@@ -1037,6 +1039,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                                 }
                             }
                             is Resource.Error -> {
+                                LoadingDialogHelper.dismiss()
                                 Toast.makeText(
                                     this@GlobalSearchFragment.requireActivity(),
                                     "Error fetching Catchup Link!",
@@ -1070,6 +1073,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                             }
 
                             is Resource.Error -> {
+                                LoadingDialogHelper.dismiss()
                                 Toast.makeText(
                                     this@GlobalSearchFragment.requireActivity(),
                                     "Error fetching Catchup Link!",
@@ -1116,6 +1120,7 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
             helpViewModel.currentFocusedChannPosition = tvChannelPos
             helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
             helpViewModel.channelFromSearchContainer = true
+            LoadingDialogHelper.dismiss()
             removeDimOverlay()
             (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
         }
@@ -1151,10 +1156,12 @@ class GlobalSearchFragment : Fragment(R.layout.fragment_search_global) {
                         helpViewModel.currentFocusedChannPosition = tvChannelPos
                         helpViewModel.currentFocusedChannel = tvChannelPos.tvchannel.target
                         helpViewModel.globalSearchCatchupUrl = catchUp.data?.removePrefix("ffmpeg")?.trim() ?: ""
+                        LoadingDialogHelper.dismiss()
                         removeDimOverlay()
                         (requireActivity() as MainActivity).checkTvChannelsFragmentFromGlobalSearch()
                     }
                     is Resource.Error -> {
+                        LoadingDialogHelper.dismiss()
                         Toast.makeText(
                             this@GlobalSearchFragment.requireActivity(),
                             "Error fetching Catchup Link!\n${catchUp.message}",

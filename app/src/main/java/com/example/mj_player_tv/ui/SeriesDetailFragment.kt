@@ -1026,6 +1026,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
             }
         }
         helpViewModel.currentFocusedSerie?.let {
+            helpViewModel.currentFocusedSerie?.seriesAccount?.target = helpViewModel.currentSeriesAccount
             seriesBox.put(it)
             saveSeriesChangesInDBAndCache()
             updateSerieStatus()
@@ -1231,6 +1232,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                     seasonsAdapter.notifyItemChanged(lastSeasonPos)
                     seasonsAdapter.notifyItemChanged(newSeasonPos)
                     binding.rvLayoutSeriesSeasons.setSelectedPosition(newSeasonPos)
+                    firstEpisodeOpen = true
                     showEpisodesForSeason(previousSeason)
                 }
             }
@@ -1249,6 +1251,7 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
                     seasonsAdapter.notifyItemChanged(lastSeasonPos)
                     seasonsAdapter.notifyItemChanged(newSeasonPos)
                     binding.rvLayoutSeriesSeasons.setSelectedPosition(newSeasonPos)
+                    firstEpisodeOpen = true
                     showEpisodesForSeason(nextSeason)
                 }
             }
@@ -1477,51 +1480,61 @@ class SeriesDetailFragment : Fragment(R.layout.fragment_series_detail) {
 
             if (!helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }?.toMutableList().isNullOrEmpty()) {
                 binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
-                episodesAdapter.submitList(helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }
-                    ?.toMutableList())
+                val episodes = helpViewModel.focusedEpisodes?.filter { it.seasonNumber == season.seasonNumber }?.toMutableList()
+                episodesAdapter.submitList(episodes) {
+                    if (firstEpisodeOpen) {
+                        if (season.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason) {
+                            val thisEpisode =
+                                episodesAdapter.currentList.firstOrNull { it.episodeNumber == helpViewModel.currentFocusedSerie?.lastWatchedEpisode }
+                            val thisEpisodePosition = episodesAdapter.currentList.indexOf(thisEpisode)
+                            binding.rvLayoutSeriesEpisodes.setSelectedPosition(thisEpisodePosition)
+                            val position = seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
+                            seasonsAdapter.notifyItemChanged(position)
+                            thisEpisode?.let {
+                                showFocusedEpisodeInfos(it)
+                            }
+                            binding.rvLayoutSeriesEpisodes.requestFocus()
+                        } else {
+                            if (episodesAdapter.currentList.all { it.isEpisodeFullyWatched }) {
+                                val lastEpisode = episodesAdapter.currentList.lastOrNull()
+                                val position = episodesAdapter.currentList.indexOf(lastEpisode)
+                                binding.rvLayoutSeriesEpisodes.post {
+                                    binding.rvLayoutSeriesEpisodes.setSelectedPosition(position)
+                                    lastEpisode?.let { showFocusedEpisodeInfos(it) }
+                                    binding.rvLayoutSeriesEpisodes.requestFocus()
+                                }
+                            } else {
+                                binding.rvLayoutSeriesEpisodes.setSelectedPosition(0)
+                                val position =
+                                    seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
+                                seasonsAdapter.notifyItemChanged(position)
+
+                                val thisEpisode =
+                                    helpViewModel.focusedEpisodes?.firstOrNull { it.seasonNumber?.toIntOrNull() == 1 && it.episodeNumber == 1 }
+                                thisEpisode?.let {
+                                    showFocusedEpisodeInfos(it)
+                                }
+                                binding.rvLayoutSeriesEpisodes.requestFocus()
+                            }
+                        }
+                        firstEpisodeOpen = false
+                    }
+                    if (changedSeason) {
+                        val position = episodesAdapter.currentList.indexOf(helpViewModel.currentFocusedEpisode)
+                        binding.rvLayoutSeriesEpisodes.setSelectedPosition(position)
+                        changedSeason = false
+                        if (!helpViewModel.serieFullScreenOpened) {
+                            binding.rvLayoutSeriesEpisodes.requestFocus()
+                            binding.fullscreenSerie.visibility = View.GONE
+                        }
+                    }
+                }
             } else {
 
                 binding.loadseriesDetailProgressBar.visibility = View.INVISIBLE
                 Toast.makeText(this@SeriesDetailFragment.requireActivity(), "No Episodes found!",
                     Toast.LENGTH_SHORT).show()
                 binding.rvLayoutSeriesSeasons.requestFocus()
-            }
-            // Setze die letzte geschaut Episode falls vorhanden
-            binding.rvLayoutSeriesEpisodes.post {
-                if (firstEpisodeOpen) {
-                    if (season.seasonNumber.toIntOrNull() == helpViewModel.currentFocusedSerie?.lastWatchedSeason) {
-                        val thisEpisode =
-                            episodesAdapter.currentList.firstOrNull { it.episodeNumber == helpViewModel.currentFocusedSerie?.lastWatchedEpisode }
-                        val thisEpisodePosition = episodesAdapter.currentList.indexOf(thisEpisode)
-                        binding.rvLayoutSeriesEpisodes.setSelectedPosition(thisEpisodePosition)
-                        val position = seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
-                        seasonsAdapter.notifyItemChanged(position)
-                        thisEpisode?.let {
-                            showFocusedEpisodeInfos(it)
-                        }
-                        binding.rvLayoutSeriesEpisodes.requestFocus()
-                    } else {
-                        binding.rvLayoutSeriesEpisodes.setSelectedPosition(0)
-                        val position = seasonsAdapter.currentList.indexOf(helpViewModel.currentFocusedSeason)
-                        seasonsAdapter.notifyItemChanged(position)
-                        val thisEpisode = helpViewModel.focusedEpisodes?.firstOrNull { it.seasonNumber?.toIntOrNull() == 1 && it.episodeNumber == 1 }
-                        thisEpisode?.let {
-                            showFocusedEpisodeInfos(it)
-                        }
-
-                        binding.rvLayoutSeriesEpisodes.requestFocus()
-                    }
-                    firstEpisodeOpen = false
-                }
-                if (changedSeason) {
-                    val position = episodesAdapter.currentList.indexOf(helpViewModel.currentFocusedEpisode)
-                    binding.rvLayoutSeriesEpisodes.setSelectedPosition(position)
-                    changedSeason = false
-                    if (!helpViewModel.serieFullScreenOpened) {
-                        binding.rvLayoutSeriesEpisodes.requestFocus()
-                        binding.fullscreenSerie.visibility = View.GONE
-                    }
-                }
             }
         }
     }

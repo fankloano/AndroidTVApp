@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:id="@+id/relLayout_tvpreview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:weightSum="1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHeight_percent="0.30">
+
+        <androidx.fragment.app.FragmentContainerView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.3"
+            android:background="@color/background_dark_dark"
+            android:layout_margin="3dp"/>
+
+        <RelativeLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.7"
+            android:layout_margin="3dp"
+            android:background="@color/background_dark">
+
+        </RelativeLayout>
+
+    </LinearLayout>
+
+    <!-- Obere Timebar -->
+    <View
+        android:id="@+id/timeLineBackground"
+        android:layout_width="0dp"
+        android:layout_height="30dp"
+        android:background="?attr/backgroundMain"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Live-Uhr -->
+    <TextClock
+        android:id="@+id/textClock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textColor="?attr/mainPrimaryColor"
+        android:layout_marginStart="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/timeLineBackground"
+        app:layout_constraintBottom_toBottomOf="@id/timeLineBackground"/>
+
+    <!-- RecyclerView für Zeitmarken -->
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rvTimeMarks"
+        android:layout_width="0dp"
+        android:layout_height="25dp"
+        android:clipToPadding="false"
+        android:paddingStart="200dp"
+        android:paddingEnd="16dp"
+        tools:listitem="@layout/rv_item_fullepg_tabs"
+        app:layout_constraintTop_toTopOf="@id/timeLineBackground"
+        app:layout_constraintBottom_toBottomOf="@id/timeLineBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:orientation="horizontal"/>
+
+    <!-- Vertikale Senderliste links -->
+    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+        android:id="@+id/rvChannelsWithEpg"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:background="?attr/backgroundDarkDark"
+        tools:listitem="@layout/rv_item_tvguide_tvepg"
+        app:layout_constraintTop_toBottomOf="@id/timeLineBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <!-- Programmdetails Overlay -->
+    <FrameLayout
+        android:id="@+id/containerProgramInfo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

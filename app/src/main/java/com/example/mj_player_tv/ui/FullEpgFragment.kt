@@ -1,6 +1,5 @@
 package com.example.mj_player_tv.ui
 
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.KeyEvent
@@ -10,7 +9,6 @@ import android.view.ViewGroup
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -19,11 +17,8 @@ import androidx.media3.common.util.UnstableApi
 import coil.load
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
-import com.example.mj_player_tv.database.entity.Accounts
-import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgDataOB_
-import com.example.mj_player_tv.database.entity.EpgSourceChannel
 import com.example.mj_player_tv.database.entity.PortalEpgAndDate
 import com.example.mj_player_tv.database.entity.PortalEpgAndDate_
 import com.example.mj_player_tv.database.entity.Programme
@@ -48,21 +43,14 @@ import org.threeten.bp.Duration
 import org.threeten.bp.LocalDate
 import org.threeten.bp.LocalDateTime
 import org.threeten.bp.format.DateTimeFormatter
-import org.threeten.bp.temporal.ChronoUnit
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
-import android.Manifest
-import android.app.Activity
-import android.app.AlertDialog
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 import android.text.method.ScrollingMovementMethod
-import androidx.annotation.RequiresApi
-import androidx.core.app.ActivityCompat
-import androidx.core.app.NotificationManagerCompat
+import com.example.mj_player_tv.utils.LoadingDialogHelper
 import java.util.Locale
 
 @UnstableApi
@@ -334,6 +322,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                     helpViewModel.currentFocusedTvCategory
                 }
                 stopCurrentStreamAndShowProgressBar()
+                LoadingDialogHelper.show(parentFragmentManager)
                 if (tvChannel.linkedEpgChannel?.target?.isExternalEpg == true) {
                     if (tvChannel.account.target.isXtream) {
                         clickedEpgData?.let { epgData ->
@@ -357,6 +346,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                                     }
                                     is Resource.Error -> {
                                         closeEpgOptions()
+                                        LoadingDialogHelper.dismiss()
                                         Toast.makeText(
                                             this@FullEpgFragment.requireActivity(),
                                             "Error fetching Catchup Link!",
@@ -388,6 +378,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                                     }
                                     is Resource.Error -> {
                                         closeEpgOptions()
+                                        LoadingDialogHelper.dismiss()
                                         Toast.makeText(
                                             this@FullEpgFragment.requireActivity(),
                                             "Error fetching Catchup Link!",
@@ -818,7 +809,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
     }
 
     fun showDetailEpg(epgData: EpgDataOB) {
-        if (helpViewModel.currentSelectedEpgForSelectedChannel?.idByAccountData != epgData.idByAccountData) {
+        if (helpViewModel.currentSelectedEpgForSelectedChannel?.idByAccountData != epgData.idByAccountData || helpViewModel.isFullScreenFullEpg) {
             val oldPos = fullEpgAdapter?.currentList?.indexOf(helpViewModel.currentSelectedEpgForSelectedChannel)
             helpViewModel.currentSelectedEpgForSelectedChannel = epgData
             val newPos = fullEpgAdapter?.currentList?.indexOf(epgData)
@@ -1141,25 +1132,26 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
                 ).await()
                 when (catchUp) {
                     is Resource.Success -> {
-                        Log.d("CATCHUP STALKER", "CATCHUPDATA: ${catchUp.data}")
                         helpViewModel.isPlayingCatchup = true
                         helpViewModel.catchupEpgData = clickedEpgData
                         helpViewModel.catchupPlayingChannelPosition = tvChannelPos
                         helpViewModel.currentPlayingTvCategory = tvCategory
                         helpViewModel.currentPlayingTvAccount = account
                         helpViewModel.isFullScreenFullEpg = false
+                        LoadingDialogHelper.dismiss()
                         val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
                         if (mainFragment is TvChannelsFragment) {
                             mainFragment.hideFullEpgAndDetailEpgContainer()
                             helpViewModel.catchupPlayingChannelPosition = tvChannelPos
                             val url =  catchUp.data?.removePrefix("ffmpeg ")?.trim() ?: ""
-                            Log.d("CATCHUP STALKER", "CATCHUPURL: $url")
                             mainFragment.cancelChannelLoadJob()
                             mainFragment.switchChannel(url)
                             mainFragment.setVideoViewFullScreen()
                         }
+                        parentFragmentManager.popBackStack()
                     }
                     is Resource.Error -> {
+                        LoadingDialogHelper.dismiss()
                         Toast.makeText(
                             this@FullEpgFragment.requireActivity(),
                             "Error fetching Catchup Link!\n${catchUp.message}",
@@ -1211,7 +1203,7 @@ class FullEpgFragment : Fragment(R.layout.fragment_fullepg) {
             helpViewModel.catchupEpgData = clickedEpgData
             helpViewModel.catchupPlayingChannelPosition = tvChannelPos
             closeEpgOptions()
-
+            LoadingDialogHelper.dismiss()
             helpViewModel.isFullScreenFullEpg = false
             val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
             if (mainFragment is TvChannelsFragment) {

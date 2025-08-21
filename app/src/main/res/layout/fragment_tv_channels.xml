@@ -884,6 +884,15 @@
                     android:layout_height="20dp"
                     android:orientation="horizontal">
 
+                    <ImageView
+                        android:id="@+id/iv_playcatchup"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="10dp"
+                        android:visibility="gone"
+                        android:src="@drawable/ic_catchup"
+                        android:tint="@color/light_blue"/>
+
                     <TextView
                         android:id="@+id/tv_hud_currentProgramTime"
                         android:layout_width="wrap_content"
@@ -927,16 +936,6 @@
                     android:textColor="@color/white"
                     android:textSize="18sp"
                     tools:text="Der Herr der Ringe: Die Rückkehr des Königssad asdasdadasdsadasdadasdsa" />
-
-                <ImageView
-                    android:id="@+id/iv_playcatchup"
-                    android:layout_width="wrap_content"
-                    android:layout_height="25dp"
-                    android:layout_alignParentEnd="true"
-                    android:visibility="invisible"
-                    android:layout_below="@id/linLayout_hud_currentTime"
-                    android:src="@drawable/ic_catchup"
-                    android:tint="@color/light_blue"/>
 
                 <TextView
                     android:id="@+id/tv_hud_currenProgramSubtitle"

@@ -68,6 +68,8 @@ class TvChannelsAdapter(
 
     private var startedPosition = -1
 
+    private var epgMap: Map<Long, List<EpgDataOB>> = emptyMap()
+
     var thisList: MutableList<ChannelPositions> = mutableListOf()
 
     inner class ViewHolder(val binding: RvItemTvchannelsBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -116,8 +118,6 @@ class TvChannelsAdapter(
                 binding.ivCatchup.visibility =
                     if (tvchannel.enable_tv_archive == 1) View.VISIBLE else View.INVISIBLE
 
-                CoroutineScope(Dispatchers.IO).launch {
-
                     val currentTimeSec = System.currentTimeMillis() / 1000
 
                     val timeOffSetSec = calculateTimeOffsetInSeconds(
@@ -126,33 +126,20 @@ class TvChannelsAdapter(
                             ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
                             ?: 0
                     )
-
+                    val epgList = epgMap[tvchannel.id]
                     // Hilfsfunktion für verschobene Zeiten
                     fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
                     fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
 
-
+                    val currentProgram = epgList?.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
+                    val nextProgram = epgList?.firstOrNull { it.shiftedStart() > currentTimeSec }
                     // EPG-ID bestimmen
                     val chEpgId = tvchannel.linkedEpgChannel?.target?.chEpgId ?: if (playlistEpgActive) {
                         tvchannel.epgChannel?.target?.chEpgId
                     } else null
 
-                    // EPG-Daten laden (Filter basiert auf Offset-Zeit)
-                    val usedEpgData =  chEpgId?.let {
-                            epgDataBox.query(
-                                EpgDataOB_.epgChId.equal(it)
-                                    .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffSetSec))
-                            )
-                                .order(EpgDataOB_.startTimestamp)
-                                .build()
-                                .find(0, 3)
-                    }
-
-                    val currentProgram = usedEpgData?.firstOrNull()
-                    val nextProgram = usedEpgData?.getOrNull(1)
                     // Verarbeite die gefilterte EpgData-Liste nach Bedarf und binde sie an die UI
                     // Hier ist ein Beispiel, wie du die Informationen in die UI einbinden könntest:
-                    withContext(Dispatchers.Main) {
                         if (currentProgram != null) {
                             // --- Aktuelles Programm ---
                             val startTime = formatUnixTimestampToTime(currentProgram.shiftedStart())
@@ -240,9 +227,6 @@ class TvChannelsAdapter(
                             tvCurrentStartTime.text = formatUnixTimestampToTime(currentTimeSec)
                             tvCurrentEndTime.text = " - " + formatUnixTimestampToTime(currentTimeSec + 1800)
                             progressBar.progress = 0
-                        }
-                    }
-
                 }
 
                 binding.cardViewTvchannel.setOnClickListener {
@@ -403,6 +387,7 @@ class TvChannelsAdapter(
                 }
             }
         }
+
 
         private fun handleCenterShortPress(tvchannel: ChannelPositions) {
             if (!helpViewModel.changeChannelOrder) {
@@ -581,6 +566,7 @@ class TvChannelsAdapter(
     @UnstableApi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val tvchannelPos = getItem(position)!!
+
         holder.bind(tvchannelPos)
         val tvchannel = tvchannelPos.tvchannel.target
 
@@ -736,4 +722,28 @@ class TvChannelsAdapter(
         notifyItemChanged(oldPosition)
         notifyItemChanged(newPosition)
     }
+
+    fun updateEpg(map: Map<Long, List<EpgDataOB>>) {
+        map.forEach { (channelId, epgList) ->
+            val pos = currentList.indexOfFirst { it.tvchannel.target.id == channelId }
+            if (pos != -1) {
+                val currentEpg = epgMap[channelId]
+                if (currentEpg.isNullOrEmpty()) {  // nur wenn vorher keine Daten
+                    epgMap = epgMap.toMutableMap().apply { put(channelId, epgList) }
+                    notifyItemChanged(pos)
+                }
+            }
+        }
+    }
+
+
+    fun getChannelIdsAndEpgIdsInRange(first: Int, last: Int): List<Pair<Long, String?>> {
+        if (first < 0 || last >= currentList.size) return emptyList()
+        return currentList.subList(first, last + 1).map { tvChannel ->
+            val chEpgId = tvChannel.tvchannel.target.linkedEpgChannel?.target?.chEpgId
+                ?: tvChannel.tvchannel.target.epgChannel?.target?.chEpgId
+            tvChannel.tvchannel.target.id to chEpgId
+        }
+    }
+
 }

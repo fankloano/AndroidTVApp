@@ -127,19 +127,7 @@ class EpgSourceTimeOffsetFragment : Fragment(R.layout.fragment_epgsource_timeoff
         if (timeOffSetInt != currentTimeOffSet && epgSource != null) {
             epgSource.timeOffSet = timeOffSetInt
             newTimeOffSet = timeOffSetInt
-            helpViewModel.viewModelScope.launch {
-                withContext(Dispatchers.IO) {
-                    epgSource.timeOffSet = newTimeOffSet
-                    epgSource.previousTimeOffSet = currentTimeOffSet
-                    epgSourceBox.put(epgSource)
-                }
-                if (isAdded) {
-                    val mainFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                    if (mainFragment is TvChannelsFragment) {
-                        mainFragment.updateChannelList()
-                    }
-                }
-            }
+            helpViewModel.updateEpgSource(epgSource, currentTimeOffSet, newTimeOffSet)
             helpViewModel.requestUpdateShowEpgPreview()
             parentFragmentManager.popBackStack()
         }

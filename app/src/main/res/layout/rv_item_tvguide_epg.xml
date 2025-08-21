@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/relLayout_fullepgitem"
+    android:layout_width="300dp"
+    android:layout_height="50dp"
+    android:gravity="center_vertical"
+    android:focusable="true"
+    android:background="@drawable/selector_epgfull_background"
+    android:focusableInTouchMode="true"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical"
+        android:layout_marginStart="15dp"
+        android:layout_marginEnd="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_StartTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="08:20"
+                android:textColor="#A6A5A5"
+                android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"/>
+
+            <TextView
+                android:id="@+id/tv_EndTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text=" - 08:20"
+                android:textColor="#A6A5A5"
+                android:textSize="12sp" />
+
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tv_Program"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Es war einmal in Amerika"
+            android:textColor="?attr/textMainColor"
+            android:textSize="13sp"
+            android:scrollHorizontally="true"
+            android:ellipsize="marquee"
+            android:maxLines="1"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+        <TextView
+            android:id="@+id/tv_SubTitleProgram"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Es war einmal in Amerika"
+            android:textColor="?attr/textColorLight"
+            android:textSize="12sp"
+            android:layout_marginStart="10dp"
+            android:maxLines="1"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/iv_reminder"
+        android:layout_width="10dp"
+        android:layout_height="10dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:src="@drawable/ic_alarm"
+        android:layout_margin="5dp"/>
+
+    <View
+        android:id="@+id/overlay_full"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/background_overlay_globalsearch_epglist"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"/>
+
+</RelativeLayout>

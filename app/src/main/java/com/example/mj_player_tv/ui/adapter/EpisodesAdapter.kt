@@ -49,7 +49,6 @@ class EpisodesAdapter(private val onClickListener: EpisodesAdapter.OnClickListen
                 } else {
                     binding.progressBar.visibility = View.INVISIBLE
                 }
-                Log.d("VON DER SERIE", "STAFFEL ${episode.seasonNumber} EPISODE: ${episode.episodeNumber} gesehen: ${episode.episodePercentagePlayed}")
                 if (episode.episodePercentagePlayed > 0.0) {
                     if (episode.episodePercentagePlayed == 1.0) {
                         binding.tvIsFullyWatched.visibility = View.VISIBLE
