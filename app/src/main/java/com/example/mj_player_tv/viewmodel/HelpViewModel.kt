@@ -989,19 +989,13 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                     .apply(EpgSourceChannel_.relatedepgSourceId.equal(epgSourceId))
                 val channels = builder.build().find()
                 if (isExternEpg) {
-                    channels.forEach {
-                        Log.d("CHANNEL TO DELETE EPG", "CHANNELNAME: ${it.showingName}")
-                    }
+
                     channels.forEachParallel {
                         it.epgLogo = ""
                         it.usesExternalEpg = false
                         it.alwaysUsesExternalEpg = false
                         it.epgSourceId = account.epgsources.firstOrNull { it.isPlaylistEpg }?.id
-                        it.linkedEpgChannel?.target = if (account.epgsources.filter { it.isSelected }.any { it.isPlaylistEpg }) {
-                            it.epgChannel?.target
-                        } else {
-                            null
-                        }
+                        it.linkedEpgChannel?.target = null
                         tvChannBox.put(it)
                     }
                     epgSourceChangeCompleteSuccessful()
@@ -1139,12 +1133,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                     .sortedBy { it.position }
                     .map { it.relatedepgsource.target }
 
-                epgSources.forEachIndexed { index, epgSource ->
-                    Log.d(
-                        "PLAYLISTEPG MATCHING:",
-                        "POS: $index == ${epgSource.name}"
-                    )
-                }
                 val onlyExternalEpgSources = epgSources.filter { !it.isPlaylistEpg }
                 val playlistEpg = epgSources.find { it.isPlaylistEpg }
                 val playlistIndex = playlistEpg?.let { epgSources.indexOf(it) } ?: -1
@@ -1157,7 +1145,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
                         epgChannel.display_name.map { it.lowercase() }.toHashSet()
                     }
                 }
-
 
                 // Parallelisiere Matching durch async
                 val matchedCategoryJobs = selectedCategories.chunked(10).map { categoryChunk ->
@@ -2617,46 +2604,64 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             }
         }
 
-    private val _epgMap = MutableLiveData<Map<Long, List<EpgDataOB>>>()
-    val epgMap: LiveData<Map<Long, List<EpgDataOB>>> = _epgMap
+    suspend fun addEpgToSingleChannel(tvChannel: TvChannelOB): Boolean {
+        Log.d("CHANNELUNDSO", "${tvChannel.showingName} = LINKED: ${tvChannel.linkedEpgChannel?.target?.chEpgId} NICHT: ${tvChannel.epgChannel?.target?.chEpgId}")
+        val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
+            ?: tvChannel.epgChannel?.target?.chEpgId
+        if (chEpgId == null) return false
 
-    fun loadEpgForChannels(channels: List<Pair<Long, String?>>, currentTimeSec: Long, timeOffsetSec: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val map = mutableMapOf<Long, List<EpgDataOB>>()
-
-            channels.forEach { (chId, chEpgId) ->
-                if (chEpgId == null) return@forEach
-                val epgList = epgDataBox.query(
-                    EpgDataOB_.epgChId.equal(chEpgId)
-                        .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffsetSec))
-                )
-                    .order(EpgDataOB_.startTimestamp)
-                    .build()
-                    .find(0, 6)
-                map[chId] = epgList
-            }
-
-            _epgMap.postValue(map)
+        val nowSec = System.currentTimeMillis() / 1000
+        val twelveHoursLaterSec = nowSec + 12 * 60 * 60
+        epgDataBox.query(
+            EpgDataOB_.epgChId.equal(chEpgId)
+        ).build().find().forEach {
+            Log.d("FETCH INTERNEPG", "${it.name} ID: ${it.epgChId} ${it.startTimestamp} bis ${it.stopTimestamp}")
         }
+        val newEpg = epgDataBox.query(
+            EpgDataOB_.epgChId.equal(chEpgId)
+                .and(EpgDataOB_.stopTimestamp.greater(nowSec))
+                .and(EpgDataOB_.startTimestamp.less(twelveHoursLaterSec))
+        ).build().find()
+        Log.d("GET INTERN EPG FOR", "LOAD IT: ${tvChannel.showingName} EPGCHID: $chEpgId SIZE: ${newEpg.size}")
+
+        if (newEpg.isEmpty()) return false
+        Log.d("GET INTERN EPG FOR", "${tvChannel.showingName} = ${newEpg.size}")
+
+        // Cache aktualisieren
+        val sortedList = newEpg.sortedBy { it.startTimestamp }.toMutableList()
+        val existing = epgCache[chEpgId]
+        if (existing != null) {
+            existing.addAll(sortedList)
+            existing.sortBy { it.startTimestamp }
+        } else {
+            epgCache[chEpgId] = sortedList
+        }
+
+        return true
     }
 
-    fun addEpgToSingleChannel(tvChannel: TvChannelOB, currentTimeSec: Long, timeOffsetSec: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
-                ?: tvChannel.epgChannel?.target?.chEpgId
-            if (chEpgId == null) return@launch
 
-            val epgList = epgDataBox.query(
-                EpgDataOB_.epgChId.equal(chEpgId)
-                    .and(EpgDataOB_.stopTimestamp.greater(currentTimeSec - timeOffsetSec))
+    var epgCache = HashMap<String, MutableList<EpgDataOB>>()
+
+    fun getEpgForTime(account: Accounts) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val epgSourceIds = account.epgsources.map {
+                it.relatedepgsource.target.id.toInt()
+            }.toIntArray()
+            val nowSec = System.currentTimeMillis() / 1000   // jetzt in Sekunden
+            val twelveHoursLaterSec = nowSec + 12 * 60 * 60  // 12h später in Sekunden
+            epgCache = HashMap(
+                epgDataBox.query(
+                    EpgDataOB_.epgSourceId.oneOf(epgSourceIds)
+                        .and(EpgDataOB_.stopTimestamp.greater(nowSec))
+                        .and(EpgDataOB_.startTimestamp.less(twelveHoursLaterSec))
+                ).build().find()
+                    .groupBy { it.epgChId ?: "" }
+                    .mapValues { entry ->
+                        entry.value.sortedBy { it.startTimestamp }.toMutableList()
+                    }
             )
-                .order(EpgDataOB_.startTimestamp)
-                .build()
-                .find(0, 6)
-
-            val updatedMap = (_epgMap.value ?: emptyMap()).toMutableMap()
-            updatedMap[tvChannel.id] = epgList
-            _epgMap.postValue(updatedMap)
         }
     }
+
 }

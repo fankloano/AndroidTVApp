@@ -2203,7 +2203,7 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                             .findFirst()
 
                     if (!epgResult.data?.js.isNullOrEmpty() && epgSource != null) {
-                        val epg = epgResult.data?.js?.map {
+                        val epg = epgResult.data.js.map {
                             val dateTimeString = it.time
                             val datum = dateTimeString?.let { dts -> extractDate(dts) }
                             EpgDataOB(
@@ -2233,7 +2233,11 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                                 "${epgSource.id}_${it.ch_id}"
                             )
                         }
-                        if (!epg.isNullOrEmpty()) {
+                        if (epg.isNotEmpty()) {
+                            epg.forEach {
+                                Log.d("FETCH INTERNEPG", "LOADDD ${it.name} ID: ${it.epgChId} ${it.startTimestamp} bis ${it.stopTimestamp}")
+
+                            }
                             return@withContext epg
                         } else {
                             return@withContext null
@@ -3267,12 +3271,9 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                     val epg = getShortEpgByChannel(currentAccountInUse, channelOB)
                     val currentTime = System.currentTimeMillis() / 1000
                     val currentProgram = epg?.firstOrNull { it.startTimestamp!! < currentTime && it.stopTimestamp!! > currentTime }
-                    Log.d("EPG FOR CHANNEL FETCHED", "${channelOB.showingName} = NEWEPG: ${epg?.size} CURRENT: ${currentProgram?.name}")
-
                     if (!epg.isNullOrEmpty()) {
                         val playlistEpgSource =
-                            currentAccountInUse.epgsources.filter { it.isSelected }
-                                .find { it.isPlaylistEpg }
+                            currentAccountInUse.epgsources.firstOrNull { it.isSelected && it.isPlaylistEpg }?.relatedepgsource?.target
                         if (playlistEpgSource != null) {
                             val epgChExists = withContext(Dispatchers.IO) {
                                 channelOB.epgChannel?.target?.chEpgId?.let {
@@ -3285,7 +3286,6 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                                 epgDataBox.put(epg)
                                 epgChannelBox.put(epgChExists)
                                 channelOB.epgChannel?.target = epgChExists
-                                channelOB.linkedEpgChannel?.target = epgChExists
                                 tvChannelBox.put(channelOB)
                             } else {
                                 val newEpgChannel = EpgSourceChannel(
@@ -3304,10 +3304,9 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
                                 )
                                 epgDataBox.put(epg)
                                 newEpgChannel.epgsource.target =
-                                    playlistEpgSource.relatedepgsource.target
+                                    playlistEpgSource
                                 epgChannelBox.put(newEpgChannel)
                                 channelOB.epgChannel?.target = newEpgChannel
-                                channelOB.linkedEpgChannel?.target = newEpgChannel
                                 tvChannelBox.put(channelOB)
                             }
                         }
@@ -3357,7 +3356,9 @@ class StalkerViewModel(application: Application): AndroidViewModel(application) 
             isPortalEpgLoading = true
 
             val account = accountBox.get(channel.playlistId!!)
-            val epgSource = account!!.epgsources.find { it.isPlaylistEpg }?.relatedepgsource?.target
+            val epgSource = epgSourceBox.query(
+                EpgSource_.playlistId.equal(account.id)
+            ).build().findFirst()
             val epgChannel =
                 if (channel.epgChannel?.target != null) {
                     channel.epgChannel!!.target

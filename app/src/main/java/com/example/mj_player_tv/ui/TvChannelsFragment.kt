@@ -866,30 +866,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                 helpViewModel.clearEpgTimeOffsetUpdatedFragment()
             }
         }
-
-        helpViewModel.epgMap.observe(viewLifecycleOwner) { map ->
-            tvChannelsAdapter?.updateEpg(map)
-        }
-
-        binding.rvLayoutTvChannels.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-
-                val layoutManager = recyclerView.layoutManager
-                if (layoutManager is PivotLayoutManager) {
-                    val first = layoutManager.findFirstVisibleItemPosition()
-                    val last = layoutManager.findLastVisibleItemPosition()
-
-                    val visibleChannels = tvChannelsAdapter?.getChannelIdsAndEpgIdsInRange(first, last) ?: emptyList()
-
-                    helpViewModel.loadEpgForChannels(
-                        visibleChannels,
-                        System.currentTimeMillis() / 1000,
-                        0
-                    )
-                }
-            }
-        })
     }
 
     // Aktualisiere UI nach dem Spulen
@@ -1057,7 +1033,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
             return
         }
         expandedAccountId = item.id
-
+        helpViewModel.currentFocusedTvAccount?.let {
+            helpViewModel.epgCache.clear()
+            helpViewModel.getEpgForTime(it)
+        }
         val oldAccount = tvAccountCategoryAdapter.currentList.firstOrNull {
             it is AccountTvCategory.Account && it.id == helpViewModel.clickedTvAccountId
         } as? AccountTvCategory.Account
@@ -1422,7 +1401,10 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                 val filteredchannels = sortedChannels.filter { it.tvchannel.target.account.target.epgsources.filter { it.isSelected }.any { it.isPlaylistEpg } }
                                 checkChannelEpg(filteredchannels)
                             } else {
-                                if (helpViewModel.currentFocusedTvAccount!!.epgsources.filter { it.isSelected }.any { it.isPlaylistEpg }) {
+                                helpViewModel.currentFocusedTvAccount?.epgsources?.forEach {
+                                    Log.d("CHECKCHANNELSSOURCE", "${it.isPlaylistEpg} § ${it.isSelected}")
+                                }
+                                if (helpViewModel.currentFocusedTvAccount!!.epgsources.any { it.isSelected && it.isPlaylistEpg }) {
                                     checkChannelEpg(sortedChannels)
                                 }
                             }
@@ -1499,15 +1481,11 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     binding.tvLoadEpg.visibility = VISIBLE
                 }
                 channelPositions.filter { channelPos ->
-                    val tvChannel = channelPos.tvchannel.target
-                    val currentTimeMillis = (System.currentTimeMillis() / 1000).plus(calculateTimeOffsetInSeconds(
-                        tvChannel.epgTimeOffSet ?: channelPos.tvcategory.target.epgTimeOffSet ?: tvChannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet ?: 0)
-                    )
-                    val epgChId = tvChannel.linkedEpgChannel?.target?.chEpgId
-                    (tvChannel.linkedEpgChannel?.target == null) ||
-                            tvChannel.linkedEpgChannel?.target?.isExternalEpg == false
+                    val tvchannel = channelPos.tvchannel.target
+                    tvchannel.linkedEpgChannel == null || !helpViewModel.epgCache.containsKey(tvchannel.epgChannel?.target?.chEpgId)
                 }.forEach {
                     val tvChannel = it.tvchannel.target
+                    Log.d("GET INTERN EPG", "FETCH FOR ${tvChannel.showingName}")
                     val newChannel = if (tvChannel.account.target.isStalker) {
                         stalkerViewModel.checkChannelsAndShortEpg(tvChannel)
                     } else if (tvChannel.account.target.isXtream) {
@@ -1515,12 +1493,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                     } else {
                         null
                     }
-                    if (newChannel?.linkedEpgChannel?.target == null ||
-                        newChannel.linkedEpgChannel?.target?.chEpgId?.let { chEpgId ->
-                            EpgDataOB_.epgChId.equal(
-                                chEpgId
-                            )
-                        }?.let { it1 -> epgDataBox.query(it1).build().find() } == null) {
+                    if (newChannel?.epgChannel?.target == null) {
                         val matchedChannel = helpViewModel.matchSingleChannelWithEpgChannels(
                             tvChannel,
                             helpViewModel.currentFocusedTvAccount!!
@@ -1534,8 +1507,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                             showEpgPreview(it)
                                         }
                                     }
-                                    val currentTimeSec = System.currentTimeMillis() / 1000
-                                    helpViewModel.addEpgToSingleChannel(tvChannel, currentTimeSec, 0)
+                                    val epgAdded = helpViewModel.addEpgToSingleChannel(tvChannel)
+                                    if (epgAdded) {
+                                        val position = tvChannelsAdapter?.currentList?.indexOf(it)
+                                        if (position != null) {
+                                            tvChannelsAdapter?.notifyItemChanged(position)
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1546,8 +1524,13 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
                                         showEpgPreview(it)
                                     }
                                 }
-                                val currentTimeSec = System.currentTimeMillis() / 1000
-                                helpViewModel.addEpgToSingleChannel(tvChannel, currentTimeSec, 0)
+                                val epgAdded = helpViewModel.addEpgToSingleChannel(tvChannel)
+                                if (epgAdded) {
+                                    val position = tvChannelsAdapter?.currentList?.indexOf(it)
+                                    if (position != null) {
+                                        tvChannelsAdapter?.notifyItemChanged(position)
+                                    }
+                                }
                         }
                     }
                 }

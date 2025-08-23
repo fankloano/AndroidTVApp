@@ -68,8 +68,6 @@ class TvChannelsAdapter(
 
     private var startedPosition = -1
 
-    private var epgMap: Map<Long, List<EpgDataOB>> = emptyMap()
-
     var thisList: MutableList<ChannelPositions> = mutableListOf()
 
     inner class ViewHolder(val binding: RvItemTvchannelsBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -126,17 +124,19 @@ class TvChannelsAdapter(
                             ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
                             ?: 0
                     )
-                    val epgList = epgMap[tvchannel.id]
                     // Hilfsfunktion für verschobene Zeiten
                     fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
                     fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
 
-                    val currentProgram = epgList?.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
-                    val nextProgram = epgList?.firstOrNull { it.shiftedStart() > currentTimeSec }
-                    // EPG-ID bestimmen
                     val chEpgId = tvchannel.linkedEpgChannel?.target?.chEpgId ?: if (playlistEpgActive) {
                         tvchannel.epgChannel?.target?.chEpgId
                     } else null
+
+                    val epgs = helpViewModel.epgCache[chEpgId] ?: emptyList()
+                    val currentProgram = epgs.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
+                    val nextProgram = epgs.firstOrNull { it.shiftedStart() > currentTimeSec }
+
+                // EPG-ID bestimmen
 
                     // Verarbeite die gefilterte EpgData-Liste nach Bedarf und binde sie an die UI
                     // Hier ist ein Beispiel, wie du die Informationen in die UI einbinden könntest:
@@ -722,28 +722,4 @@ class TvChannelsAdapter(
         notifyItemChanged(oldPosition)
         notifyItemChanged(newPosition)
     }
-
-    fun updateEpg(map: Map<Long, List<EpgDataOB>>) {
-        map.forEach { (channelId, epgList) ->
-            val pos = currentList.indexOfFirst { it.tvchannel.target.id == channelId }
-            if (pos != -1) {
-                val currentEpg = epgMap[channelId]
-                if (currentEpg.isNullOrEmpty()) {  // nur wenn vorher keine Daten
-                    epgMap = epgMap.toMutableMap().apply { put(channelId, epgList) }
-                    notifyItemChanged(pos)
-                }
-            }
-        }
-    }
-
-
-    fun getChannelIdsAndEpgIdsInRange(first: Int, last: Int): List<Pair<Long, String?>> {
-        if (first < 0 || last >= currentList.size) return emptyList()
-        return currentList.subList(first, last + 1).map { tvChannel ->
-            val chEpgId = tvChannel.tvchannel.target.linkedEpgChannel?.target?.chEpgId
-                ?: tvChannel.tvchannel.target.epgChannel?.target?.chEpgId
-            tvChannel.tvchannel.target.id to chEpgId
-        }
-    }
-
 }
