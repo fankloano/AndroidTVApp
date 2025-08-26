@@ -104,11 +104,31 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:nextFocusUp="@id/btn_home"
-                android:nextFocusDown="@id/btn_movies"
+                android:nextFocusDown="@id/btn_tvguide"
                 android:gravity="center_vertical"
                 android:text="@string/tv"
                 android:textSize="19sp"
                 android:layout_below="@id/btn_home"
+                android:textColor="@drawable/focused_selected_mainmenu" />
+
+            <TextView
+                android:id="@+id/btn_tvguide"
+                android:layout_width="match_parent"
+                android:layout_height="45dp"
+                android:paddingStart="13dp"
+                android:paddingEnd="13dp"
+                android:layout_marginTop="6dp"
+                android:background="@drawable/test_selector_mainmenu_background"
+                android:drawableStart="@drawable/selector_livetv"
+                android:drawablePadding="13dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:nextFocusUp="@id/btn_tv"
+                android:nextFocusDown="@id/btn_movies"
+                android:gravity="center_vertical"
+                android:text="TV Guide"
+                android:textSize="19sp"
+                android:layout_below="@id/btn_tv"
                 android:textColor="@drawable/focused_selected_mainmenu" />
 
             <TextView
@@ -123,12 +143,12 @@
                 android:drawablePadding="13dp"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
-                android:nextFocusUp="@id/btn_tv"
+                android:nextFocusUp="@id/btn_tvguide"
                 android:nextFocusDown="@id/btn_series"
                 android:gravity="center_vertical"
                 android:text="@string/movies"
                 android:textSize="19sp"
-                android:layout_below="@id/btn_tv"
+                android:layout_below="@id/btn_tvguide"
                 android:textColor="@drawable/focused_selected_mainmenu" />
 
 

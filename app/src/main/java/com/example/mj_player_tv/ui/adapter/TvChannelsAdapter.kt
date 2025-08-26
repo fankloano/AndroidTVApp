@@ -22,6 +22,7 @@ import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgDataOB_
 import com.example.mj_player_tv.database.entity.TvChannelOB
+import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.RvItemTvchannelsBinding
 import com.example.mj_player_tv.ui.TvChannelsFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
@@ -43,7 +44,7 @@ class TvChannelsAdapter(
     private val fragment: TvChannelsFragment,
     private val helpViewModel: HelpViewModel,
     private val epgDataBox: Box<EpgDataOB>
-) : ListAdapter<ChannelPositions, TvChannelsAdapter.ViewHolder>(
+) : ListAdapter<TvChannelWithEpg, TvChannelsAdapter.ViewHolder>(
     MANAGE_TVCHANNELS_COMPERATOR) {
 
     private val fragmentRef = WeakReference(fragment)
@@ -61,20 +62,19 @@ class TvChannelsAdapter(
 
     var isHandled = false // Flag zur Vermeidung doppelter Aktionen
 
-    private var currentFocusedChannel: ChannelPositions? = null
-    private var currentSelectedChannelId: String = ""
-
-    var epgForChannelCache: MutableMap<Long, MutableList<EpgDataOB>> = mutableMapOf()
+    private var currentFocusedChannel: TvChannelWithEpg? = null
+    private var currentSelectedChannelId: Long = 0L
 
     private var startedPosition = -1
 
-    var thisList: MutableList<ChannelPositions> = mutableListOf()
+    var thisList: MutableList<TvChannelWithEpg> = mutableListOf()
 
     inner class ViewHolder(val binding: RvItemTvchannelsBinding) : RecyclerView.ViewHolder(binding.root) {
         private val handler = Handler(Looper.getMainLooper())
         private var progressUpdater: Runnable? = null
-        fun bind(tvchannelPos: ChannelPositions) {
+        fun bind(tvChannelWithEpg: TvChannelWithEpg) {
             binding.apply {
+                val tvchannelPos = tvChannelWithEpg.tvChannelPosition
                 val tvchannel = tvchannelPos.tvchannel.target
                 val account = tvchannel.account.target
                 val playlistEpgActive = account.usePlaylistEpg
@@ -127,14 +127,9 @@ class TvChannelsAdapter(
                     // Hilfsfunktion für verschobene Zeiten
                     fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
                     fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
-
-                    val chEpgId = tvchannel.linkedEpgChannel?.target?.chEpgId ?: if (playlistEpgActive) {
-                        tvchannel.epgChannel?.target?.chEpgId
-                    } else null
-
-                    val epgs = helpViewModel.epgCache[chEpgId] ?: emptyList()
-                    val currentProgram = epgs.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
-                    val nextProgram = epgs.firstOrNull { it.shiftedStart() > currentTimeSec }
+                    val epg = tvChannelWithEpg.epgList
+                    val currentProgram = epg.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
+                    val nextProgram = epg.firstOrNull { it.shiftedStart() > currentTimeSec }
 
                 // EPG-ID bestimmen
 
@@ -231,7 +226,7 @@ class TvChannelsAdapter(
 
                 binding.cardViewTvchannel.setOnClickListener {
                     binding.cardViewTvchannel.requestFocus()
-                    handleCenterShortPress(tvchannelPos)
+                    handleCenterShortPress(tvChannelWithEpg)
                 }
 
                 binding.cardViewTvchannel.setOnKeyListener { view, keyCode, event ->
@@ -279,7 +274,7 @@ class TvChannelsAdapter(
                                                     if (helpViewModel.isNowChangingChannelOrder) {
                                                         handleSortDownShortPress()
                                                     } else {
-                                                        handleDownShortPress(tvchannel)
+                                                        handleDownShortPress(tvChannelWithEpg)
                                                     }
                                                     return@setOnKeyListener true
                                                 } else {
@@ -355,19 +350,16 @@ class TvChannelsAdapter(
                                 if (pressDuration < longPressDuration && !isLongPress) {
                                     when (keyCode) {
                                         KeyEvent.KEYCODE_DPAD_LEFT -> handleLeftShortPress()
-                                        KeyEvent.KEYCODE_DPAD_RIGHT -> handleRightShortPress(
-                                            tvchannel,
-                                            true
-                                        )
+                                        KeyEvent.KEYCODE_DPAD_RIGHT -> handleRightShortPress(tvchannel, playlistEpgActive)
 
                                         KeyEvent.KEYCODE_BACK -> {
                                             if (!helpViewModel.fullScreenFromAbside) {
-                                                handleBackShortPress(tvchannelPos)
+                                                handleBackShortPress(tvChannelWithEpg)
                                             }
                                         }
 
                                         KeyEvent.KEYCODE_DPAD_CENTER -> handleCenterShortPress(
-                                            tvchannelPos
+                                            tvChannelWithEpg
                                         )
                                     }
                                 }
@@ -389,22 +381,23 @@ class TvChannelsAdapter(
         }
 
 
-        private fun handleCenterShortPress(tvchannel: ChannelPositions) {
+        private fun handleCenterShortPress(tvChannelWithEpg: TvChannelWithEpg) {
+            val tvChannelPos = tvChannelWithEpg.tvChannelPosition
             if (!helpViewModel.changeChannelOrder) {
-                onClickListener.onClick(tvchannel, bindingAdapterPosition)
+                onClickListener.onClick(tvChannelPos, bindingAdapterPosition)
             } else {
                 startedPosition = bindingAdapterPosition
                 if (helpViewModel.isNowChangingChannelOrder) {
                     fragment.changeChOrderInformation()
                     helpViewModel.isNowChangingChannelOrder = false
-                    refreshItem(tvchannel)
-                    fragment.saveCurrentList(tvchannel)
+                    refreshItem(tvChannelWithEpg)
+                    fragment.saveCurrentList(tvChannelPos)
                 } else {
                     startedPosition = bindingAdapterPosition
                     helpViewModel.isNowChangingChannelOrder = true
-                    currentSelectedChannelId = tvchannel.catAndChannelAccount
+                    currentSelectedChannelId = tvChannelWithEpg.id
                     fragment.changeChOrderInfoMoving()
-                    refreshItem(tvchannel)
+                    refreshItem(tvChannelWithEpg)
                 }
             }
         }
@@ -413,7 +406,7 @@ class TvChannelsAdapter(
             fragment.closeAssignEpgFull()
         }
 
-        private fun handleBackShortPress(tvchannelPos: ChannelPositions) {
+        private fun handleBackShortPress(tvChannelWithEpg: TvChannelWithEpg) {
             if (!helpViewModel.changeChannelOrder) {
                 fragmentRef.get()?.takeIf { it.isAdded }
                     ?.setTvAccountsVisibilityAnimated(true)
@@ -424,11 +417,11 @@ class TvChannelsAdapter(
                 if (helpViewModel.isNowChangingChannelOrder) {
                     fragment.changeChOrderInformation()
                     helpViewModel.isNowChangingChannelOrder = false
-                    refreshItem(tvchannelPos)
+                    refreshItem(tvChannelWithEpg)
                 } else {
                     helpViewModel.changeChannelOrder = false
-                    currentSelectedChannelId = ""
-                    refreshItem(tvchannelPos)
+                    currentSelectedChannelId = 0L
+                    refreshItem(tvChannelWithEpg)
                     fragment.closeChOrder()
                 }
             }
@@ -452,9 +445,9 @@ class TvChannelsAdapter(
             }
         }
 
-        private fun handleRightShortPress(tvchannel: TvChannelOB, isNotEmpty: Boolean) {
+        private fun handleRightShortPress(tvchannel: TvChannelOB, isplaylistEpgActive: Boolean) {
             if (!helpViewModel.changeChannelOrder) {
-                if (tvchannel.linkedEpgChannel?.target != null && isNotEmpty) {
+                if (tvchannel.linkedEpgChannel?.target != null || (isplaylistEpgActive && tvchannel.epgChannel?.target != null)) {
                     helpViewModel.focusShowEpgOrDescription = true
                     notifyItemChanged(bindingAdapterPosition)
                     fragmentRef.get()?.takeIf { it.isAdded }?.setFocusToShortEpg()
@@ -472,13 +465,13 @@ class TvChannelsAdapter(
             }
         }
 
-        private fun handleDownShortPress(tvchannel: TvChannelOB) {
+        private fun handleDownShortPress(tvChannelWithEpg: TvChannelWithEpg) {
             // Prüfen, ob es ein nächstes Element gibt
             if (bindingAdapterPosition < itemCount - 1) {
                 // Fokussiere das nächste Element automatisch
                 itemView.focusSearch(View.FOCUS_DOWN)?.requestFocus()
                 if (helpViewModel.changeChannelOrder) {
-                    currentSelectedChannelId = currentFocusedChannel?.catAndChannelAccount ?: ""
+                    currentSelectedChannelId = currentFocusedChannel?.id ?: 0L
                     notifyItemChanged(bindingAdapterPosition)
                     val newPosition = currentList.indexOf(currentFocusedChannel)
                     notifyItemChanged(newPosition)
@@ -494,7 +487,7 @@ class TvChannelsAdapter(
             if (bindingAdapterPosition <= itemCount - 1) {
                 itemView.focusSearch(View.FOCUS_UP)?.requestFocus()
                 if (helpViewModel.changeChannelOrder) {
-                    currentSelectedChannelId = currentFocusedChannel?.catAndChannelAccount ?: ""
+                    currentSelectedChannelId = currentFocusedChannel?.id ?: 0L
                     notifyItemChanged(bindingAdapterPosition)
                     val newPosition = currentList.indexOf(currentFocusedChannel)
                     notifyItemChanged(newPosition)
@@ -565,12 +558,13 @@ class TvChannelsAdapter(
 
     @UnstableApi
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val tvchannelPos = getItem(position)!!
+        val tvchannelWithEpg = getItem(position)!!
 
-        holder.bind(tvchannelPos)
+        holder.bind(tvchannelWithEpg)
+        val tvchannelPos = tvchannelWithEpg.tvChannelPosition
         val tvchannel = tvchannelPos.tvchannel.target
 
-        if (currentSelectedChannelId == tvchannelPos.catAndChannelAccount) {
+        if (currentSelectedChannelId == tvchannelWithEpg.id) {
             if (helpViewModel.changeChannelOrder) {
                 if (helpViewModel.isNowChangingChannelOrder) {
                     holder.binding.borderOrderselectchannel.visibility = View.INVISIBLE
@@ -614,7 +608,7 @@ class TvChannelsAdapter(
         holder.binding.cardViewTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvTvchannelname.isSelected = hasFocus
             if (hasFocus) {
-                currentFocusedChannel = tvchannelPos
+                currentFocusedChannel = tvchannelWithEpg
                 if (helpViewModel.assignChannelToEpgActive) {
                     helpViewModel.currentAssignChannelPosition = tvchannelPos
                     updateFocusedAssignChannel(tvchannelPos)
@@ -632,23 +626,23 @@ class TvChannelsAdapter(
     }
 
     companion object {
-        private val MANAGE_TVCHANNELS_COMPERATOR = object : DiffUtil.ItemCallback<ChannelPositions>() {
-            override fun areItemsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
-                oldItem.catAndChannelAccount == newItem.catAndChannelAccount
+        private val MANAGE_TVCHANNELS_COMPERATOR = object : DiffUtil.ItemCallback<TvChannelWithEpg>() {
+            override fun areItemsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg) =
+                oldItem.tvChannelPosition.catAndChannelAccount == newItem.tvChannelPosition.catAndChannelAccount
 
             @SuppressLint("DiffUtilEquals")
-            override fun areContentsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
-                        oldItem.tvchannel.target.linkedEpgChannel?.target?.id == newItem.tvchannel.target?.linkedEpgChannel?.target?.id &&
-                        oldItem.tvchannel.target.showingName == newItem.tvchannel.target.showingName &&
-                        oldItem.tvchannel.target.usesPlaylistEpg == newItem.tvchannel.target.usesPlaylistEpg &&
-                        oldItem.isSelected == newItem.isSelected &&
-                        oldItem.position == newItem.position &&
-                        oldItem.tvchannel.target.epgSourceId == newItem.tvchannel.target.epgSourceId &&
-                        oldItem.tvchannel.target.usesExternalEpg == newItem.tvchannel.target.usesExternalEpg &&
-                        oldItem.tvchannel.target.isFavorite == newItem.tvchannel.target.isFavorite &&
-                        oldItem.tvchannel.target.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet == newItem.tvchannel.target.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet &&
-                        oldItem.tvchannel.target.account.target.useEpgLogos == newItem.tvchannel.target.account.target.useEpgLogos &&
-                        oldItem.tvchannel.target.account.target.usePlaylistEpg == newItem.tvchannel.target.account.target.usePlaylistEpg
+            override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg) =
+                        oldItem.tvChannelPosition.tvchannel.target.linkedEpgChannel?.target?.id == newItem.tvChannelPosition.tvchannel.target?.linkedEpgChannel?.target?.id &&
+                        oldItem.tvChannelPosition.tvchannel.target.showingName == newItem.tvChannelPosition.tvchannel.target.showingName &&
+                        oldItem.tvChannelPosition.tvchannel.target.usesPlaylistEpg == newItem.tvChannelPosition.tvchannel.target.usesPlaylistEpg &&
+                        oldItem.tvChannelPosition.isSelected == newItem.tvChannelPosition.isSelected &&
+                        oldItem.tvChannelPosition.position == newItem.tvChannelPosition.position &&
+                        oldItem.tvChannelPosition.tvchannel.target.epgSourceId == newItem.tvChannelPosition.tvchannel.target.epgSourceId &&
+                        oldItem.tvChannelPosition.tvchannel.target.usesExternalEpg == newItem.tvChannelPosition.tvchannel.target.usesExternalEpg &&
+                        oldItem.tvChannelPosition.tvchannel.target.isFavorite == newItem.tvChannelPosition.tvchannel.target.isFavorite &&
+                        oldItem.tvChannelPosition.tvchannel.target.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet == newItem.tvChannelPosition.tvchannel.target.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet &&
+                        oldItem.tvChannelPosition.tvchannel.target.account.target.useEpgLogos == newItem.tvChannelPosition.tvchannel.target.account.target.useEpgLogos &&
+                        oldItem.tvChannelPosition.tvchannel.target.account.target.usePlaylistEpg == newItem.tvChannelPosition.tvchannel.target.account.target.usePlaylistEpg
         }
     }
 
@@ -699,26 +693,28 @@ class TvChannelsAdapter(
 
 
     fun setCurrentChanneldId(tvchannelPos: ChannelPositions) {
-        currentSelectedChannelId = tvchannelPos.catAndChannelAccount
-        startedPosition = currentList.indexOf(tvchannelPos)
+        val tvChannelWithEpg = currentList.firstOrNull { it.tvChannelPosition.catAndChannelAccount == tvchannelPos.catAndChannelAccount }
+        currentSelectedChannelId = tvChannelWithEpg?.id ?: 0L
+        startedPosition = currentList.indexOf(tvChannelWithEpg)
         helpViewModel.isNowChangingChannelOrder = true
-        notifyItemChanged(currentList.indexOf(tvchannelPos))
+        notifyItemChanged(currentList.indexOf(tvChannelWithEpg))
     }
 
-    fun submitListToUse(channelList: List<ChannelPositions>? ) {
+    fun submitListToUse(channelList: List<TvChannelWithEpg>? ) {
         thisList.clear()
         thisList = channelList?.toMutableList() ?: mutableListOf()
     }
 
-    fun refreshItem(tvchannelPos: ChannelPositions) {
-        val itemPosition = currentList.indexOf(tvchannelPos)
+    fun refreshItem(tvChannelWithEpg: TvChannelWithEpg) {
+        val itemPosition = currentList.indexOf(tvChannelWithEpg)
         notifyItemChanged(itemPosition)
     }
 
-    fun updateFocusedAssignChannel(channelPositions: ChannelPositions) {
-        val oldPosition = passfocusedAssignChannel.let { currentList.indexOf(it) }
-        val newPosition = currentList.indexOf(channelPositions)
-        passfocusedAssignChannel = channelPositions
+    fun updateFocusedAssignChannel(tvchannelPos: ChannelPositions) {
+        val tvChannelWithEpg = currentList.firstOrNull { it.tvChannelPosition.id == tvchannelPos.id }
+        val oldPosition = currentList.indexOfFirst { it.tvChannelPosition.id == passfocusedAssignChannel?.id }
+        val newPosition = currentList.indexOf(tvChannelWithEpg)
+        passfocusedAssignChannel = tvchannelPos
         notifyItemChanged(oldPosition)
         notifyItemChanged(newPosition)
     }

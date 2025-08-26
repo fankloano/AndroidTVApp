@@ -983,43 +983,36 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         viewModelScope.launch(Dispatchers.IO) {
                 epgSourceChangeCompleteReset()
                 val account = accountBox.get(accountId)
-                val builder = tvChannBox
-                    .query(TvChannelOB_.accountId.equal(accountId))
-                builder.link(TvChannelOB_.linkedEpgChannel)
-                    .apply(EpgSourceChannel_.relatedepgSourceId.equal(epgSourceId))
-                val channels = builder.build().find()
-                if (isExternEpg) {
 
+                if (isExternEpg) {
+                    val builder = tvChannBox
+                        .query(TvChannelOB_.accountId.equal(accountId))
+                    builder.link(TvChannelOB_.linkedEpgChannel)
+                        .apply(EpgSourceChannel_.relatedepgSourceId.equal(epgSourceId))
+                    val channels = builder.build().find()
                     channels.forEachParallel {
                         it.epgLogo = ""
                         it.usesExternalEpg = false
                         it.alwaysUsesExternalEpg = false
                         it.epgSourceId = account.epgsources.firstOrNull { it.isPlaylistEpg }?.id
                         it.linkedEpgChannel?.target = null
-                        tvChannBox.put(it)
                     }
+                    tvChannBox.put(channels)
                     epgSourceChangeCompleteSuccessful()
                 } else {
-                    channels.forEach {
-                        Log.d("CHANNEL TO DELETE EPG", "INTERN: CHANNELNAME: ${it.showingName}")
-                    }
+                    val builder = tvChannBox
+                        .query(TvChannelOB_.accountId.equal(accountId)
+                            .and(TvChannelOB_.usesPlaylistEpg.equal(true)))
+                    val channels = builder.build().find()
                     channels.forEachParallel {
-                        it.linkedEpgChannel?.target = null
-                        tvChannBox.put(it)
+                        it.usesPlaylistEpg = false
                     }
+                    tvChannBox.put(channels)
                     account.usePlaylistEpg = false
                     accountBox.put(account)
                     epgSourceChangeCompleteSuccessful()
             }
         }
-
-    //GET CHANNEL INFO:
-
-
-    fun getCurrentTimeWithMilliseconds(): String {
-        val sdf = SimpleDateFormat("HH:mm:ss.SSS")
-        return sdf.format(Date())  // Gibt die aktuelle Zeit im gewünschten Format zurück
-    }
 
     ///////EPG/////////
 
@@ -2664,4 +2657,5 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
         }
     }
 
+    val currentTimePosition = MutableLiveData<Long>()
 }

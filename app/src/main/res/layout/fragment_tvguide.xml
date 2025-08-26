@@ -3,13 +3,68 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:id="@+id/const_tvguide"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <RelativeLayout
+        android:id="@+id/linLayout_tvAccounts_menu"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:padding="1dp"
+        android:background="@drawable/background_border_test_right"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintWidth_percent="0.25"
+        tools:listitem="@layout/rv_item_activated_accounts">
+
+        <TextView
+            android:id="@+id/tv_allAccounts"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:text="TV ACCOUNTS"
+            android:gravity="center_vertical"
+            android:background="@color/background_dark"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="2dp"
+            android:textSize="15sp"
+            android:textColor="?attr/textMainColor" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_tvAccounts_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_allAccounts"
+            android:paddingEnd="1dp"
+            android:paddingTop="2dp"
+            android:layout_marginTop="1dp"
+            android:orientation="vertical"
+            tools:listitem="@layout/rv_item_activated_accounts" />
+
+        <TextView
+            android:id="@+id/tv_noTvAccounts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_active_accounts"
+            app:layout_constraintStart_toStartOf="parent"
+            android:visibility="invisible"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:layout_marginTop="56dp"/>
+
+    </RelativeLayout>
 
     <LinearLayout
         android:id="@+id/relLayout_tvpreview"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:weightSum="1"
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintWidth_percent="1.0"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHeight_percent="0.30">
 
@@ -38,20 +93,35 @@
         android:layout_height="30dp"
         android:background="?attr/backgroundMain"
         app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintWidth_percent="1.0"/>
 
     <!-- Live-Uhr -->
     <TextClock
         android:id="@+id/textClock"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:textSize="14sp"
         android:textColor="?attr/mainPrimaryColor"
         android:layout_marginStart="12dp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
         app:layout_constraintTop_toTopOf="@id/timeLineBackground"
+        app:layout_constraintWidth_percent="0.2"
         app:layout_constraintBottom_toBottomOf="@id/timeLineBackground"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTvGuide"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="0dp"
+        android:paddingStart="0dp"
+        android:visibility="gone"
+        android:background="?attr/backgroundDarkDark"
+        app:layout_constraintTop_toBottomOf="@id/timeLineBackground"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintWidth_percent="0.8"/>
 
     <!-- RecyclerView für Zeitmarken -->
     <com.rubensousa.dpadrecyclerview.DpadRecyclerView
@@ -59,26 +129,36 @@
         android:layout_width="0dp"
         android:layout_height="25dp"
         android:clipToPadding="false"
-        android:paddingStart="200dp"
         android:paddingEnd="16dp"
         tools:listitem="@layout/rv_item_fullepg_tabs"
         app:layout_constraintTop_toTopOf="@id/timeLineBackground"
         app:layout_constraintBottom_toBottomOf="@id/timeLineBackground"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/textClock"
+        app:layout_constraintWidth_percent="0.8"
         android:orientation="horizontal"/>
 
     <!-- Vertikale Senderliste links -->
     <com.rubensousa.dpadrecyclerview.DpadRecyclerView
         android:id="@+id/rvChannelsWithEpg"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:background="?attr/backgroundDarkDark"
         tools:listitem="@layout/rv_item_tvguide_tvepg"
         app:layout_constraintTop_toBottomOf="@id/timeLineBackground"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintWidth_percent="1.0"/>
+
+    <View
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:id="@+id/viewNowMarker"
+        android:layout_width="2dp"
+        android:layout_height="0dp"
+        android:background="@color/light_blue"/>
 
     <!-- Programmdetails Overlay -->
     <FrameLayout

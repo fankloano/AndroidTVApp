@@ -11,6 +11,7 @@
         android:id="@+id/const_tvchannel"
         android:layout_width="0dp"
         android:layout_height="50dp"
+        android:background="@drawable/selector_tvguide_channel"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintWidth_percent="0.2">
@@ -23,7 +24,7 @@
             app:layout_constraintStart_toStartOf="parent"
             android:layout_marginTop="3dp"
             android:layout_marginBottom="3dp"
-            android:layout_marginStart="15dp"
+            android:layout_marginStart="5dp"
             android:paddingStart="2dp"
             app:shapeAppearanceOverlay="@style/roundedImageViewBottomUpLeft"
             tools:src="@drawable/skybundesliga"
@@ -37,9 +38,10 @@
             tools:text="DE: SKY CINEMA HIGHLIGHT 4K FHD"
             android:textColor="@drawable/selector_textview_scroll_tvchannels"
             android:textSize="13sp"
-            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="marquee"
             android:scrollHorizontally="true"
-            android:ellipsize="end"
+            android:marqueeRepeatLimit="marquee_forever"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             app:layout_constraintTop_toTopOf="parent"
@@ -64,7 +66,7 @@
             android:src="@drawable/ic_catchup"
             android:layout_marginEnd="5dp"
             android:layout_marginTop="1dp"
-            app:layout_constraintStart_toEndOf="@id/iv_channel_logo"
+            app:layout_constraintEnd_toStartOf="@id/iv_favorite"
             app:layout_constraintTop_toTopOf="parent"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -74,13 +76,13 @@
         android:id="@+id/rv_channel_programs"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginStart="10dp"
+        android:layout_marginStart="2dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         tools:listitem="@layout/rv_item_tvguide_epg"
         android:background="@color/background_dark_dark"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/const_tvchannel"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintWidth_percent="0.8"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

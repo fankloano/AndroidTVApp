@@ -60,6 +60,7 @@ import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
 import io.sentry.Sentry
 import androidx.core.view.isGone
+import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.ui.WatchlistStatsFragment
 
 
@@ -336,6 +337,69 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                         searchFragment.focusToSearchBar()
                     }
                     return@setOnKeyListener true
+            }
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                openClosingDialog()
+            }
+            return@setOnKeyListener false
+        }
+
+        activityMainBinding.btnTvguide.setOnClickListener {
+            closeMenu()
+            val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
+            if (containerFragment is TvGuideFragment) {
+                viewModel.requestCloseGlobalSearchFragment()
+                toggleActivateOnMenu(activityMainBinding.btnTvguide)
+                toggleSelectedMenu(activityMainBinding.btnTvguide)
+                toggleVisibilityOfMainContainer(true)
+                containerFragment.setFocusToAccountCategoryRV()
+            } else {
+                closeMenu()
+                resetNavHostFragment()
+                toggleActivateOnMenu(it)
+                toggleVisibilityOfMainContainer(true)
+                lastOpenedFragment = Constants.FRAGMENT_TVGUIDE
+                changeFragment(TvGuideFragment())
+                activityMainBinding.navHostFragment.requestFocus()
+            }
+        }
+
+        activityMainBinding.btnTvguide.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT && event.action == KeyEvent.ACTION_DOWN) {
+                closeMenu()
+                val containerFragment = supportFragmentManager.findFragmentById(R.id.navHostFragment)
+                if (containerFragment is TvChannelsFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnTvguide)
+                    toggleVisibilityOfMainContainer(true)
+                    containerFragment.setFirstFocusToAccounts()
+                } else if (containerFragment is TvChannelsFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnTv)
+                    toggleVisibilityOfMainContainer(true)
+                    containerFragment.setFirstFocusToAccounts()
+                } else if (containerFragment is MoviesFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnMovies)
+                    toggleVisibilityOfMainContainer(true)
+                    containerFragment.setFocusToMoviesAccount()
+                } else if (containerFragment is SeriesFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSeries)
+                    toggleVisibilityOfMainContainer(true)
+                    containerFragment.setFocusToSeriesAccount()
+                } else if (containerFragment is WatchlistStatsFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnWatchstats)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    containerFragment.focusToLast()
+                }
+                val searchFragment = supportFragmentManager.findFragmentById(R.id.overlayContainer)
+                if (searchFragment is GlobalSearchFragment) {
+                    toggleActivateOnMenu(activityMainBinding.btnSearch)
+                    toggleVisibilityOfMainContainer(true)
+                    closeMenu()
+                    hideMenu()
+                    searchFragment.focusToSearchBar()
+                }
+                return@setOnKeyListener true
             }
             if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
                 openClosingDialog()

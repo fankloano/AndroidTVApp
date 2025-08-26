@@ -17,6 +17,7 @@ import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.EpgDataOB_
+import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.RvItemFullepgBinding
 import com.example.mj_player_tv.databinding.RvItemScrollTvchannelBinding
 import com.example.mj_player_tv.ui.FullEpgFragment
@@ -35,14 +36,15 @@ class ScrollTvChannelAdapter(
     private val fragment: TvChannelsFragment,
     private val helpViewModel: HelpViewModel,
     private val epgDataBox: Box<EpgDataOB>
-) : ListAdapter<ChannelPositions, ScrollTvChannelAdapter.ViewHolder>(
+) : ListAdapter<TvChannelWithEpg, ScrollTvChannelAdapter.ViewHolder>(
     SCROLLTVCHANNEL_COMPERATOR) {
 
     private val focusHandler = Handler(Looper.getMainLooper())
     private var focusRunnable: Runnable? = null
 
     inner class ViewHolder(val binding: RvItemScrollTvchannelBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(tvchannelpos: ChannelPositions) {
+        fun bind(tvChannelWithEpg: TvChannelWithEpg) {
+            val tvchannelpos = tvChannelWithEpg.tvChannelPosition
             val tvChannel = tvchannelpos.tvchannel.target
             val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
             val epgChId = linkedEpgChannel?.chEpgId
@@ -137,8 +139,8 @@ class ScrollTvChannelAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val tvChannPos = getItem(position)
-        holder.bind(tvChannPos)
+        val tvChannelWithEpg = getItem(position)
+        holder.bind(tvChannelWithEpg)
 
         holder.binding.relLayoutScrollTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.progressBar.isSelected = hasFocus
@@ -149,8 +151,8 @@ class ScrollTvChannelAdapter(
                 holder.binding.overlayFull.visibility = View.GONE
                 focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls vorher noch aktiv
                 focusRunnable = Runnable {
-                    if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
-                        onClickListener.onClick(tvChannPos)
+                    if (tvChannelWithEpg.tvChannelPosition.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
+                        onClickListener.onClick(tvChannelWithEpg)
                     }
                     fragment.closeScrollTvChannelRV()
                 }
@@ -164,25 +166,25 @@ class ScrollTvChannelAdapter(
 
         holder.binding.relLayoutScrollTvchannel.setOnClickListener {
             focusRunnable?.let { focusHandler.removeCallbacks(it) } // falls noch aktiv
-            if (tvChannPos.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
-                onClickListener.onClick(tvChannPos)
+            if (tvChannelWithEpg.tvChannelPosition.catAndChannelAccount != helpViewModel.currentPlayingChannelPosition?.catAndChannelAccount) {
+                onClickListener.onClick(tvChannelWithEpg)
             }
             fragment.closeScrollTvChannelRV()
         }
     }
 
     companion object {
-        private val SCROLLTVCHANNEL_COMPERATOR = object : DiffUtil.ItemCallback<ChannelPositions>() {
-            override fun areItemsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
+        private val SCROLLTVCHANNEL_COMPERATOR = object : DiffUtil.ItemCallback<TvChannelWithEpg>() {
+            override fun areItemsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg) =
                 oldItem == newItem
 
-            override fun areContentsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions) =
+            override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg) =
                 oldItem == newItem
         }
     }
 
-    class OnClickListener(val clickListener: (tvchannelpos: ChannelPositions) -> Unit) {
-        fun onClick(tvchannelpos: ChannelPositions) = clickListener(tvchannelpos)
+    class OnClickListener(val clickListener: (tvChannelWithEpg: TvChannelWithEpg) -> Unit) {
+        fun onClick(tvChannelWithEpg: TvChannelWithEpg) = clickListener(tvChannelWithEpg)
     }
 
     fun formatUnixTimestampToTime(unixTimestamp: Long): String {
