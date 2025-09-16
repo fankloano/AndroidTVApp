@@ -45,4 +45,6 @@
     <color name="yellow_darker">#AEEAB705</color>
     <color name="green_darker">#A3299A00</color>
 
+    <color name="program_selection_overlay">#2c00bbff</color>
+    <color name="divider">#20ffffff</color>
 </resources>

@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.view.isInvisible
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
@@ -25,6 +26,7 @@ import com.example.mj_player_tv.ui.FullEpgFragment
 import com.example.mj_player_tv.ui.TvChannelsFragment
 import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
+import com.rubensousa.dpadrecyclerview.layoutmanager.PivotLayoutManager
 import io.objectbox.Box
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -38,6 +40,8 @@ class TvGuideChannelAdapter(
     private val helpViewModel: HelpViewModel
 ) : ListAdapter<TvChannelWithEpg, TvGuideChannelAdapter.ViewHolder>(
     SCROLLTVCHANNEL_COMPERATOR) {
+
+    var timelineStartSec: Long = 0
 
     inner class ViewHolder(val binding: RvItemTvguideTvepgBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(tvchannelwithepg: TvChannelWithEpg) {
@@ -84,7 +88,22 @@ class TvGuideChannelAdapter(
 
             val epgAdapter = TvGuideEpgAdapter(fragment, tvchannelwithepg.tvChannelPosition, helpViewModel)
             binding.rvChannelPrograms.adapter = epgAdapter
-            epgAdapter.submitList(tvchannelwithepg.epgList)
+            binding.rvChannelPrograms.layoutManager = LinearLayoutManager(binding.rvChannelPrograms.context,
+                RecyclerView.HORIZONTAL, false)
+
+            // idempotente Registrierung
+            if (binding.rvChannelPrograms.getTag(R.id.tag_sync_registered) != true) {
+                fragment.scrollSyncManager.register(binding.rvChannelPrograms)
+            }
+            val programs = tvchannelwithepg.epgList.ifEmpty {
+                generateFakeEpg(
+                    tvChannelPosId = tvChannel.id,
+                    timelineStartSec = timelineStartSec,
+                    timelineEndSec = (System.currentTimeMillis() / 1000) + 1800
+                )
+            }
+            epgAdapter.timelineStartSec = timelineStartSec
+            epgAdapter.submitList(programs)
 
             binding.constTvchannel.setOnKeyListener { _, keyCode, event ->
                 if ((keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) && event.action == KeyEvent.ACTION_DOWN) {
@@ -112,6 +131,35 @@ class TvGuideChannelAdapter(
             }
 
         }
+
+        fun generateFakeEpg(
+            timelineStartSec: Long,
+            timelineEndSec: Long,
+            tvChannelPosId: Long
+        ): List<EpgDataOB> {
+            val fakeList = mutableListOf<EpgDataOB>()
+            val halfHourSec = 30 * 60
+            var t = timelineStartSec - (timelineStartSec % halfHourSec) // abrunden auf halbe Stunde
+
+            while (t < timelineEndSec) {
+                val start = t
+                val end = (t + halfHourSec).coerceAtMost(timelineEndSec)
+
+                fakeList.add(
+                    EpgDataOB(
+                        id = tvChannelPosId,
+                        idByAccountData = "$tvChannelPosId$start",
+                        name = "No information",
+                        startTimestamp = start,
+                        stopTimestamp = end
+                    )
+                )
+
+                t += halfHourSec
+            }
+            return fakeList
+        }
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -125,8 +173,17 @@ class TvGuideChannelAdapter(
 
         holder.binding.constTvchannel.setOnFocusChangeListener { _, hasFocus ->
             holder.binding.tvChannelname.isSelected = hasFocus
+
         }
     }
+
+    override fun onViewAttachedToWindow(holder: ViewHolder) {
+        fragment.scrollSyncManager.register(holder.binding.rvChannelPrograms)
+    }
+    override fun onViewDetachedFromWindow(holder: ViewHolder) {
+        fragment.scrollSyncManager.unregister(holder.binding.rvChannelPrograms)
+    }
+
 
     companion object {
         private val SCROLLTVCHANNEL_COMPERATOR = object : DiffUtil.ItemCallback<TvChannelWithEpg>() {

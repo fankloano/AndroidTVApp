@@ -726,7 +726,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         helpViewModel.epgTimeOffsetComplete.observe(viewLifecycleOwner) { epgTimeOffset ->
             when (epgTimeOffset) {
                 1 -> {
-                    updateChannelList()
+                    updateEpgCache()
                 }
             }
         }
@@ -734,7 +734,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
         helpViewModel.matchAndUpdateComplete.observe(viewLifecycleOwner) { matchAndUpdate ->
             when (matchAndUpdate) {
                 1 -> {
-                    updateChannelList()
+                    updateEpgCache()
                     helpViewModel.matchAndUpdateCompleteReset()
                 }
             }
@@ -1163,6 +1163,14 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     }
 
     var firstOpenTvCategory = true
+
+    fun updateEpgCache() {
+        helpViewModel.currentFocusedTvAccount?.let {
+            helpViewModel.epgCache.clear()
+            helpViewModel.getEpgForTime(it)
+            updateChannelList()
+        }
+    }
 
     fun updateChannelList() {
         if (helpViewModel.currentFocusedTvCategory != null) {

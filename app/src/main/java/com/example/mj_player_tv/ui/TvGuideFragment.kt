@@ -1,7 +1,6 @@
 package com.example.mj_player_tv.ui
 
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.VISIBLE
@@ -14,10 +13,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
-import coil.size.Dimension
 import com.example.mj_player_tv.MainActivity
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
@@ -26,25 +25,32 @@ import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.TvCategoryOB
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
-import com.example.mj_player_tv.databinding.FragmentHomeBinding
-import com.example.mj_player_tv.databinding.FragmentTvChannelsBinding
 import com.example.mj_player_tv.databinding.FragmentTvguideBinding
-import com.example.mj_player_tv.ui.adapter.TvAccountCategoryAdapter
-import com.example.mj_player_tv.ui.adapter.TvChannelsAdapter
+import com.example.mj_player_tv.repository.TvGuideScrollSyncManager
+import com.example.mj_player_tv.ui.adapter.ChannelAdapter
+import com.example.mj_player_tv.ui.adapter.TimeMarkAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideChannelAdapter
-import com.example.mj_player_tv.utils.EpgScrollSyncManager
-import com.example.mj_player_tv.utils.Resource
+import com.example.mj_player_tv.ui.adapter.TvGuideTimelineAdapter
+import com.example.mj_player_tv.utils.views.CustomVerticalGridView
+import com.example.mj_player_tv.utils.views.ProgramsRecyclerView
+import com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
+import com.example.mj_player_tv.viewmodel.TvGuideViewModel
+import com.example.mj_player_tv.viewmodel.TvGuideViewModelFactory
+import com.rubensousa.dpadrecyclerview.layoutmanager.PivotLayoutManager
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import io.objectbox.Box
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.Instant
+import java.util.Calendar
+import kotlin.properties.Delegates
 
 @UnstableApi
 class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
@@ -59,14 +65,20 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private lateinit var tvGuideAccountCategoryAdapter: TvGuideAccountCategoryAdapter
 
-    private lateinit var tvGuideChannelsWithEpgAdapter: TvGuideChannelAdapter
+    private lateinit var channelAdapter: ChannelAdapter
 
-    val scrollSyncManager = EpgScrollSyncManager()
+    private lateinit var timeMarksRecyclerView: TimeMarksRecyclerView
+
+    private lateinit var timeMarkAdapter: TimeMarkAdapter
+
+    private var timeLineStartSec = 0L
+
+    val pxPerMinute = 5f
 
     private var fullAccountList = listOf<AccountTvCategory>()
     private var expandedAccountId: Long? = null
     private var currentList = listOf<AccountTvCategory>()
-
+    val scrollSyncManager = TvGuideScrollSyncManager()
 
     private var isFirstOpen = true
 
@@ -78,6 +90,12 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private val helpViewModel: HelpViewModel by activityViewModels {
         HelpViewModelFactory(
+            requireActivity().application
+        )
+    }
+
+    private val tvGuideViewModel: TvGuideViewModel by activityViewModels {
+        TvGuideViewModelFactory(
             requireActivity().application
         )
     }
@@ -97,9 +115,49 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
         scrollSyncManager.register(binding.rvTimeMarks)
 
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        timeLineStartSec = calendar.timeInMillis / 1000
+
         prepareAccountCategoryRecyclerView()
 
-        prepareTvChannelsRecyclerView()
+        channelAdapter = ChannelAdapter { epgItem ->
+            Toast.makeText(requireContext(), "Clicked: ${epgItem.name}", Toast.LENGTH_SHORT).show()
+        }
+        val channelRecyclerView: CustomVerticalGridView = view.findViewById(R.id.rvChannelsWithEpg)
+        channelRecyclerView.adapter = channelAdapter
+        timeMarksRecyclerView = binding.rvTimeMarks
+        val now = Calendar.getInstance()
+        now.add(Calendar.MINUTE, -30) // 30 Minuten zurück
+// Runden auf volle halbe Stunde
+        val startMinute = if (now.get(Calendar.MINUTE) < 30) 0 else 30
+        now.set(Calendar.MINUTE, startMinute)
+        now.set(Calendar.SECOND, 0)
+        now.set(Calendar.MILLISECOND, 0)
+
+        val firstStartTime = now.timeInMillis
+
+// Zeitmarks erstellen, z.B. alle 30 Minuten für die nächsten 12 Stunden
+        val timeMarks = mutableListOf<String>()
+        val cal = Calendar.getInstance().apply { timeInMillis = firstStartTime }
+
+        for (i in 0 until 24) { // 24 Halbstunden = 12 Stunden
+            val hour = cal.get(Calendar.HOUR_OF_DAY)
+            val minute = cal.get(Calendar.MINUTE)
+            val text = String.format("%02d:%02d", hour, minute)
+            timeMarks.add(text)
+            cal.add(Calendar.MINUTE, 30)
+        }
+
+        timeMarksRecyclerView.times = timeMarks
+        timeMarksRecyclerView.programHalfHourWidth = 120f
+
+        setupScrollingSync(channelRecyclerView, timeMarksRecyclerView)
 
         var accountsList = listOf<AccountTvCategory>()
 
@@ -172,8 +230,8 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         binding.rvLayoutTvAccountsMenu.post {
             if (isFirstOpen) {
                 if (helpViewModel.channelFromSearchContainer) {
-                    helpViewModel.clickedTvAccountId = helpViewModel.currentFocusedTvAccount?.id
-                    val currAcc = tvGuideAccountCategoryAdapter.currentList.firstOrNull { it is AccountTvCategory.Account && it.id == helpViewModel.currentFocusedTvAccount?.id } as AccountTvCategory.Account
+                    helpViewModel.clickedTvAccountId = tvGuideViewModel.currentFocusedTvAccount?.id
+                    val currAcc = tvGuideAccountCategoryAdapter.currentList.firstOrNull { it is AccountTvCategory.Account && it.id == tvGuideViewModel.currentFocusedTvAccount?.id } as AccountTvCategory.Account
                     val pos = tvGuideAccountCategoryAdapter.currentList.indexOf(currAcc)
                     helpViewModel.clickedTvAccountPosition = pos
                 }
@@ -268,7 +326,7 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                     }
                 }
                 if (isFirstOpen) {
-                    val focusedCategoryId = helpViewModel.currentFocusedTvCategory?.id ?: 0L
+                    val focusedCategoryId = tvGuideViewModel.currentFocusedTvCategory?.id ?: 0L
                     if (focusedCategoryId != 0L) {
 
                         val categoryPosition = thisList.indexOfFirst {
@@ -286,7 +344,7 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                                     helpViewModel.currentFocusedChannPosition?.let {
                                         //changingPlayingChannel(it)
                                     }
-                                    helpViewModel.currentFocusedTvCategory?.let {
+                                    tvGuideViewModel.currentFocusedTvCategory?.let {
                                         //showChannelList(it.id)
                                     }
                                 }
@@ -355,36 +413,46 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     //TVCHANNELS
 
-    private fun prepareTvChannelsRecyclerView() {
-        tvGuideChannelsWithEpgAdapter = TvGuideChannelAdapter(
-            this,
-            helpViewModel
-        )
-        binding.rvChannelsWithEpg.apply {
-            adapter = tvGuideChannelsWithEpgAdapter
-            addItemDecoration(
-                DpadLinearSpacingDecoration.create(
-                    itemSpacing = 4,
-                    edgeSpacing = 4,
-                    perpendicularEdgeSpacing = 4
-                )
-            )
-            setFocusOutAllowed(false, false)
-            setFocusOutSideAllowed(false, false)
-            setSmoothFocusChangesEnabled(false)
+
+
+    private fun setupScrollingSync(
+        channelsRecyclerView: CustomVerticalGridView,
+        timeMarks: TimeMarksRecyclerView
+    ) {
+        val syncListeners = mutableListOf<RecyclerView.OnScrollListener>()
+
+        for (i in 0 until channelsRecyclerView.adapter!!.itemCount) {
+            val holder = channelsRecyclerView.findViewHolderForAdapterPosition(i) as? ChannelAdapter.ChannelViewHolder
+            holder?.binding?.rvChannelPrograms?.let { pr ->
+                val listener = object : RecyclerView.OnScrollListener() {
+                    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                        // Zeitlinie scrollen
+                        timeMarks.scrollBy(dx, 0)
+                        // Andere ProgramRecyclerViews synchron scrollen
+                        for (j in 0 until channelsRecyclerView.adapter!!.itemCount) {
+                            val otherHolder = channelsRecyclerView.findViewHolderForAdapterPosition(j) as? ChannelAdapter.ChannelViewHolder
+                            if (otherHolder?.binding?.rvChannelPrograms != pr) {
+                                otherHolder?.binding?.rvChannelPrograms?.scrollBy(dx, 0)
+                            }
+                        }
+                    }
+                }
+                pr.addOnScrollListener(listener)
+                syncListeners.add(listener)
+            }
         }
     }
 
     private var currentTvChannelsJob: Job? = null
 
     fun showChannelListInRecyclerview(accountTvCategoryId: Long) {
-        if (helpViewModel.currentFocusedTvCategory?.id != accountTvCategoryId) {
+        if (tvGuideViewModel.currentFocusedTvCategory?.id != accountTvCategoryId) {
             val tvCategory = tvCatBox.get(accountTvCategoryId)
-            helpViewModel.currentFocusedTvCategory = tvCategory
+            tvGuideViewModel.currentFocusedTvCategory = tvCategory
             currentTvChannelsJob?.cancel()
             currentTvChannelsJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
                 val isPlaylistActive =
-                    helpViewModel.currentFocusedTvAccount?.epgsources?.any { it.isSelected && it.isPlaylistEpg }
+                    tvGuideViewModel.currentFocusedTvAccount?.epgsources?.any { it.isSelected && it.isPlaylistEpg }
                 val sortedChannels = getChannelList()
                 if (sortedChannels.isNotEmpty()) {
                     val channelsWithEpg = sortedChannels.map {
@@ -401,9 +469,11 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                             helpViewModel.epgCache[chEpgId]?.toMutableList() ?: emptyList()
                         )
                     }
+
                     withContext(Dispatchers.Main) {
-                        tvGuideChannelsWithEpgAdapter.submitList(channelsWithEpg)
+                        channelAdapter.submitList(channelsWithEpg)
                     }
+
                 }
             }
         }
@@ -411,9 +481,9 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private fun getChannelList(): List<ChannelPositions> {
         val sortedChannels = when {
-            helpViewModel.currentFocusedTvCategory!!.isAllChannelsCategory -> {
-                helpViewModel.currentFocusedTvAccount?.channels?.reset()
-                val categories = helpViewModel.currentFocusedTvAccount?.tvcategories
+            tvGuideViewModel.currentFocusedTvCategory!!.isAllChannelsCategory -> {
+                tvGuideViewModel.currentFocusedTvAccount?.channels?.reset()
+                val categories = tvGuideViewModel.currentFocusedTvAccount?.tvcategories
                     ?.filter {
                         it.favorite && !it.isFavoriteCategory && !it.userCategory
                     }
@@ -425,15 +495,15 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
             }
 
             else -> {
-                helpViewModel.currentFocusedTvCategory!!.tvChannelLink.reset()
-                when (helpViewModel.currentFocusedTvCategory!!.orderBy) {
+                tvGuideViewModel.currentFocusedTvCategory!!.tvChannelLink.reset()
+                when (tvGuideViewModel.currentFocusedTvCategory!!.orderBy) {
                     0 -> {
                         val categoryLinks =
-                            helpViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.originalPosition }.filter {
+                            tvGuideViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.originalPosition }.filter {
                                 it.isSelected
                             }
 
-                        if (helpViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
+                        if (tvGuideViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
                             categoryLinks.filter { it.tvchannel.target.isFavorite }
                         } else {
                             categoryLinks
@@ -442,10 +512,10 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
                     1 -> {
                         val categoryLinks =
-                            helpViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.tvchannel.target.showingName }.filter {
+                            tvGuideViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.tvchannel.target.showingName }.filter {
                                 it.isSelected
                             }
-                        if (helpViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
+                        if (tvGuideViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
                             categoryLinks.filter { it.tvchannel.target.isFavorite }
                         } else {
                             categoryLinks
@@ -454,10 +524,10 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
                     else -> {
                         val categoryLinks =
-                            helpViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.position }.filter {
+                            tvGuideViewModel.currentFocusedTvCategory!!.tvChannelLink.sortedBy { it.position }.filter {
                                 it.isSelected
                             }
-                        if (helpViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
+                        if (tvGuideViewModel.currentFocusedTvCategory!!.isFavoriteCategory) {
                             categoryLinks.filter { it.tvchannel.target.isFavorite }
                         } else {
                             categoryLinks
@@ -470,19 +540,12 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
     }
 
     fun focusToTvChannelsWithEpg() {
-        if (tvGuideChannelsWithEpgAdapter.currentList.isNotEmpty()) {
+        if (channelAdapter.currentList.isNotEmpty()) {
             hideMainMenu()
             binding.rvChannelsWithEpg.requestFocus()
         } else {
             return
         }
-    }
-
-    private fun updateNowMarker() {
-        val now = System.currentTimeMillis()
-        val diffMinutes = (now - (now - 10000)) / 60000
-        val x = (diffMinutes * 7f) - binding.rvChannelsWithEpg.computeHorizontalScrollOffset()
-        binding.viewNowMarker.translationX = x.toFloat()
     }
 
     //MAIN ACTIVITY

@@ -109,22 +109,8 @@
         app:layout_constraintWidth_percent="0.2"
         app:layout_constraintBottom_toBottomOf="@id/timeLineBackground"/>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvTvGuide"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:clipToPadding="false"
-        android:paddingTop="0dp"
-        android:paddingStart="0dp"
-        android:visibility="gone"
-        android:background="?attr/backgroundDarkDark"
-        app:layout_constraintTop_toBottomOf="@id/timeLineBackground"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
-        app:layout_constraintWidth_percent="0.8"/>
-
     <!-- RecyclerView für Zeitmarken -->
-    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+    <com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
         android:id="@+id/rvTimeMarks"
         android:layout_width="0dp"
         android:layout_height="25dp"
@@ -138,7 +124,7 @@
         android:orientation="horizontal"/>
 
     <!-- Vertikale Senderliste links -->
-    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+    <com.example.mj_player_tv.utils.views.CustomVerticalGridView
         android:id="@+id/rvChannelsWithEpg"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -153,10 +139,10 @@
     <View
         app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"
+        app:layout_constraintTop_toBottomOf="@id/rvTimeMarks"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:id="@+id/viewNowMarker"
-        android:layout_width="2dp"
+        android:id="@+id/currentTimeMarker"
+        android:layout_width="1.5dp"
         android:layout_height="0dp"
         android:background="@color/light_blue"/>
 

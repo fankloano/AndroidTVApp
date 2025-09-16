@@ -17,4 +17,9 @@
     <attr name="blackwhiteColor" format="reference|color" />
     <attr name="textColorMidLight" format="reference|color" />
     <attr name="backgroundSettings" format="reference|color" />
+    <declare-styleable name="ProgramTextView">
+        <attr name="ptv_drawDivider" format="boolean" />
+        <attr name="ptv_rounded" format="boolean" />
+        <attr name="ptv_progressAlpha" format="integer" />
+    </declare-styleable>
 </resources>

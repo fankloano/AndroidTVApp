@@ -5,9 +5,8 @@
     android:layout_height="50dp"
     android:gravity="center_vertical"
     android:focusable="true"
-    android:background="@drawable/selector_epgfull_background"
+    android:background="@drawable/selector_tvguide_epg"
     android:focusableInTouchMode="true"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
     <LinearLayout
@@ -16,67 +15,33 @@
         android:gravity="center_vertical"
         android:layout_marginStart="15dp"
         android:layout_marginEnd="10dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:duplicateParentState="true">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/tv_StartTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text="08:20"
-                android:textColor="#A6A5A5"
-                android:textSize="12sp"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toStartOf="parent"/>
-
-            <TextView
-                android:id="@+id/tv_EndTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                tools:text=" - 08:20"
-                android:textColor="#A6A5A5"
-                android:textSize="12sp" />
-
-
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
 
         <TextView
             android:id="@+id/tv_Program"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Es war einmal in Amerika"
-            android:textColor="?attr/textMainColor"
+            android:textColor="@drawable/selector_textview_tvguide_title"
             android:textSize="13sp"
-            android:scrollHorizontally="true"
-            android:ellipsize="marquee"
+            android:ellipsize="end"
             android:maxLines="1"
-            android:marqueeRepeatLimit="marquee_forever" />
+            android:duplicateParentState="true"/>
 
         <TextView
             android:id="@+id/tv_SubTitleProgram"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             tools:text="Es war einmal in Amerika"
-            android:textColor="?attr/textColorLight"
+            android:textColor="@drawable/selector_textview_tvguide_subtitle"
             android:textSize="12sp"
-            android:layout_marginStart="10dp"
             android:maxLines="1"
-            android:ellipsize="marquee"
-            android:marqueeRepeatLimit="marquee_forever" />
-
-        </LinearLayout>
+            android:ellipsize="end"
+            android:duplicateParentState="true"/>
 
     </LinearLayout>
-
 
     <ImageView
         android:id="@+id/iv_reminder"
@@ -87,12 +52,5 @@
         android:src="@drawable/ic_alarm"
         android:layout_margin="5dp"/>
 
-    <View
-        android:id="@+id/overlay_full"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/background_overlay_globalsearch_epglist"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
 
 </RelativeLayout>

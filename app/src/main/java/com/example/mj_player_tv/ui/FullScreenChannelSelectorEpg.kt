@@ -67,7 +67,7 @@ class FullScreenChannelSelectorEpg : Fragment(R.layout.fragment_fullscreenchanne
             if (helpViewModel.currentPlayingChannelPosition != null || helpViewModel.fullScreenFocusedChannel != null) {
                 binding.relLayoutPrograminfo.visibility = View.VISIBLE
                 showEpgInfo(
-                    helpViewModel.fullScreenFocusedChannelPosition ?: helpViewModel.catchupPlayingChannelPosition!!
+                    helpViewModel.fullScreenFocusedChannelPosition ?: helpViewModel.currentPlayingChannelPosition!!
                 )
             }
         }

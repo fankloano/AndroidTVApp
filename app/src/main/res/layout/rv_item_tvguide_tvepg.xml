@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_margin="1dp"
-    android:background="?attr/backgroundDark">
+    android:background="?attr/backgroundDarkDark">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/const_tvchannel"
@@ -72,17 +72,22 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Horizontal RecyclerView für Programme -->
-    <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+    <com.example.mj_player_tv.utils.views.ProgramsRecyclerView
         android:id="@+id/rv_channel_programs"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginStart="2dp"
+        android:layout_marginStart="10dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         tools:listitem="@layout/rv_item_tvguide_epg"
         android:background="@color/background_dark_dark"
+        android:focusableInTouchMode="true"
+        android:focusable="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/const_tvchannel"
-        app:layout_constraintWidth_percent="0.8"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:dpadRecyclerViewChildAlignmentFraction="0"
+        app:dpadRecyclerViewParentAlignmentOffset="12dp"
+        app:dpadRecyclerViewParentAlignmentFraction="0"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

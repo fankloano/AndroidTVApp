@@ -203,25 +203,13 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var currentFocusedTvAccount: Accounts? = null
 
-    var lastSelectedTvCategoryPosition: Int? = null
-
     var fullScreenFromAbside = false
 
     var isLogoSettingsOpened: Boolean = false
 
-    var currentAccountPosition: Int? = null
-
     var changedTvCategoriesAccountId: Long? = null
 
-    var changedMovieCategoriesAccountId: Long? = null
-
-    var changedSeriesCategoriesAccountId: Long? = null
-
-    var currentSelectedTvCategory: TvCategoryOB? = null
-
     var selectedAccountData: Accounts? = null
-
-    var currentTvAccount: Accounts? = null
 
     var currentMovieAccount: Accounts? = null
 
@@ -2638,7 +2626,8 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     fun getEpgForTime(account: Accounts) {
         viewModelScope.launch(Dispatchers.IO) {
-            val epgSourceIds = account.epgsources.map {
+            val currentAcoount = accountBox.get(account.id)
+            val epgSourceIds = currentAcoount.epgsources.filter { it.isSelected }.map {
                 it.relatedepgsource.target.id.toInt()
             }.toIntArray()
             val nowSec = System.currentTimeMillis() / 1000   // jetzt in Sekunden
@@ -2656,6 +2645,4 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             )
         }
     }
-
-    val currentTimePosition = MutableLiveData<Long>()
 }

@@ -17,10 +17,14 @@ import com.example.mj_player_tv.databinding.RvItemTvguideEpgBinding
 import com.example.mj_player_tv.ui.FullEpgFragment
 import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.viewmodel.HelpViewModel
+import com.rubensousa.dpadrecyclerview.ChildAlignment
+import com.rubensousa.dpadrecyclerview.DpadRecyclerView
+import com.rubensousa.dpadrecyclerview.layoutmanager.PivotLayoutManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import kotlin.math.max
 
 @UnstableApi
 class TvGuideEpgAdapter(
@@ -29,11 +33,14 @@ class TvGuideEpgAdapter(
     private val helpViewModel: HelpViewModel) : ListAdapter<EpgDataOB, TvGuideEpgAdapter.ViewHolder>(
     FULLEPG_COMPERATOR) {
 
-    private var selectedEpgData: String = ""
+    var timelineStartSec: Long = 0
 
     var focusedChannelId = ""
 
+    var pxPerMinute = 5f
+
     inner class ViewHolder(val binding: RvItemTvguideEpgBinding) : RecyclerView.ViewHolder(binding.root) {
+
         fun bind(epgData: EpgDataOB) {
             val tvchannel = channelPosition.tvchannel.target
             val timeOffSetSec = calculateTimeOffsetInSeconds(
@@ -42,30 +49,35 @@ class TvGuideEpgAdapter(
                     ?: tvchannel.linkedEpgChannel?.target?.epgsource?.target?.timeOffSet
                     ?: 0
             )
-            // Hilfsfunktion für verschobene Zeiten
             fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
             fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+
             binding.tvProgram.text = epgData.name
-            val startTime = formatUnixTimestampToTime(epgData.shiftedStart())
-            val endTime = formatUnixTimestampToTime(epgData.shiftedStop())
-            binding.tvStartTime.text = startTime
-            binding.tvEndTime.text = " - ${endTime}"
-            if (epgData.sub_title.isEmpty()) {
-                binding.tvSubTitleProgram.visibility = View.GONE
-            } else {
+            if (epgData.sub_title.isNotEmpty()) {
                 binding.tvSubTitleProgram.visibility = View.VISIBLE
                 binding.tvSubTitleProgram.text = epgData.sub_title
-            }
-            if (epgData.isRemembered) {
-                binding.ivReminder.visibility = View.VISIBLE
             } else {
-                binding.ivReminder.visibility = View.INVISIBLE
+                binding.tvSubTitleProgram.visibility = View.GONE
             }
+            binding.ivReminder.visibility = if (epgData.isRemembered) View.VISIBLE else View.INVISIBLE
 
-            val durationMinutes = ((epgData.stopTimestamp ?: 0) - (epgData.startTimestamp ?: 0)) / 60
-            val params = binding.root.layoutParams
-            params.width = (durationMinutes * 5f).toInt()
-            binding.root.layoutParams = params
+
+            val params = binding.relLayoutFullepgitem.layoutParams as RecyclerView.LayoutParams
+            val startSec = max(epgData.shiftedStart(), timelineStartSec)
+            val endSec = epgData.shiftedStop()
+            val durationSec = endSec - startSec
+            val offsetSec = startSec - timelineStartSec
+
+            val durationMinutes = durationSec / 60f
+            val startOffsetMinutes = offsetSec / 60f
+
+            params.width = (( durationMinutes - startOffsetMinutes) * pxPerMinute).toInt()
+
+
+            binding.relLayoutFullepgitem.setOnFocusChangeListener { _, hasFocus ->
+                binding.tvProgram.isSelected = hasFocus
+                binding.tvSubTitleProgram.isSelected = hasFocus
+            }
         }
 
         fun calculateTimeOffsetInSeconds(timeOffset: Int): Long {
@@ -85,14 +97,48 @@ class TvGuideEpgAdapter(
 
         holder.binding.relLayoutFullepgitem.isSelected = epgData.idByAccountData == helpViewModel.currentSelectedEpgForSelectedChannel?.idByAccountData
 
-
         holder.binding.relLayoutFullepgitem.setOnFocusChangeListener { _, hasFocus ->
-            holder.binding.tvProgram.isSelected = hasFocus
-            holder.binding.tvSubTitleProgram.isSelected = hasFocus
-            if (hasFocus) {
+
                 //fragment.showDetailEpg(epgData)
+
+            if (hasFocus) {
             }
         }
+
+        holder.binding.relLayoutFullepgitem.setOnKeyListener { _, keyCode, event ->
+            if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
+
+            val rv = holder.itemView.parent as? DpadRecyclerView ?: return@setOnKeyListener false
+            val itemView = holder.itemView
+            val rvWidth = rv.width
+
+            return@setOnKeyListener when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    val itemEnd = itemView.right
+                    val rvVisibleEnd = rv.scrollX + rvWidth
+
+                    if (itemEnd > rvVisibleEnd) {
+                        rv.scrollBy(50, 0)
+                        true
+                    } else {
+                        false // Event weitergeben, Fokus springt zum nächsten Item
+                    }
+                }
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    val itemStart = itemView.left
+                    val rvStart = rv.scrollX
+
+                    if (itemStart < rvStart) {
+                        rv.scrollBy(-50, 0)
+                        true
+                    } else {
+                        false // Event weitergeben, Fokus springt zum vorherigen Item
+                    }
+                }
+                else -> false
+            }
+        }
+
     }
 
     companion object {

@@ -160,7 +160,7 @@ class PlaylistEpgSettingsFragment : Fragment(R.layout.fragment_playlist_epg_sett
         helpViewModel.selectedAccountData?.let { currentAccount ->
             helpViewModel.playlistEpgChanged = true
             if (isChecked) {
-                val totalSelectedSource = currentAccount.epgsources.filter { it.isSelected }.count()
+                val totalSelectedSource = currentAccount.epgsources.count { it.isSelected }
                 val thisEpgPosition = currentAccount.epgsources.firstOrNull { it.id == epgSources.id }
                 if (thisEpgPosition != null) {
                     thisEpgPosition.isSelected = true
@@ -178,10 +178,7 @@ class PlaylistEpgSettingsFragment : Fragment(R.layout.fragment_playlist_epg_sett
                 if (epgSources.isPlaylistEpg) {
                     currentAccount.usePlaylistEpg = true
                     accountBox.put(currentAccount)
-                    val currentFragment = parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                    if (currentFragment is TvChannelsFragment) {
-                        currentFragment.updateChannelList()
-                    }
+                    helpViewModel.epgSourceChangeCompleteSuccessful()
                 }
             } else {
                 val currentIndex = managePlaylistEpgAdapter.currentList.indexOf(epgSources)

@@ -632,6 +632,7 @@ class TvChannelsAdapter(
 
             @SuppressLint("DiffUtilEquals")
             override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg) =
+                        oldItem.epgList.firstOrNull()?.id == newItem.epgList.firstOrNull()?.id &&
                         oldItem.tvChannelPosition.tvchannel.target.linkedEpgChannel?.target?.id == newItem.tvChannelPosition.tvchannel.target?.linkedEpgChannel?.target?.id &&
                         oldItem.tvChannelPosition.tvchannel.target.showingName == newItem.tvChannelPosition.tvchannel.target.showingName &&
                         oldItem.tvChannelPosition.tvchannel.target.usesPlaylistEpg == newItem.tvChannelPosition.tvchannel.target.usesPlaylistEpg &&
