@@ -32,6 +32,8 @@ import com.example.mj_player_tv.ui.adapter.TimeMarkAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideChannelAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideTimelineAdapter
+import com.example.mj_player_tv.utils.views.CurrentTimeIndicatorDecoration
+import com.example.mj_player_tv.utils.views.CurrentTimeIndicatorView
 import com.example.mj_player_tv.utils.views.CustomVerticalGridView
 import com.example.mj_player_tv.utils.views.ProgramsRecyclerView
 import com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
@@ -69,16 +71,16 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private lateinit var timeMarksRecyclerView: TimeMarksRecyclerView
 
-    private lateinit var timeMarkAdapter: TimeMarkAdapter
-
     private var timeLineStartSec = 0L
-
-    val pxPerMinute = 5f
 
     private var fullAccountList = listOf<AccountTvCategory>()
     private var expandedAccountId: Long? = null
     private var currentList = listOf<AccountTvCategory>()
     val scrollSyncManager = TvGuideScrollSyncManager()
+
+    private lateinit var currentTimeIndicator: CurrentTimeIndicatorView
+
+    private lateinit var timeIndicatorDecoration: CurrentTimeIndicatorDecoration
 
     private var isFirstOpen = true
 
@@ -114,6 +116,9 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         super.onViewCreated(view, savedInstanceState)
 
         scrollSyncManager.register(binding.rvTimeMarks)
+        currentTimeIndicator = binding.currentTimeIndicator
+        timeIndicatorDecoration = CurrentTimeIndicatorDecoration()
+        scrollSyncManager.setTimeIndicatorDecoration(timeIndicatorDecoration)
 
         val calendar = Calendar.getInstance().apply {
             val minute = get(Calendar.MINUTE)
@@ -133,7 +138,19 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
         val channelRecyclerView: CustomVerticalGridView = view.findViewById(R.id.rvChannelsWithEpg)
         channelRecyclerView.adapter = channelAdapter
+        channelRecyclerView.addItemDecoration(timeIndicatorDecoration)
+        // Startzeit der Timeline (als Unix-Timestamp in Sekunden)
+        val timelineStartSec = tvGuideViewModel.timeLineStartSec
+        val nowSec = System.currentTimeMillis() / 1000
 
+// Minuten, die seit dem Start der Timeline vergangen sind
+        val minutesSinceStartFloat = ((nowSec - timelineStartSec) / 60).toFloat()
+
+// Die absolute X-Position für die Linie berechnen
+        val initialLineX = minutesSinceStartFloat * 5f
+
+// Die Position an die Decoration übergeben
+        timeIndicatorDecoration.setCurrentTimePosition(initialLineX)
         timeMarksRecyclerView = binding.rvTimeMarks
         timeMarksRecyclerView.layoutManager = LinearLayoutManager(this.context, RecyclerView.HORIZONTAL, false)
 
@@ -151,14 +168,37 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         val fraction = (minutesSinceStart % 30) / 30f // Rest für genaue Position innerhalb der halben Stunde
         val nowX = index * timeMarksRecyclerView.halfHourWidth + fraction * timeMarksRecyclerView.halfHourWidth
 
-        // Posten, damit RecyclerView schon gemessen ist
-        timeMarksRecyclerView.post {
-            val heightOfLine = binding.currentTimeMarker.height.toFloat()
-            timeMarksRecyclerView.updateCurrentTimePosition(nowX, heightOfLine)
-            timeMarksRecyclerView.setCurrentTimeIndicatorVisible(true)
+        // Overlay setzen, sobald RecyclerView gemessen ist
+        currentTimeIndicator.post {
+            currentTimeIndicator.nowX = nowX
         }
 
-    var accountsList = listOf<AccountTvCategory>()
+        // Posten, damit RecyclerView schon gemessen ist
+    //    timeMarksRecyclerView.post {
+      //      val heightOfLine = timeMarksRecyclerView.height.toFloat()
+        //    timeMarksRecyclerView.updateCurrentTimePosition(nowX, heightOfLine)
+          //  timeMarksRecyclerView.setCurrentTimeIndicatorVisible(true)
+      //  }
+
+
+        // Scroll-Listener, damit die Linie mitscrollt
+        timeMarksRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+           override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+              val offsetX = recyclerView.computeHorizontalScrollOffset()
+               val visibleWidth = recyclerView.width
+
+                val indicatorPos = nowX - offsetX
+
+                if (indicatorPos in 0f..visibleWidth.toFloat()) {
+                    currentTimeIndicator.nowX = indicatorPos
+                } else {
+                    currentTimeIndicator.nowX = -1f // verstecken
+                }
+            }
+        })
+
+
+        var accountsList = listOf<AccountTvCategory>()
 
         helpViewModel.tvAccountsWithCategoriesLiveData.observe(viewLifecycleOwner) { accounts ->
             if (accounts.isEmpty()) {

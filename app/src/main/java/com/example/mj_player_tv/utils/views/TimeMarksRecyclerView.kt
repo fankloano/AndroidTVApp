@@ -55,8 +55,8 @@ class TimeMarksRecyclerView @JvmOverloads constructor(
 
         times.forEachIndexed { index, time ->
             val centerX = index * halfHourWidth - offsetX
-            val textX = (centerX - paint.measureText(time) / 2).coerceAtLeast(0f)
-
+// RICHTIG
+            val textX = centerX - paint.measureText(time) / 2
             // Text zeichnen
             canvas.drawText(
                 time,
@@ -82,6 +82,7 @@ class TimeMarksRecyclerView @JvmOverloads constructor(
             canvas.drawLine(nowX - offsetX, 0f, nowX - offsetX, lineHeight, indicatorPaint)
         }
     }
+
 
     fun setCurrentTimeIndicatorVisible(visible: Boolean) {
         showIndicator = visible
