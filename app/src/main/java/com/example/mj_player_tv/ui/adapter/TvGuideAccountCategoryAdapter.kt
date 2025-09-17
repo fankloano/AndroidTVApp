@@ -181,6 +181,7 @@ class TvGuideAccountCategoryAdapter(
 
         private fun handleRightShortPress() {
             fragment.focusToTvChannelsWithEpg()
+            fragment.setTvAccountsVisibilityAnimated(false)
         }
 
 

@@ -1,50 +1,68 @@
 package com.example.mj_player_tv.ui.adapter
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.utils.views.ProgramTextView
+import com.example.mj_player_tv.viewmodel.TvGuideViewModel
 
 class ProgramsAdapter(
-    private val onProgramClick: (EpgDataOB) -> Unit
-) : ListAdapter<EpgDataOB, ProgramsAdapter.ProgramViewHolder>(DIFF_CALLBACK) {
+    private val tvGuideViewModel: TvGuideViewModel
+) : ListAdapter<EpgDataOB, ProgramsAdapter.ProgramViewHolder>(DiffCallback) {
 
-    companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<EpgDataOB>() {
-            override fun areItemsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean =
-                oldItem.id == newItem.id
-
-            override fun areContentsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean =
-                oldItem == newItem
+    object DiffCallback : DiffUtil.ItemCallback<EpgDataOB>() {
+        override fun areItemsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean {
+            // Programme sind eindeutig durch Startzeit + Ende
+            return oldItem.startTimestamp == newItem.startTimestamp && oldItem.stopTimestamp == newItem.stopTimestamp
         }
-    }
 
-    inner class ProgramViewHolder(itemView: ProgramTextView) : RecyclerView.ViewHolder(itemView) {
-        fun bind(epg: EpgDataOB) {
-            (itemView as ProgramTextView).apply {
-                text = epg.name
-                setTextSizeSp(12f)
-                setPaddingRelative(12, 0, 12, 0) // kleiner Padding
-                setOnClickListener { onProgramClick(epg) }
-            }
+        override fun areContentsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean {
+            return oldItem == newItem
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProgramViewHolder {
-        val textView = ProgramTextView(parent.context)
-        val params = RecyclerView.LayoutParams(
-            RecyclerView.LayoutParams.WRAP_CONTENT,
-            RecyclerView.LayoutParams.MATCH_PARENT
-        )
-        textView.layoutParams = params
-        return ProgramViewHolder(textView)
+        val tv = ProgramTextView(parent.context).apply {
+            layoutParams = RecyclerView.LayoutParams(
+                RecyclerView.LayoutParams.WRAP_CONTENT,
+                RecyclerView.LayoutParams.MATCH_PARENT
+            )
+        }
+        return ProgramViewHolder(tv)
     }
 
     override fun onBindViewHolder(holder: ProgramViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+
+        // Berechne Start- und Endzeit relativ zur Timeline
+        val visibleStart = maxOf(item.startTimestamp ?: 0L, tvGuideViewModel.timeLineStartSec)
+        val visibleEnd = item.stopTimestamp ?: tvGuideViewModel.timeLineStartSec
+
+        // Dauer in Minuten für die sichtbare Länge
+        val durationMinutes = ((visibleEnd - visibleStart) / 60).toInt().coerceAtLeast(1)
+        val startOffsetMinutes = ((visibleStart - tvGuideViewModel.timeLineStartSec) / 60).toInt()
+
+        // Setze Breite in Pixeln
+        holder.textView.layoutParams.width = (durationMinutes * 5f).toInt()
+        val modStart = startOffsetMinutes % 30
+        val modEnd = (startOffsetMinutes + durationMinutes) % 30
+        val startX = startOffsetMinutes * 5
+        val width = durationMinutes * 5
+       Log.d(
+            "ProgramsCheck",
+            "Program=${item.name} " +
+                    "| StartMin=$startOffsetMinutes EndMin=${startOffsetMinutes + durationMinutes} " +
+                    "| StartX=$startX Width=$width " +
+                    "| AlignStart=${if (modStart == 0) "OK" else "OFF($modStart)"} " +
+                    "| AlignEnd=${if (modEnd == 0) "OK" else "OFF($modEnd)"}")
+
+        // Text
+        holder.textView.text = item.name
     }
+
+    class ProgramViewHolder(val textView: ProgramTextView) : RecyclerView.ViewHolder(textView)
+
 }
-
-

@@ -6,22 +6,24 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.util.AttributeSet
+import android.util.Log
 import android.view.MotionEvent
 import androidx.recyclerview.widget.RecyclerView
 import androidx.core.graphics.withClip
+import androidx.recyclerview.widget.LinearLayoutManager
 
 class TimeMarksRecyclerView @JvmOverloads constructor(
-context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
+    context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr) {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = Color.WHITE // TimeMark Text
-        textSize = 32f // anpassen
+        color = Color.WHITE
+        textSize = 14f
     }
     private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE
-        color = Color.RED // aktuelle Zeitlinie
+        color = Color.RED
         strokeWidth = 3f
     }
 
@@ -29,39 +31,71 @@ context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     private var nowX: Float = 0f
     private var lineHeight: Float = 0f
     private var showIndicator: Boolean = false
-    private val leftMargin = 80 // Platz links für Logos
-    var programHalfHourWidth: Float = 120f // Breite eines halben Stundenblocks
+    private val leftMargin = 80
+    var programHalfHourWidth: Float = 150f
 
+    init {
+        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+        isHorizontalScrollBarEnabled = false
+        isNestedScrollingEnabled = false
+    }
+
+    fun scrollContentBy(dx: Int) {
+        // Halte Offset intern
+        offsetX += dx
+        invalidate()
+    }
+
+    private var offsetX = 0f
+    var halfHourWidth = 30 * 5f
+
+    @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
-        // TimeMarks zeichnen
-        var x = leftMargin.toFloat()
-        times.forEach { time ->
-            canvas.drawText(time, x, height / 2f + paint.textSize / 2f, paint)
-            x += programHalfHourWidth
+        times.forEachIndexed { index, time ->
+            val centerX = index * halfHourWidth - offsetX
+            val textX = (centerX - paint.measureText(time) / 2).coerceAtLeast(0f)
+
+            // Text zeichnen
+            canvas.drawText(
+                time,
+                textX,
+                height / 2f + paint.textSize / 2f,
+                paint
+            )
+
+            // Debug-Hilfslinie für jede TimeMark
+            canvas.drawLine(
+                centerX,
+                0f,
+                centerX,
+                height.toFloat(),
+                Paint().apply {
+                    color = Color.GRAY
+                    strokeWidth = 1f
+                }
+            )
         }
 
-        // aktuelle Zeitlinie
         if (showIndicator) {
-            canvas.drawLine(nowX, 0f, nowX, lineHeight, indicatorPaint)
+            canvas.drawLine(nowX - offsetX, 0f, nowX - offsetX, lineHeight, indicatorPaint)
         }
     }
 
     fun setCurrentTimeIndicatorVisible(visible: Boolean) {
-        if (showIndicator != visible) {
-            showIndicator = visible
-            invalidate()
-        }
+        showIndicator = visible
+        invalidate()
     }
 
     fun updateCurrentTimePosition(x: Float, h: Float) {
         nowX = x
         lineHeight = h
+        Log.d("TimeMarks", "NOW: ${nowX} & lineHeight=$lineHeight")
         invalidate()
     }
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(e: MotionEvent): Boolean = false
-}
 
+}

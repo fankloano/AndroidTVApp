@@ -15,10 +15,18 @@ import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.RvItemTvguideTvepgBinding
+import com.example.mj_player_tv.repository.TvGuideScrollSyncManager
+import com.example.mj_player_tv.utils.EpgScrollSyncManager
 import com.example.mj_player_tv.utils.views.ProgramsRecyclerView
+import com.example.mj_player_tv.viewmodel.HelpViewModel
+import com.example.mj_player_tv.viewmodel.TvGuideViewModel
 
 class ChannelAdapter(
-    private val onProgramClick: (EpgDataOB) -> Unit
+    private val onProgramClick: (EpgDataOB) -> Unit,
+    private val helpViewModel: HelpViewModel,
+    private val tvGuideViewModel: TvGuideViewModel,
+    private val scrollSyncManager: TvGuideScrollSyncManager // << Manager vom Fragment
+
 ) : ListAdapter<TvChannelWithEpg, ChannelAdapter.ChannelViewHolder>(DIFF_CALLBACK) {
 
     companion object {
@@ -34,8 +42,6 @@ class ChannelAdapter(
     inner class ChannelViewHolder(
         val binding: RvItemTvguideTvepgBinding
     ) : RecyclerView.ViewHolder(binding.root) {
-
-        private val programsAdapter = ProgramsAdapter(onProgramClick)
 
         fun bind(tvChannelWithEpg: TvChannelWithEpg) {
             // Channel Name + Logo
@@ -70,12 +76,73 @@ class ChannelAdapter(
                 }
             }
 
+            val epgList = tvChannelWithEpg.epgList
+            val start = System.currentTimeMillis() / 1000 // Sekunden
+            val end = start + 12 * 3600 // 12h später
+            Log.d("TVGUIDE EPG", "${tvchannel.showingName} START = ${epgList.size}")
+            val programsWithGaps = if (epgList.isEmpty()) {
+                // Channel hat kein EPG → stündliche Platzhalter
+                generateHourlyPlaceholders(start, end)
+            } else {
+                // Channel hat EPG → Lücken zwischen Sendungen füllen
+                fillGaps(epgList, start, end)
+            }
+            Log.d("TVGUIDE EPG", "${tvchannel.showingName} END = ${programsWithGaps.size}")
 
-            binding.rvChannelPrograms.layoutManager =
-                LinearLayoutManager(binding.root.context, LinearLayoutManager.HORIZONTAL, false)
-            binding.rvChannelPrograms.adapter = programsAdapter
-            programsAdapter.submitList(tvChannelWithEpg.epgList)
+            val adapter = ProgramsAdapter(tvGuideViewModel)
+            binding.rvChannelPrograms.adapter = adapter
+            adapter.submitList(programsWithGaps)
+            scrollSyncManager.register(binding.rvChannelPrograms)
         }
+
+        fun fillGaps(
+            epgList: List<EpgDataOB>,
+            startOfWindow: Long,
+            endOfWindow: Long
+        ): List<EpgDataOB> {
+            val result = mutableListOf<EpgDataOB>()
+            var cursor = startOfWindow
+
+            for (program in epgList) {
+                if ((program.startTimestamp ?: 0L) > cursor) {
+                    // Lücke → Dummy EPG
+                    result += EpgDataOB(
+                        name = "No Information",
+                        startTimestamp = cursor,
+                        stopTimestamp = program.startTimestamp
+                    )
+                }
+                result += program
+                cursor = program.stopTimestamp ?: 0L
+            }
+
+            if (cursor < endOfWindow) {
+                result += EpgDataOB(
+                    name = "No Information",
+                    startTimestamp = cursor,
+                    stopTimestamp = endOfWindow
+                )
+            }
+
+            return result
+        }
+
+        fun generateHourlyPlaceholders(startOfWindow: Long, endOfWindow: Long): List<EpgDataOB> {
+            val result = mutableListOf<EpgDataOB>()
+            var cursor = startOfWindow
+            while (cursor < endOfWindow) {
+                val nextHour = cursor + 3600
+                result += EpgDataOB(
+                    name = "No Information",
+                    startTimestamp = cursor,
+                    stopTimestamp = minOf(nextHour, endOfWindow)
+                )
+                cursor = nextHour
+            }
+            return result
+        }
+
+
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChannelViewHolder {

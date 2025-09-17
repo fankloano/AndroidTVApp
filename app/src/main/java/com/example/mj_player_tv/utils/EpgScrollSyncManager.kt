@@ -4,37 +4,25 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class EpgScrollSyncManager {
-
-    private val registered = mutableListOf<RecyclerView>()
-    private var isSyncing = false
+    private val listeners = mutableListOf<RecyclerView>()
 
     fun register(rv: RecyclerView) {
-        registered.add(rv)
-
+        listeners.add(rv)
         rv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (!isSyncing) {
-                    syncOthers(recyclerView)
+                if (dx != 0) {
+                    propagateScroll(recyclerView, dx)
                 }
             }
         })
     }
 
-    private fun syncOthers(source: RecyclerView) {
-        val offset = source.computeHorizontalScrollOffset()
-
-        isSyncing = true
-        registered.forEach { rv ->
+    private fun propagateScroll(source: RecyclerView, dx: Int) {
+        listeners.forEach { rv ->
             if (rv != source) {
-                val current = rv.computeHorizontalScrollOffset()
-                val diff = offset - current
-                if (diff != 0) {
-                    rv.scrollBy(diff, 0)
-                }
+                rv.scrollBy(dx, 0)
             }
         }
-        isSyncing = false
     }
-
 }
 

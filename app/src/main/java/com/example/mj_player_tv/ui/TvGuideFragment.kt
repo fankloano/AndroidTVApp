@@ -115,51 +115,50 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
         scrollSyncManager.register(binding.rvTimeMarks)
 
-
         val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
+            val minute = get(Calendar.MINUTE)
+            // Auf die vorherige halbe Stunde runden
+            set(Calendar.MINUTE, if (minute < 30) 0 else 30)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
         timeLineStartSec = calendar.timeInMillis / 1000
+        tvGuideViewModel.timeLineStartSec = timeLineStartSec
 
         prepareAccountCategoryRecyclerView()
 
-        channelAdapter = ChannelAdapter { epgItem ->
+        channelAdapter = ChannelAdapter({ epgItem ->
             Toast.makeText(requireContext(), "Clicked: ${epgItem.name}", Toast.LENGTH_SHORT).show()
-        }
+        }, helpViewModel, tvGuideViewModel, scrollSyncManager)
+
         val channelRecyclerView: CustomVerticalGridView = view.findViewById(R.id.rvChannelsWithEpg)
         channelRecyclerView.adapter = channelAdapter
+
         timeMarksRecyclerView = binding.rvTimeMarks
-        val now = Calendar.getInstance()
-        now.add(Calendar.MINUTE, -30) // 30 Minuten zurück
-// Runden auf volle halbe Stunde
-        val startMinute = if (now.get(Calendar.MINUTE) < 30) 0 else 30
-        now.set(Calendar.MINUTE, startMinute)
-        now.set(Calendar.SECOND, 0)
-        now.set(Calendar.MILLISECOND, 0)
+        timeMarksRecyclerView.layoutManager = LinearLayoutManager(this.context, RecyclerView.HORIZONTAL, false)
 
-        val firstStartTime = now.timeInMillis
+        setupTimeline() // füllt die times-Liste und setzt programHalfHourWidth
+        val timelineStartHour = calendar.get(Calendar.HOUR_OF_DAY)
+        val timelineStartMinute = calendar.get(Calendar.MINUTE)
+        // Jetzt den aktuellen Zeitpunkt berechnen und den Indikator setzen
+        val nowCalendar = Calendar.getInstance()
+        val nowHour = nowCalendar.get(Calendar.HOUR_OF_DAY)
+        val nowMinute = nowCalendar.get(Calendar.MINUTE)
 
-// Zeitmarks erstellen, z.B. alle 30 Minuten für die nächsten 12 Stunden
-        val timeMarks = mutableListOf<String>()
-        val cal = Calendar.getInstance().apply { timeInMillis = firstStartTime }
+        val minutesSinceStart = (nowHour - timelineStartHour) * 60 + (nowMinute - timelineStartMinute)
 
-        for (i in 0 until 24) { // 24 Halbstunden = 12 Stunden
-            val hour = cal.get(Calendar.HOUR_OF_DAY)
-            val minute = cal.get(Calendar.MINUTE)
-            val text = String.format("%02d:%02d", hour, minute)
-            timeMarks.add(text)
-            cal.add(Calendar.MINUTE, 30)
+        val index = minutesSinceStart / 30 // Ganzzahlig: welche halbe Stunde
+        val fraction = (minutesSinceStart % 30) / 30f // Rest für genaue Position innerhalb der halben Stunde
+        val nowX = index * timeMarksRecyclerView.halfHourWidth + fraction * timeMarksRecyclerView.halfHourWidth
+
+        // Posten, damit RecyclerView schon gemessen ist
+        timeMarksRecyclerView.post {
+            val heightOfLine = binding.currentTimeMarker.height.toFloat()
+            timeMarksRecyclerView.updateCurrentTimePosition(nowX, heightOfLine)
+            timeMarksRecyclerView.setCurrentTimeIndicatorVisible(true)
         }
 
-        timeMarksRecyclerView.times = timeMarks
-        timeMarksRecyclerView.programHalfHourWidth = 120f
-
-        setupScrollingSync(channelRecyclerView, timeMarksRecyclerView)
-
-        var accountsList = listOf<AccountTvCategory>()
+    var accountsList = listOf<AccountTvCategory>()
 
         helpViewModel.tvAccountsWithCategoriesLiveData.observe(viewLifecycleOwner) { accounts ->
             if (accounts.isEmpty()) {
@@ -203,6 +202,27 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
     }
 
     //ACCOUNTS
+    private fun setupTimeline() {
+        val timeMarks = mutableListOf<String>()
+        val cal = Calendar.getInstance().apply {
+            // Startzeit auf nächste halbe Stunde runden
+            set(Calendar.MINUTE, if (get(Calendar.MINUTE) < 30) 0 else 30)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        // 12 Stunden Timeline (30 Min Schritte)
+        for (i in 0 until 24) {
+            val text = String.format("%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
+            timeMarks.add(text)
+            cal.add(Calendar.MINUTE, 30)
+        }
+
+        timeMarksRecyclerView.times = timeMarks
+        timeMarksRecyclerView.programHalfHourWidth = 30 * 5f
+        timeMarksRecyclerView.invalidate()
+    }
+
 
     private fun prepareAccountCategoryRecyclerView() {
         tvGuideAccountCategoryAdapter = TvGuideAccountCategoryAdapter(

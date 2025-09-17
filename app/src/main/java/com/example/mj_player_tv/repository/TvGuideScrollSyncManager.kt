@@ -2,6 +2,7 @@ package com.example.mj_player_tv.repository
 
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
+import com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
 import java.util.Collections
 
 /**
@@ -13,36 +14,36 @@ import java.util.Collections
  */
 class TvGuideScrollSyncManager {
 
-    private val rvs = Collections.synchronizedSet(mutableSetOf<RecyclerView>())
-
+    private val listeners = Collections.synchronizedSet(mutableSetOf<RecyclerView>())
     @Volatile
     private var isSyncingFrom: RecyclerView? = null
 
+    /**
+     * Registriere eine RecyclerView (Timeline oder ProgramRow)
+     */
     fun register(rv: RecyclerView) {
-        if (!rvs.add(rv)) return
-
-        // markieren für Identification
-        rv.setTag(R.id.tag_sync_registered, true)
+        if (!listeners.add(rv)) return
 
         rv.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            private var lastScrollX = 0
 
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                // Verhindere reentrancy
                 if (isSyncingFrom != null && isSyncingFrom !== recyclerView) return
 
-                // beginne Sync
                 isSyncingFrom = recyclerView
                 try {
-                    // Für alle anderen Rvs die gleiche scrollPosition setzen
-                    synchronized(rvs) {
-                        for (other in rvs) {
+                    synchronized(listeners) {
+                        for (other in listeners) {
                             if (other === recyclerView) continue
-                            other.scrollBy(dx, 0)
+                            // Spezialfall TimeMarksRecyclerView
+                            if (other is TimeMarksRecyclerView) {
+                                other.scrollContentBy(dx)
+                            } else {
+                                other.scrollBy(dx, 0)
+                            }
                         }
                     }
-
                 } finally {
-                    // kleine Verzögerung/Reset könnte nötig sein, aber setzen wir sofort zurück
                     isSyncingFrom = null
                 }
             }
@@ -50,13 +51,12 @@ class TvGuideScrollSyncManager {
     }
 
     fun unregister(rv: RecyclerView) {
-        rvs.remove(rv)
+        listeners.remove(rv)
         rv.setTag(R.id.tag_sync_registered, null)
-        // Listener entfernen ist optional — hier ignoriert
     }
 
     fun clear() {
-        rvs.clear()
+        listeners.clear()
         isSyncingFrom = null
     }
 }

@@ -181,7 +181,6 @@ class TvGuideChannelAdapter(
         fragment.scrollSyncManager.register(holder.binding.rvChannelPrograms)
     }
     override fun onViewDetachedFromWindow(holder: ViewHolder) {
-        fragment.scrollSyncManager.unregister(holder.binding.rvChannelPrograms)
     }
 
 

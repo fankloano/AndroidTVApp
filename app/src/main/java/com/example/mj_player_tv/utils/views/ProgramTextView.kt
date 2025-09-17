@@ -3,6 +3,7 @@ package com.example.mj_player_tv.utils.views
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.text.TextUtils
@@ -53,7 +54,9 @@ class ProgramTextView @JvmOverloads constructor(
         paintProgress.style = Paint.Style.FILL
         paintProgress.color = -0x1
         paintProgress.alpha = progressAlpha
-
+        val scale = resources.displayMetrics.density
+        val paddingLeftPx = (8 * scale + 0.5f).toInt()
+        setPadding(paddingLeftPx, paddingTop, paddingLeftPx, paddingBottom)
         paintDivider.style = Paint.Style.FILL
         paintDivider.color = context.getColor(R.color.divider)
         maxLines = 1
