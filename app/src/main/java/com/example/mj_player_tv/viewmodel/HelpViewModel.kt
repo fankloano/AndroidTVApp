@@ -2630,7 +2630,7 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             val epgSourceIds = currentAcoount.epgsources.filter { it.isSelected }.map {
                 it.relatedepgsource.target.id.toInt()
             }.toIntArray()
-            val nowSec = System.currentTimeMillis() / 1000   // jetzt in Sekunden
+            val nowSec = (System.currentTimeMillis() / 1000) - (40 * 60)   // jetzt in Sekunden
             val twelveHoursLaterSec = nowSec + 12 * 60 * 60  // 12h später in Sekunden
             epgCache = HashMap(
                 epgDataBox.query(

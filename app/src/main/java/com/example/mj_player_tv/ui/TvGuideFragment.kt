@@ -1,6 +1,9 @@
 package com.example.mj_player_tv.ui
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.VISIBLE
@@ -8,15 +11,16 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DefaultItemAnimator
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
+import coil.load
 import com.example.mj_player_tv.MainActivity
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
@@ -28,14 +32,8 @@ import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.FragmentTvguideBinding
 import com.example.mj_player_tv.repository.TvGuideScrollSyncManager
 import com.example.mj_player_tv.ui.adapter.ChannelAdapter
-import com.example.mj_player_tv.ui.adapter.TimeMarkAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryAdapter
-import com.example.mj_player_tv.ui.adapter.TvGuideChannelAdapter
-import com.example.mj_player_tv.ui.adapter.TvGuideTimelineAdapter
-import com.example.mj_player_tv.utils.views.CurrentTimeIndicatorDecoration
-import com.example.mj_player_tv.utils.views.CurrentTimeIndicatorView
 import com.example.mj_player_tv.utils.views.CustomVerticalGridView
-import com.example.mj_player_tv.utils.views.ProgramsRecyclerView
 import com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
@@ -43,16 +41,17 @@ import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
 import com.example.mj_player_tv.viewmodel.TvGuideViewModel
 import com.example.mj_player_tv.viewmodel.TvGuideViewModelFactory
-import com.rubensousa.dpadrecyclerview.layoutmanager.PivotLayoutManager
-import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
+import com.volkov.EPGConfig
+import com.volkov.epgrecycler.EPGRecyclerView
+import com.volkov.epgrecycler.models.epg.ChannelModel
+import com.volkov.epgrecycler.models.epg.ShowModel
 import io.objectbox.Box
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.time.Instant
+import org.joda.time.DateTime
 import java.util.Calendar
-import kotlin.properties.Delegates
 
 @UnstableApi
 class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
@@ -67,21 +66,27 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private lateinit var tvGuideAccountCategoryAdapter: TvGuideAccountCategoryAdapter
 
-    private lateinit var channelAdapter: ChannelAdapter
+    private val epgListener = object : EPGRecyclerView.OnEventListener {
+        override fun onShowSelected(channelId: String, showId: String) {
 
-    private lateinit var timeMarksRecyclerView: TimeMarksRecyclerView
+        }
 
-    private var timeLineStartSec = 0L
+        override fun onShowClick(channelId: String, showId: String) {
+            Log.d("click epgview:", "$channelId, $showId")
+        }
+
+        override fun onShowExit() {
+            binding.btnFocus.post {
+                binding.btnFocus.requestFocus()
+            }
+        }
+    }
+
 
     private var fullAccountList = listOf<AccountTvCategory>()
     private var expandedAccountId: Long? = null
     private var currentList = listOf<AccountTvCategory>()
     val scrollSyncManager = TvGuideScrollSyncManager()
-
-    private lateinit var currentTimeIndicator: CurrentTimeIndicatorView
-
-    private lateinit var timeIndicatorDecoration: CurrentTimeIndicatorDecoration
-
     private var isFirstOpen = true
 
     private val stalkerViewModel: StalkerViewModel by activityViewModels {
@@ -115,89 +120,29 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        scrollSyncManager.register(binding.rvTimeMarks)
-        currentTimeIndicator = binding.currentTimeIndicator
-        timeIndicatorDecoration = CurrentTimeIndicatorDecoration()
-        scrollSyncManager.setTimeIndicatorDecoration(timeIndicatorDecoration)
-
-        val calendar = Calendar.getInstance().apply {
-            val minute = get(Calendar.MINUTE)
-            // Auf die vorherige halbe Stunde runden
-            set(Calendar.MINUTE, if (minute < 30) 0 else 30)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
+        with(EPGConfig) {
+            showBackgroundDrawable = com.volkov.epg_recycler.R.drawable.bg_radius_4dp
+            channelLogoBackgroundDrawable = com.volkov.epg_recycler.R.drawable.show_background
+            showBackgroundColorStateList = ContextCompat.getColorStateList(
+                requireContext(),
+                R.color.seekbar_vod_scrubbercolor)
+            rowHeight = 50
+            rowLogoHeight = 50
+            marginVerticalChannelLogo = 5
         }
-        timeLineStartSec = calendar.timeInMillis / 1000
-        tvGuideViewModel.timeLineStartSec = timeLineStartSec
+        binding.epgView.apply {
+            setDayShift(0)
+            val startDate = DateTime().minusMinutes(15)
+            val endTime = startDate.plusMinutes(15)
+            setStartHour(startDate.hourOfDay)
+            setEndHour(0)
+            listener = epgListener
+            initView(
+                listOf()
+            )
+        }
 
         prepareAccountCategoryRecyclerView()
-
-        channelAdapter = ChannelAdapter({ epgItem ->
-            Toast.makeText(requireContext(), "Clicked: ${epgItem.name}", Toast.LENGTH_SHORT).show()
-        }, helpViewModel, tvGuideViewModel, scrollSyncManager)
-
-        val channelRecyclerView: CustomVerticalGridView = view.findViewById(R.id.rvChannelsWithEpg)
-        channelRecyclerView.adapter = channelAdapter
-        channelRecyclerView.addItemDecoration(timeIndicatorDecoration)
-        // Startzeit der Timeline (als Unix-Timestamp in Sekunden)
-        val timelineStartSec = tvGuideViewModel.timeLineStartSec
-        val nowSec = System.currentTimeMillis() / 1000
-
-// Minuten, die seit dem Start der Timeline vergangen sind
-        val minutesSinceStartFloat = ((nowSec - timelineStartSec) / 60).toFloat()
-
-// Die absolute X-Position für die Linie berechnen
-        val initialLineX = minutesSinceStartFloat * 5f
-
-// Die Position an die Decoration übergeben
-        timeIndicatorDecoration.setCurrentTimePosition(initialLineX)
-        timeMarksRecyclerView = binding.rvTimeMarks
-        timeMarksRecyclerView.layoutManager = LinearLayoutManager(this.context, RecyclerView.HORIZONTAL, false)
-
-        setupTimeline() // füllt die times-Liste und setzt programHalfHourWidth
-        val timelineStartHour = calendar.get(Calendar.HOUR_OF_DAY)
-        val timelineStartMinute = calendar.get(Calendar.MINUTE)
-        // Jetzt den aktuellen Zeitpunkt berechnen und den Indikator setzen
-        val nowCalendar = Calendar.getInstance()
-        val nowHour = nowCalendar.get(Calendar.HOUR_OF_DAY)
-        val nowMinute = nowCalendar.get(Calendar.MINUTE)
-
-        val minutesSinceStart = (nowHour - timelineStartHour) * 60 + (nowMinute - timelineStartMinute)
-
-        val index = minutesSinceStart / 30 // Ganzzahlig: welche halbe Stunde
-        val fraction = (minutesSinceStart % 30) / 30f // Rest für genaue Position innerhalb der halben Stunde
-        val nowX = index * timeMarksRecyclerView.halfHourWidth + fraction * timeMarksRecyclerView.halfHourWidth
-
-        // Overlay setzen, sobald RecyclerView gemessen ist
-        currentTimeIndicator.post {
-            currentTimeIndicator.nowX = nowX
-        }
-
-        // Posten, damit RecyclerView schon gemessen ist
-    //    timeMarksRecyclerView.post {
-      //      val heightOfLine = timeMarksRecyclerView.height.toFloat()
-        //    timeMarksRecyclerView.updateCurrentTimePosition(nowX, heightOfLine)
-          //  timeMarksRecyclerView.setCurrentTimeIndicatorVisible(true)
-      //  }
-
-
-        // Scroll-Listener, damit die Linie mitscrollt
-        timeMarksRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-           override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-              val offsetX = recyclerView.computeHorizontalScrollOffset()
-               val visibleWidth = recyclerView.width
-
-                val indicatorPos = nowX - offsetX
-
-                if (indicatorPos in 0f..visibleWidth.toFloat()) {
-                    currentTimeIndicator.nowX = indicatorPos
-                } else {
-                    currentTimeIndicator.nowX = -1f // verstecken
-                }
-            }
-        })
-
-
         var accountsList = listOf<AccountTvCategory>()
 
         helpViewModel.tvAccountsWithCategoriesLiveData.observe(viewLifecycleOwner) { accounts ->
@@ -242,27 +187,10 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
     }
 
     //ACCOUNTS
-    private fun setupTimeline() {
-        val timeMarks = mutableListOf<String>()
-        val cal = Calendar.getInstance().apply {
-            // Startzeit auf nächste halbe Stunde runden
-            set(Calendar.MINUTE, if (get(Calendar.MINUTE) < 30) 0 else 30)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
 
-        // 12 Stunden Timeline (30 Min Schritte)
-        for (i in 0 until 24) {
-            val text = String.format("%02d:%02d", cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE))
-            timeMarks.add(text)
-            cal.add(Calendar.MINUTE, 30)
-        }
-
-        timeMarksRecyclerView.times = timeMarks
-        timeMarksRecyclerView.programHalfHourWidth = 30 * 5f
-        timeMarksRecyclerView.invalidate()
+    fun focusEpgRecycler() {
+        binding.epgView.requestFocus()
     }
-
 
     private fun prepareAccountCategoryRecyclerView() {
         tvGuideAccountCategoryAdapter = TvGuideAccountCategoryAdapter(
@@ -515,28 +443,93 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                     tvGuideViewModel.currentFocusedTvAccount?.epgsources?.any { it.isSelected && it.isPlaylistEpg }
                 val sortedChannels = getChannelList()
                 if (sortedChannels.isNotEmpty()) {
-                    val channelsWithEpg = sortedChannels.map {
-                        val tvChannel = it.tvchannel.target
-                        val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
-                            ?: if (isPlaylistActive == true) {
-                                tvChannel.epgChannel?.target?.chEpgId
+                    binding.epgView.apply {
+                        setDayShift(0)
+                        val startDate = DateTime().minusMinutes(10)
+                        val endTime = startDate.plusMinutes(11)
+                        setStartHour(startDate.hourOfDay - 1)
+                        setEndHour(0)
+                        listener = epgListener
+                        val epgViewChannels = sortedChannels.map { tvChannelPosition ->
+                            val tvChannel = tvChannelPosition.tvchannel.target
+                            val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
+                                ?: if (isPlaylistActive == true) {
+                                    tvChannel.epgChannel?.target?.chEpgId
+                                } else {
+                                    null
+                                }
+                            // 2. Mappen Sie die Programme jedes Kanals auf ShowModel
+                            val shows = helpViewModel.epgCache[chEpgId]?.toMutableList()?.map { program ->
+                                val startDate = DateTime((program.startTimestamp ?: 0L) * 1000)
+                                val endDate = DateTime((program.stopTimestamp ?: 0L) * 1000)
+                                ShowModel(
+                                    id = program.idByAccountData,
+                                    showPreviewImage = program.showIcon,
+                                    channelId = tvChannelPosition.catAndChannelAccount,
+                                    name = program.name,
+                                    startDate = startDate,
+                                    endDate = endDate
+                                )
+                            } ?: emptyList()
+                            val image = tvChannel.logo
+                            val epgLogo = tvChannel.linkedEpgChannel?.target?.icon?.firstOrNull()
+                            val logo =   if (tvChannel.account.target!!.useEpgLogos) {
+                                if (!epgLogo.isNullOrEmpty() && (tvChannel?.linkedEpgChannel?.target?.isExternalEpg == true || tvChannel.alwaysUsesExternalEpg)) {
+                                    epgLogo
+                                } else {
+                                    image.ifEmpty {
+                                        ""
+                                    }
+                                }
                             } else {
-                                null
+                                image.ifEmpty {
+                                    ""
+                                }
                             }
-                        TvChannelWithEpg(
-                            it.id,
-                            it,
-                            helpViewModel.epgCache[chEpgId]?.toMutableList() ?: emptyList()
-                        )
+                            // Erstellen Sie das ChannelModel mit den umgewandelten ShowModel Objekten
+                            ChannelModel(
+                                id = tvChannelPosition.catAndChannelAccount,
+                                logo = logo,
+                                name = tvChannel.showingName,
+                                shows = shows.ifEmpty { generateDummyShows(tvChannelPosition.catAndChannelAccount) }
+                            )
+                        }
+                        withContext(Dispatchers.Main) {
+                            initView(epgViewChannels)
+                        }
                     }
-
-                    withContext(Dispatchers.Main) {
-                        channelAdapter.submitList(channelsWithEpg)
-                    }
-
                 }
             }
         }
+    }
+
+    fun generateDummyShows(channelId: String): List<ShowModel> {
+        val shows = mutableListOf<ShowModel>()
+
+        // 1. Die Startzeit ist jetzt 2 Stunden vor der aktuellen Uhrzeit
+        var currentTime = DateTime.now().minusHours(2)
+
+        // Die Schleife endet wie zuvor am Ende des Tages
+        val dayEnd = currentTime.withTimeAtStartOfDay().plusDays(1)
+
+        val showDurationMinutes = 30 // 30-Minuten-Blöcke
+
+        while (currentTime.isBefore(dayEnd)) {
+            val endTime = currentTime.plusMinutes(showDurationMinutes)
+
+            shows.add(
+                ShowModel(
+                    id = "dummy_${channelId}_${currentTime.millis}",
+                    showPreviewImage = "",
+                    channelId = channelId,
+                    name = "No information",
+                    startDate = currentTime,
+                    endDate = endTime
+                )
+            )
+            currentTime = endTime // Gehe zum nächsten Block
+        }
+        return shows
     }
 
     private fun getChannelList(): List<ChannelPositions> {
@@ -597,15 +590,6 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
             }
         }
       return sortedChannels
-    }
-
-    fun focusToTvChannelsWithEpg() {
-        if (channelAdapter.currentList.isNotEmpty()) {
-            hideMainMenu()
-            binding.rvChannelsWithEpg.requestFocus()
-        } else {
-            return
-        }
     }
 
     //MAIN ACTIVITY

@@ -21,11 +21,7 @@ class TimeMarksRecyclerView @JvmOverloads constructor(
         color = Color.WHITE
         textSize = 14f
     }
-    private val indicatorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        color = Color.RED
-        strokeWidth = 3f
-    }
+
 
     var times: List<String> = emptyList()
     private var nowX: Float = 0f
@@ -76,10 +72,6 @@ class TimeMarksRecyclerView @JvmOverloads constructor(
                     strokeWidth = 1f
                 }
             )
-        }
-
-        if (showIndicator) {
-            canvas.drawLine(nowX - offsetX, 0f, nowX - offsetX, lineHeight, indicatorPaint)
         }
     }
 

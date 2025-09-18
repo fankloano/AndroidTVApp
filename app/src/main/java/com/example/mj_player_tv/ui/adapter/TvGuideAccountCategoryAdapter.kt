@@ -180,7 +180,7 @@ class TvGuideAccountCategoryAdapter(
         }
 
         private fun handleRightShortPress() {
-            fragment.focusToTvChannelsWithEpg()
+            fragment.focusEpgRecycler()
             fragment.setTvAccountsVisibilityAnimated(false)
         }
 
@@ -356,12 +356,12 @@ class TvGuideAccountCategoryAdapter(
         }
 
         private fun handleRightShortPress() {
-            fragment.focusToTvChannelsWithEpg()
+            fragment.focusEpgRecycler()
             fragment.setTvAccountsVisibilityAnimated(false)
         }
 
         private fun handleCenterShortPress() {
-            fragment.focusToTvChannelsWithEpg()
+            fragment.focusEpgRecycler()
             fragment.setTvAccountsVisibilityAnimated(false)
         }
 
