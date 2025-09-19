@@ -26,6 +26,7 @@ import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.ObjectBox
 import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.ChannelPositions
+import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.entity.TvCategoryOB
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
@@ -33,6 +34,7 @@ import com.example.mj_player_tv.databinding.FragmentTvguideBinding
 import com.example.mj_player_tv.repository.TvGuideScrollSyncManager
 import com.example.mj_player_tv.ui.adapter.ChannelAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryAdapter
+import com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
 import com.example.mj_player_tv.utils.views.CustomVerticalGridView
 import com.example.mj_player_tv.utils.views.TimeMarksRecyclerView
 import com.example.mj_player_tv.viewmodel.HelpViewModel
@@ -51,7 +53,12 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 @UnstableApi
 class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
@@ -66,7 +73,7 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
     private lateinit var tvGuideAccountCategoryAdapter: TvGuideAccountCategoryAdapter
 
-    private val epgListener = object : EPGRecyclerView.OnEventListener {
+    private val epgListener = object : TvGuideRecyclerview.OnEventListener {
         override fun onShowSelected(channelId: String, showId: String) {
 
         }
@@ -121,18 +128,11 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         super.onViewCreated(view, savedInstanceState)
 
         with(EPGConfig) {
-            showBackgroundDrawable = com.volkov.epg_recycler.R.drawable.bg_radius_4dp
-            channelLogoBackgroundDrawable = com.volkov.epg_recycler.R.drawable.show_background
-            showBackgroundColorStateList = ContextCompat.getColorStateList(
-                requireContext(),
-                R.color.seekbar_vod_scrubbercolor)
-            rowHeight = 50
-            rowLogoHeight = 50
-            marginVerticalChannelLogo = 5
+            marginVerticalChannelLogo = 2
         }
         binding.epgView.apply {
             setDayShift(0)
-            val startDate = DateTime().minusMinutes(15)
+            val startDate = DateTime().minusMinutes(0)
             val endTime = startDate.plusMinutes(15)
             setStartHour(startDate.hourOfDay)
             setEndHour(0)
@@ -445,12 +445,12 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                 if (sortedChannels.isNotEmpty()) {
                     binding.epgView.apply {
                         setDayShift(0)
-                        val startDate = DateTime().minusMinutes(10)
-                        val endTime = startDate.plusMinutes(11)
-                        setStartHour(startDate.hourOfDay - 1)
+                        val startDate = DateTime().minusMinutes(5)
+                        val endTime = startDate.plusMinutes(5)
+                        setStartHour(startDate.hourOfDay)
                         setEndHour(0)
                         listener = epgListener
-                        val epgViewChannels = sortedChannels.map { tvChannelPosition ->
+                        val channelsWithEpg = sortedChannels.map { tvChannelPosition ->
                             val tvChannel = tvChannelPosition.tvchannel.target
                             val chEpgId = tvChannel.linkedEpgChannel?.target?.chEpgId
                                 ?: if (isPlaylistActive == true) {
@@ -458,44 +458,15 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
                                 } else {
                                     null
                                 }
-                            // 2. Mappen Sie die Programme jedes Kanals auf ShowModel
-                            val shows = helpViewModel.epgCache[chEpgId]?.toMutableList()?.map { program ->
-                                val startDate = DateTime((program.startTimestamp ?: 0L) * 1000)
-                                val endDate = DateTime((program.stopTimestamp ?: 0L) * 1000)
-                                ShowModel(
-                                    id = program.idByAccountData,
-                                    showPreviewImage = program.showIcon,
-                                    channelId = tvChannelPosition.catAndChannelAccount,
-                                    name = program.name,
-                                    startDate = startDate,
-                                    endDate = endDate
-                                )
-                            } ?: emptyList()
-                            val image = tvChannel.logo
-                            val epgLogo = tvChannel.linkedEpgChannel?.target?.icon?.firstOrNull()
-                            val logo =   if (tvChannel.account.target!!.useEpgLogos) {
-                                if (!epgLogo.isNullOrEmpty() && (tvChannel?.linkedEpgChannel?.target?.isExternalEpg == true || tvChannel.alwaysUsesExternalEpg)) {
-                                    epgLogo
-                                } else {
-                                    image.ifEmpty {
-                                        ""
-                                    }
-                                }
-                            } else {
-                                image.ifEmpty {
-                                    ""
-                                }
-                            }
-                            // Erstellen Sie das ChannelModel mit den umgewandelten ShowModel Objekten
-                            ChannelModel(
-                                id = tvChannelPosition.catAndChannelAccount,
-                                logo = logo,
-                                name = tvChannel.showingName,
-                                shows = shows.ifEmpty { generateDummyShows(tvChannelPosition.catAndChannelAccount) }
+                            TvChannelWithEpg(
+                                tvChannel.id,
+                                tvChannelPosition,
+                                helpViewModel.epgCache[chEpgId] ?: generateDummyEpg(tvChannelPosition.catAndChannelAccount)
                             )
+
                         }
                         withContext(Dispatchers.Main) {
-                            initView(epgViewChannels)
+                            initView(channelsWithEpg)
                         }
                     }
                 }
@@ -503,33 +474,40 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         }
     }
 
-    fun generateDummyShows(channelId: String): List<ShowModel> {
-        val shows = mutableListOf<ShowModel>()
+    fun generateDummyEpg(channelId: String): List<EpgDataOB> {
+        val dummyEpgList = mutableListOf<EpgDataOB>()
 
-        // 1. Die Startzeit ist jetzt 2 Stunden vor der aktuellen Uhrzeit
-        var currentTime = DateTime.now().minusHours(2)
+        // Aktuelle Zeit als Unix-Zeitstempel in Sekunden
+        // Die Berechnung muss direkt auf Sekundenbasis erfolgen
+        var currentTimeInSeconds = System.currentTimeMillis() / 1000
 
-        // Die Schleife endet wie zuvor am Ende des Tages
-        val dayEnd = currentTime.withTimeAtStartOfDay().plusDays(1)
+        // Die Startzeit 2 Stunden vor der aktuellen Zeit
+        currentTimeInSeconds -= TimeUnit.HOURS.toSeconds(2)
 
-        val showDurationMinutes = 30 // 30-Minuten-Blöcke
+        // Das Ende ist das Ende des heutigen Tages
+        val dayEndInSeconds = LocalDateTime.now().plusDays(1)
+            .truncatedTo(ChronoUnit.DAYS)
+            .atZone(ZoneId.systemDefault())
+            .toEpochSecond()
 
-        while (currentTime.isBefore(dayEnd)) {
-            val endTime = currentTime.plusMinutes(showDurationMinutes)
+        val showDurationInSeconds = TimeUnit.MINUTES.toSeconds(30) // 30-Minuten-Blöcke
 
-            shows.add(
-                ShowModel(
-                    id = "dummy_${channelId}_${currentTime.millis}",
-                    showPreviewImage = "",
-                    channelId = channelId,
-                    name = "No information",
-                    startDate = currentTime,
-                    endDate = endTime
+        while (currentTimeInSeconds < dayEndInSeconds) {
+            val endTimeInSeconds = currentTimeInSeconds + showDurationInSeconds
+
+            dummyEpgList.add(
+                EpgDataOB(
+                    id = 0,
+                    startTimestamp = currentTimeInSeconds,
+                    stopTimestamp = endTimeInSeconds,
+                    // Setzen Sie hier alle anderen notwendigen Dummy-Werte
+                    name = "No Information",
+                    idByAccountData = "dummy_${channelId}_$currentTimeInSeconds"
                 )
             )
-            currentTime = endTime // Gehe zum nächsten Block
+            currentTimeInSeconds = endTimeInSeconds
         }
-        return shows
+        return dummyEpgList
     }
 
     private fun getChannelList(): List<ChannelPositions> {

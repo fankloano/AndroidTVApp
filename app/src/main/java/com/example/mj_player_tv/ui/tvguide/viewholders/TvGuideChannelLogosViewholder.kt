@@ -1,5 +1,6 @@
 package com.example.mj_player_tv.ui.tvguide.viewholders
 
+import android.util.Log
 import android.view.View
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
@@ -15,6 +16,7 @@ class TvGuideChannelLogosViewholder(itemView: View) : RecyclerView.ViewHolder(it
     private val binding by viewBinding(RvItemTvguideTvchannelBinding::bind)
 
     fun bind(item: TvChannelWithEpg) {
+        Log.d("TVGUIDE CHANNELLOGOADAPTER", "${item.tvChannelPosition.tvchannel.target.showingName}")
 
         val tvchannelPos = item.tvChannelPosition
         val tvchannel = tvchannelPos.tvchannel.target

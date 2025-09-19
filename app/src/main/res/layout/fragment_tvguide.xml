@@ -107,7 +107,7 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="HardcodedText" />
 
-    <com.volkov.epgrecycler.EPGRecyclerView
+    <com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
         android:id="@+id/epgView"
         android:layout_width="0dp"
         android:layout_height="0dp"

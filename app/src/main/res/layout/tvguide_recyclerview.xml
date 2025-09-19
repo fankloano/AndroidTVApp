@@ -10,7 +10,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintWidth_percent="0.2"
-        android:background="@color/channel_logos_blue_dark"
+        android:background="?attr/backgroundDarkDark"
         android:descendantFocusability="blocksDescendants"
         android:focusable="false"
         android:focusableInTouchMode="false"
@@ -24,7 +24,7 @@
         android:layout_width="0dp"
         android:layout_height="40dp"
         android:layout_marginStart="5dp"
-        android:background="@color/time_header_blue"
+        android:background="?attr/backgroundDarkDark"
         android:descendantFocusability="blocksDescendants"
         android:focusable="false"
         android:focusableInTouchMode="false"
@@ -33,8 +33,7 @@
         app:layout_constraintWidth_percent="1"
         app:layout_constraintStart_toEndOf="@id/rv_channels_logos"
         app:layout_constraintTop_toTopOf="parent"
-        tools:itemCount="4"
-        tools:listitem="@layout/item_time_line" />
+        tools:listitem="@layout/rv_item_tvguide_timeline" />
 
     <com.example.mj_player_tv.utils.views.RecyclerWithPositionView
         android:id="@+id/rv_channels"
@@ -50,10 +49,10 @@
 
     <View
         android:id="@+id/time_indicator"
-        android:layout_width="2dp"
+        android:layout_width="1dp"
         android:layout_height="0dp"
         android:layout_marginTop="4dp"
-        android:background="@color/red"
+        android:background="@color/light_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/rv_time_line"
         app:layout_constraintTop_toTopOf="@id/rv_time_line"
@@ -65,7 +64,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:background="@drawable/bg_radius_4dp"
-        android:backgroundTint="@color/red"
+        android:backgroundTint="@color/epg_grey_dark"
         android:gravity="center"
         android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="@id/rv_time_line"

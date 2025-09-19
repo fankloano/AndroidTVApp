@@ -1,0 +1,22 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_activated="true" android:state_selected="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/epg_grey_dark" />
+        </shape>
+    </item>
+    <item android:state_activated="true" android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/red" />
+        </shape>
+    </item>
+    <item android:state_selected="true">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/red" />
+        </shape>
+    </item>
+    <item android:state_selected="false">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/epg_grey" />
+        </shape>
+    </item>
+</selector>

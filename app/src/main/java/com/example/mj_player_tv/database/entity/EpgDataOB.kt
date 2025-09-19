@@ -32,9 +32,9 @@ data class EpgDataOB(
     var startTime: String = "",
     var endTime: String = "",
     @Index
-    var startTimestamp: Long? = null,
+    var startTimestamp: Long = 0L,
     @Index
-    var stopTimestamp: Long? = null,
+    var stopTimestamp: Long = 0L,
     var mark_archive: Int? = null,
     var accountData: String = "",
     @Index

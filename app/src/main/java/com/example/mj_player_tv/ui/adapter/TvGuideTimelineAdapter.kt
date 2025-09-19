@@ -42,7 +42,7 @@ class TvGuideTimelineAdapter(
                 formatter.format(Date(timestampSec * 1000))
             }
 
-            binding.tvTimeMark.text = label
+            binding.tvTime.text = label
             val params = binding.root.layoutParams ?: RecyclerView.LayoutParams(
                 (30 * pxPerMinute).toInt(),
                 RecyclerView.LayoutParams.MATCH_PARENT
@@ -51,7 +51,7 @@ class TvGuideTimelineAdapter(
             binding.root.layoutParams = params
 
             binding.root.setOnFocusChangeListener { _, hasFocus ->
-                binding.tvTimeMark.isSelected = hasFocus
+                binding.tvTime.isSelected = hasFocus
             }
         }
     }

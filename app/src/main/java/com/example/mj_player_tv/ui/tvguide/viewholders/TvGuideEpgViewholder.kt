@@ -1,70 +1,65 @@
 package com.example.mj_player_tv.ui.tvguide.viewholders
 
 import android.annotation.SuppressLint
+import android.util.Log
 import android.view.View
-import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.databinding.RvItemTvguideEpgBinding
+import com.volkov.epgrecycler.EPGUtils.getCellWidth
+import com.volkov.EPGConfig
+import com.volkov.epgrecycler.EPGUtils
+import com.volkov.epgrecycler.EPGUtils.endTime
+import com.volkov.epgrecycler.EPGUtils.startTime
+import com.volkov.epgrecycler.dpToPx
 import dev.androidbroadcast.vbpd.viewBinding
+import org.joda.time.DateTime
 
-class TvGuideEpgViewholder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+class TvGuideEpgViewholder(itemView: View, private val channelId: String) : RecyclerView.ViewHolder(itemView) {
 
     private val binding by viewBinding(RvItemTvguideEpgBinding::bind)
 
     @SuppressLint("SetTextI18n")
     fun bind(item: EpgDataOB) {
 
-        EPGConfig.showBackgroundColorStateList?.let {
-            binding.background.backgroundTintList = it
-        }
-
-        binding.background.isActivated = item.isLiveShow
+        binding.root.tag = "${channelId}#${item.idByAccountData}"
 
         binding.root.updateLayoutParams<RecyclerView.LayoutParams> {
             marginEnd = EPGConfig.marginEnd.dpToPx
         }
 
-        binding.ivShowImage.isVisible = EPGConfig.displayPreviewForLiveShow && item.isLiveShow
+        val progressMax = item.stopTimestamp - item.startTimestamp
+        val progress = (System.currentTimeMillis() / 1000) - item.startTimestamp
+        binding.progressBar.isVisible = item.isLiveShow
+        binding.progressBar.max = progressMax.toInt()
+        binding.progressBar.progress = progress.toInt()
 
-        val progressMax = Seconds.secondsBetween(item.startDate, item.endDate).seconds
-        val progress = Seconds.secondsBetween(item.startDate, DateTime.now()).seconds
-        binding.pbLine.isVisible = EPGConfig.isProgressVisible && binding.ivShowImage.isVisible
-        binding.pbLine.max = progressMax
-        binding.pbLine.progress = progress
+        val itemstartDate = DateTime(item.startTimestamp * 1000L)
+        val itemendDate = DateTime(item.stopTimestamp * 1000L)
+        val isBefore = itemstartDate.isBefore(startTime)
+        val start = if (itemstartDate.isBefore(startTime)) startTime else itemstartDate
+        val end = if (itemendDate.isAfter(endTime)) endTime else itemendDate
 
-        if (binding.ivShowImage.isVisible) {
-            val options = RequestOptions().apply {
-                EPGConfig.transform?.let { list ->
-                    list.map {
-                        transform(it)
-                    }
-                }
-            }
-            Glide.with(context)
-                .load(item.showPreviewImage)
-                .apply(options)
-                .into(binding.ivShowImage)
+        binding.tvProgram.text = item.name
+        binding.tvSubTitleProgram.text =
+            item.sub_title
+        // Berechnet die Standardbreite der Sendung
+        val baseWidth = getCellWidth(start, end)
+
+        // Fügt einen zusätzlichen Puffer hinzu, um die Sendungen um 15 Minuten nach rechts zu verschieben
+        val bufferOffset = (15 * EPGUtils.minuteToPixel) / 2
+
+        // Die endgültige Breite der Sendung ist die Basisbreite plus der Puffer
+        val finalWidth = baseWidth + bufferOffset
+        binding.relLayoutFullepgitem.updateLayoutParams<RecyclerView.LayoutParams> {
+            width = finalWidth
         }
 
-        val realStartDate = DateTime(item.startDate)
-        val realEndDate = DateTime(item.endDate)
-        val start = if (item.startDate.isBefore(startTime)) startTime else item.startDate
-        val end = if (item.endDate.isAfter(endTime)) endTime else item.endDate
 
-        binding.tvTitle.text = item.name
-        binding.tvSubTitle.text =
-            "${realStartDate.toString(SHOW_TIME_PATTERN)} - ${realEndDate.toString(SHOW_TIME_PATTERN)}"
-
-        binding.showParent.updateLayoutParams<RecyclerView.LayoutParams> {
-            width = getCellWidth(start, end)
-        }
-
-        binding.root.setOnClickListenerDebounce {
-            item.onClick?.invoke()
-        }
     }
 
-    private val DataModel.ShowDataModel.isLiveShow: Boolean
-        get() = startDate.isBeforeNow && endDate.isAfterNow
+    private val EpgDataOB.isLiveShow: Boolean
+        get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
 }
