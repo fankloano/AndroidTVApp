@@ -56,4 +56,21 @@ object EPGUtils {
 
     val endTime: DateTime
         get() = startTime.plusDays(1).withHourOfDay(endHour)
+
+    val startEpgTime: DateTime
+        get() {
+            // Holen Sie sich die aktuelle Zeit unter Berücksichtigung von dayShift und timeZone.
+            val now = DateTime()
+                .plusDays(dayShift)
+                .withZoneRetainFields(timeZone)
+
+            // Berechne die letzte volle Stunde basierend auf der aktuellen Zeit.
+            val lastFullHour = now
+                .withMinuteOfHour(0)
+                .withSecondOfMinute(0)
+                .withMillisOfSecond(0)
+
+            // Ziehe 15 Minuten ab, um die neue startEpgTime zu erhalten.
+            return lastFullHour.minusMinutes(15)
+        }
 }

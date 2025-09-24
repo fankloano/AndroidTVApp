@@ -100,6 +100,9 @@ import org.threeten.bp.LocalDateTime
 import org.threeten.bp.ZoneOffset
 import org.threeten.bp.format.DateTimeFormatter
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.temporal.ChronoUnit
 import java.util.Calendar
 import java.util.Collections
 import java.util.Date
@@ -2630,13 +2633,22 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
             val epgSourceIds = currentAcoount.epgsources.filter { it.isSelected }.map {
                 it.relatedepgsource.target.id.toInt()
             }.toIntArray()
-            val lastFullHourSec = System.currentTimeMillis() / 1000 / 3600 * 3600
-            val twelveHoursLaterSec = lastFullHourSec + 12 * 60 * 60
+
+            // 1. Hole die aktuelle Zeit und runde auf die letzte volle Stunde
+            val lastFullHour = ZonedDateTime.now(ZoneId.systemDefault())
+                .truncatedTo(ChronoUnit.HOURS)
+
+            // 2. Ziehe 30 Minuten ab, um den neuen Startzeitpunkt zu erhalten
+            val startTimeSec = lastFullHour.minusMinutes(30).toEpochSecond()
+
+            // 3. Berechne das Ende der Abfrage, 12.5 Stunden später
+            val twelveHalfHoursLaterSec = startTimeSec + (12 * 60 * 60) + (30 * 60)
+
             epgCache = HashMap(
                 epgDataBox.query(
                     EpgDataOB_.epgSourceId.oneOf(epgSourceIds)
-                        .and(EpgDataOB_.stopTimestamp.greater(lastFullHourSec))
-                        .and(EpgDataOB_.startTimestamp.less(twelveHoursLaterSec))
+                        .and(EpgDataOB_.stopTimestamp.greater(startTimeSec))
+                        .and(EpgDataOB_.startTimestamp.less(twelveHalfHoursLaterSec))
                 ).build().find()
                     .groupBy { it.epgChId ?: "" }
                     .mapValues { entry ->

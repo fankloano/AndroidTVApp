@@ -7,14 +7,13 @@
 
     <com.example.mj_player_tv.utils.views.RecyclerWithPositionView
         android:id="@+id/rv_channels_logos"
-        android:layout_width="0dp"
+        android:layout_width="160dp"
         android:layout_height="0dp"
-        app:layout_constraintWidth_percent="0.2"
         android:background="?attr/backgroundDarkDark"
-        android:descendantFocusability="blocksDescendants"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:layout_marginStart="5dp"
+        android:nextFocusRight="@id/rv_channels"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/rv_channels" />
@@ -25,7 +24,6 @@
         android:layout_height="40dp"
         android:layout_marginStart="5dp"
         android:background="?attr/backgroundDarkDark"
-        android:descendantFocusability="blocksDescendants"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:orientation="horizontal"
@@ -39,7 +37,6 @@
         android:id="@+id/rv_channels"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:descendantFocusability="blocksDescendants"
         android:focusable="false"
         android:focusableInTouchMode="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -51,24 +48,32 @@
         android:id="@+id/time_indicator"
         android:layout_width="1dp"
         android:layout_height="0dp"
-        android:layout_marginTop="4dp"
-        android:background="@color/light_blue"
+        android:background="@color/light_grey"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="@id/rv_time_line"
-        app:layout_constraintTop_toTopOf="@id/rv_time_line"
+        app:layout_constraintTop_toBottomOf="@id/rv_time_line"
         tools:layout_marginStart="200dp" />
+
+    <View
+        android:id="@+id/time_indicator_bubble"
+        android:layout_width="4dp"
+        android:layout_height="3dp"
+        android:background="@color/light_grey"
+        app:layout_constraintStart_toStartOf="@id/time_indicator"
+        app:layout_constraintEnd_toEndOf="@id/time_indicator"
+        app:layout_constraintBottom_toBottomOf="@id/rv_time_line"/>
 
     <TextView
         android:id="@+id/tv_time_line_label"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
         android:background="@drawable/bg_radius_4dp"
-        android:backgroundTint="@color/epg_grey_dark"
         android:gravity="center"
         android:textColor="@color/white"
-        app:layout_constraintStart_toStartOf="@id/rv_time_line"
-        app:layout_constraintTop_toTopOf="@id/rv_time_line"
-        tools:layout_marginStart="175dp"
+        android:layout_marginStart="10dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/rv_time_line"
         tools:text="12:12" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

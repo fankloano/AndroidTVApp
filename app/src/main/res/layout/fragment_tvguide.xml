@@ -82,30 +82,117 @@
             android:layout_margin="3dp"
             android:background="@color/background_dark">
 
+                <TextView
+                    android:id="@+id/tv_currentStartTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"
+                    android:fontFamily="sans-serif-smallcaps"
+                    android:paddingStart="8dp"
+                    android:paddingTop="3dp"
+                    android:textColor="#CBFFFFFF"
+                    android:textSize="12sp"
+                    tools:text="08:20" />
+
+                <TextView
+                    android:id="@+id/tv_currentEndTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_toEndOf="@id/tv_currentStartTime"
+                    android:fontFamily="sans-serif-smallcaps"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="3dp"
+                    android:textColor="#CBFFFFFF"
+                    android:textSize="12sp"
+                    tools:text=" - 08:20" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="80dp"
+                android:layout_height="4dp"
+                android:progress="20"
+                android:layout_toEndOf="@id/tv_currentEndTime"
+                android:layout_alignTop="@id/tv_currentStartTime"
+                android:layout_alignBottom="@id/tv_currentStartTime"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="2dp"
+                android:progressTint="?attr/mainPrimaryColor"/>
+
+            <TextView
+                android:id="@+id/tv_remainingTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/progressBar"
+                android:layout_alignTop="@id/progressBar"
+                android:layout_alignBottom="@id/progressBar"
+                android:ellipsize="marquee"
+                android:singleLine="true"
+                android:textColor="?attr/textColorDarkGrey"
+                android:textSize="11sp"
+                android:layout_marginStart="10dp"
+                tools:text="12min remaining" />
+
+                <TextView
+                    android:id="@+id/tv_currentProgram"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_currentStartTime"
+                    android:ellipsize="marquee"
+                    android:paddingStart="8dp"
+                    android:singleLine="true"
+                    android:textColor="?attr/textMainColor"
+                    android:textSize="14sp"
+                    tools:text="Es war einmal in Amerika" />
+
+                <TextView
+                    android:id="@+id/tv_currentSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_currentProgram"
+                    android:ellipsize="marquee"
+                    android:paddingStart="8dp"
+                    android:singleLine="true"
+                    android:textColor="?attr/textColorLight"
+                    android:textSize="13sp"
+                    android:textStyle=""
+                    tools:text="Folge 5, Staffel 10 - Es war einmal ein Mann" />
+
+                <TextView
+                    android:id="@+id/tv_description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/tv_currentSubtitle"
+                    android:layout_marginStart="3dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="2dp"
+                    android:ellipsize="end"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:maxLines="5"
+                    android:padding="5dp"
+                    android:textColor="?attr/textColorLight"
+                    android:textSize="12sp"
+                    app:layout_constraintWidth_percent="0.46"
+                    tools:text="In drei ineinander verwobenen Zeitabschnitten (1922, 1933 und 1968) wird die Geschichte einer Bande in New York City erzählt. Sie kommt während der Alkoholprohibition in den USA zu schnellem Reichtum und viel Macht, indem sie Schutzgeld erpresst, Konkurrenten gewaltsam aus dem Weg räumt und Alkohol schmuggelt." />
+
+                <View
+                    android:id="@+id/border_animated"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_alignStart="@id/tv_description"
+                    android:layout_alignTop="@id/tv_description"
+                    android:layout_alignEnd="@id/tv_description"
+                    android:layout_alignBottom="@id/tv_description"
+                    android:background="@drawable/background_border_grey_rounded"
+                    android:padding="2dp"
+                    android:visibility="invisible"
+                    app:layout_constraintWidth_percent="0.46" />
+
         </RelativeLayout>
 
     </LinearLayout>
-
-    <!-- Obere Timebar -->
-    <View
-        android:id="@+id/timeLineBackground"
-        android:layout_width="0dp"
-        android:layout_height="30dp"
-        android:background="?attr/backgroundMain"
-        app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"
-        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
-        app:layout_constraintWidth_percent="1.0"/>
-
-    <Button
-        android:id="@+id/btn_focus"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:focusable="true"
-        android:focusableInTouchMode="true"
-        android:text="test focus"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="HardcodedText" />
 
     <com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
         android:id="@+id/epgView"
@@ -115,6 +202,7 @@
         app:layout_constraintWidth_percent="1.0"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"/>
+
     <!-- Programmdetails Overlay -->
     <FrameLayout
         android:id="@+id/containerProgramInfo"

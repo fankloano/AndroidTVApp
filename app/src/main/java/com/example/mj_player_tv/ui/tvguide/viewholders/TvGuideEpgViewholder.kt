@@ -25,41 +25,66 @@ class TvGuideEpgViewholder(itemView: View, private val channelId: String) : Recy
     fun bind(item: EpgDataOB) {
 
         binding.root.tag = "${channelId}#${item.idByAccountData}"
-
         binding.root.updateLayoutParams<RecyclerView.LayoutParams> {
             marginEnd = EPGConfig.marginEnd.dpToPx
         }
 
-        val progressMax = item.stopTimestamp - item.startTimestamp
-        val progress = (System.currentTimeMillis() / 1000) - item.startTimestamp
-        binding.progressBar.isVisible = item.isLiveShow
-        binding.progressBar.max = progressMax.toInt()
-        binding.progressBar.progress = progress.toInt()
-
         val itemstartDate = DateTime(item.startTimestamp * 1000L)
         val itemendDate = DateTime(item.stopTimestamp * 1000L)
-        val isBefore = itemstartDate.isBefore(startTime)
-        val start = if (itemstartDate.isBefore(startTime)) startTime else itemstartDate
-        val end = if (itemendDate.isAfter(endTime)) endTime else itemendDate
+
+        val hide = itemendDate.isBefore(com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime)
+        val start = if (itemstartDate.isBefore(com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime)) com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime else itemstartDate
+        val end = if (itemendDate.isAfter(EPGUtils.endTime)) EPGUtils.endTime else itemendDate
+
 
         binding.tvProgram.text = item.name
-        binding.tvSubTitleProgram.text =
-            item.sub_title
-        // Berechnet die Standardbreite der Sendung
-        val baseWidth = getCellWidth(start, end)
-
-        // Fügt einen zusätzlichen Puffer hinzu, um die Sendungen um 15 Minuten nach rechts zu verschieben
-        val bufferOffset = (15 * EPGUtils.minuteToPixel) / 2
-
-        // Die endgültige Breite der Sendung ist die Basisbreite plus der Puffer
-        val finalWidth = baseWidth + bufferOffset
-        binding.relLayoutFullepgitem.updateLayoutParams<RecyclerView.LayoutParams> {
-            width = finalWidth
+        if (item.sub_title.isNotEmpty()) {
+            binding.tvSubTitleProgram.text = item.sub_title
+        } else {
+            binding.tvSubTitleProgram.visibility = View.GONE
         }
 
+        // Die Breite der Ansicht wird basierend auf der sichtbaren Dauer auf der Timeline berechnet.
+        if (!hide) {
+            binding.relLayoutFullepgitem.updateLayoutParams<RecyclerView.LayoutParams> {
+                width = EPGUtils.getCellWidth(start, end)
+                }
+            } else {
+            binding.relLayoutFullepgitem.updateLayoutParams<RecyclerView.LayoutParams> {
+                width = 0
+            }
+        }
+        updateProgress(item, DateTime())
 
     }
-
     private val EpgDataOB.isLiveShow: Boolean
         get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
+
+    fun updateProgress(item: EpgDataOB, now: DateTime) {
+        if (!item.idByAccountData.startsWith("dummy_")) {
+            // Now you can use the 'now' object to calculate progress
+            val progressStartTime =
+                if (item.startTimestamp < com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime.millis / 1000) {
+                    com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime.millis / 1000
+                } else {
+                    item.startTimestamp
+                }
+
+            val progressEndTime = if (item.stopTimestamp > EPGUtils.endTime.millis / 1000) {
+                EPGUtils.endTime.millis / 1000
+            } else {
+                item.stopTimestamp
+            }
+
+            val progress = (now.millis / 1000) - progressStartTime
+            val progressMax = progressEndTime - progressStartTime
+
+            binding.progressBar.isVisible =
+                item.isLiveShow && (now.millis / 1000) in progressStartTime..progressEndTime
+            binding.progressBar.max = progressMax.toInt()
+            binding.progressBar.progress = progress.toInt()
+        } else {
+            binding.progressBar.visibility = View.INVISIBLE
+        }
+    }
 }

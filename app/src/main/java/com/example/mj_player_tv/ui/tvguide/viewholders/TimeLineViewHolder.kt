@@ -19,6 +19,7 @@ class TimeLineViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun bind(item: TimeLineData) {
 
         binding.tvTime.text = item.time
+        Log.d("TV GUID TIMELINE CHECK", "${item.time} = ${item.width}")
         // Setzt die Breite des gesamten ViewHolders
         binding.llTimeLineParent.updateLayoutParams<RecyclerView.LayoutParams> {
             width = item.width

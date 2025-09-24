@@ -10,6 +10,7 @@ import com.example.mj_player_tv.ui.tvguide.viewholders.TvGuideEmptyShowViewholde
 import com.example.mj_player_tv.ui.tvguide.viewholders.TvGuideEpgViewholder
 import com.example.mj_player_tv.utils.Common.getView
 import com.volkov.epgrecycler.adapters.models.DataModel
+import org.joda.time.DateTime
 
 class TvGuideEpgAdapter() : ListAdapter<EpgDataOB, RecyclerView.ViewHolder>(EpgDataOBDiffCallback()) {
 
@@ -25,11 +26,27 @@ class TvGuideEpgAdapter() : ListAdapter<EpgDataOB, RecyclerView.ViewHolder>(EpgD
         }
     }
 
+    // Standard onBindViewHolder that is required
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        holder.setIsRecyclable(false)
-        when (holder) {
-            is TvGuideEpgViewholder -> holder.bind(getItem(position))
-            is TvGuideEmptyShowViewholder -> holder.bind(getItem(position))
+        // It's a good practice to simply pass the call to the payload version
+        // This ensures the initial binding is handled correctly
+        onBindViewHolder(holder, position, mutableListOf())
+    }
+
+    // This is the special onBindViewHolder for payloads that you already implemented
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
+        if (payloads.isNotEmpty()) {
+            val payload = payloads[0]
+            if (payload is DateTime) {
+                // If the payload is a DateTime, update the progress bar only
+                (holder as? TvGuideEpgViewholder)?.updateProgress(getItem(position), payload)
+            }
+        } else {
+            // If there are no payloads, do the full initial binding
+            when (holder) {
+                is TvGuideEpgViewholder -> holder.bind(getItem(position))
+                is TvGuideEmptyShowViewholder -> holder.bind(getItem(position))
+            }
         }
     }
 

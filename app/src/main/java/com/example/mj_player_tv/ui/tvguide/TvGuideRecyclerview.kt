@@ -1,7 +1,8 @@
 package com.example.mj_player_tv.ui.tvguide
 
-import android.annotation.SuppressLint
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
@@ -11,40 +12,29 @@ import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import androidx.core.view.isVisible
-import androidx.core.view.marginStart
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
+import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.TvguideRecyclerviewBinding
-import com.example.mj_player_tv.ui.tvguide.EPGUtils.timeLabelWidth
 import com.example.mj_player_tv.ui.tvguide.adapters.TimeLineAdapter
 import com.example.mj_player_tv.ui.tvguide.adapters.TvGuideChannelListAdapter
 import com.example.mj_player_tv.ui.tvguide.adapters.TvGuideChannelLogosAdapter
+import com.example.mj_player_tv.ui.tvguide.adapters.TvGuideEpgAdapter
 import com.example.mj_player_tv.utils.views.RecyclerWithPositionView
 import com.volkov.EPGConfig
 import com.volkov.epgrecycler.Constants
 import com.volkov.epgrecycler.EPGUtils
-import com.volkov.epgrecycler.EPGUtils.getDayLength
-import com.volkov.epgrecycler.EPGUtils.maxHour
-import com.volkov.epgrecycler.EPGUtils.minuteToPixel
-import com.volkov.epgrecycler.EPGUtils.startTime
 import com.volkov.epgrecycler.dpToPx
-import com.volkov.epgrecycler.getColorRes
-import com.volkov.epgrecycler.onDownPressed
-import com.volkov.epgrecycler.onEnterPressed
-import com.volkov.epgrecycler.onLeftPressed
-import com.volkov.epgrecycler.onRightPressed
-import com.volkov.epgrecycler.onUpPressed
 import dev.androidbroadcast.vbpd.viewBinding
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.joda.time.Minutes
-import kotlin.math.abs
 import kotlin.math.max
+import kotlin.math.min
 
 class TvGuideRecyclerview @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -54,15 +44,11 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
     private var channels: List<TvChannelWithEpg> = emptyList()
 
-    private var currentDummyIndex = -1
-
     private var lastSelectedShowView: View? = null
-    private var lastSelectedShowViewTemp: View? = null
-    private var lastSelectedDummyView: View? = null
 
     interface OnEventListener {
-        fun onShowSelected(channelId: String, showId: String)
-        fun onShowClick(channelId: String, showId: String)
+        fun onShowSelected(channelPosition: ChannelPositions, epgData: EpgDataOB)
+        fun onShowClick(channelPosition: ChannelPositions, epgData: EpgDataOB)
         fun onShowExit()
     }
 
@@ -77,7 +63,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             super.onScrolled(recyclerView, dx, dy)
             scrollAll(recyclerView, dx)
             scrollTimeHeader(recyclerView, dx)
-            updateTimeIndicator(withSubmit = false)
         }
     }
 
@@ -99,20 +84,15 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         EPGUtils.dayShift = day
     }
 
-    private val verticalScrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            scrollChannels(recyclerView, dy)
-            scrollChannelsLogo(recyclerView, dy)
-        }
-    }
-
     private val timeAdapter = TimeLineAdapter()
 
     private val channelLogosAdapter = TvGuideChannelLogosAdapter()
     private var timeLineScrollPosition = 0
 
     private val focusListener = OnFocusChangeListener { _, hasFocus ->
-        if (hasFocus) lastSelectedShowView?.isSelected = true
+        if (hasFocus) {
+            lastSelectedShowView?.isSelected = true
+        }
     }
 
     init {
@@ -136,7 +116,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             adapter = channelLogosAdapter
             setHasFixedSize(true)
             itemAnimator = null
-            addOnScrollListener(verticalScrollListener)
             onFocusChangeListener = focusListener
         }
     }
@@ -145,16 +124,16 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         channels: List<TvChannelWithEpg>,
         initChannel: Long? = null
     ) {
+        handler.removeCallbacks(updateRunnable)
+        val now = DateTime()
         setTimeHeader()
         initChannelRecycler()
         this.channels = channels
         setChannelsLogo(channels)
-        setChannels(channels)
-        scrollToNow()
-        post {
-            binding.rvChannels.requestFocus()
-            selectCurrentShow(initChannel ?: channels.firstOrNull()?.id)
-        }
+        setChannels(channels, now)
+        scrollToNow(now)
+        // Starte den Timer für die automatische Aktualisierung
+        handler.post(updateRunnable)
     }
 
     private fun getNextShowByDirection(direction: MoveDirection): View? {
@@ -163,60 +142,68 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         val showId = currentChannelTag.getOrNull(1) ?: return null
         val currentChannel = channels.firstOrNull { it.tvChannelPosition.catAndChannelAccount == channelId } ?: return null
         val currentChannelIndex = channels.indexOf(currentChannel)
+
+        val currentChannelShow = currentChannel.epgList.firstOrNull { it.idByAccountData == showId } ?: return null
+
         val (channel, desiredShow) = when (direction) {
             MoveDirection.UP -> {
                 val prevChannel = channels.getOrNull(currentChannelIndex - 1) ?: return null
-                val currentChannelShow =
-                    currentChannel.epgList.firstOrNull { it.idByAccountData == showId } ?: return null
-                val foundingTime = currentChannelShow.startTimestamp + 1
+                // Bestimme die Suchzeit: ist die aktuelle Sendung live?
+                val foundingTime = if (currentChannelShow.isLiveShow) {
+                    System.currentTimeMillis() / 1000
+                } else {
+                    currentChannelShow.startTimestamp
+                }
+
                 val desiredShow = prevChannel.epgList.singleOrNull {
-                    it.startTimestamp < foundingTime && it.stopTimestamp > foundingTime
-                } ?: prevChannel.epgList.firstOrNull {
-                    it.startTimestamp > foundingTime
-                } ?: prevChannel.epgList.lastOrNull {
-                    it.stopTimestamp < foundingTime
-                } ?: return null
+                    it.startTimestamp <= foundingTime && it.stopTimestamp > foundingTime
+                } ?: prevChannel.epgList.lastOrNull() // Fallback zum letzten Element, falls kein Treffer
+
                 Pair(prevChannel, desiredShow)
             }
 
             MoveDirection.DOWN -> {
                 val nextChannel = channels.getOrNull(currentChannelIndex + 1) ?: return null
-                val currentChannelShow =
-                    currentChannel.epgList.firstOrNull { it.idByAccountData == showId } ?: return null
-                val foundingTime = currentChannelShow.startTimestamp + 1
-                val desiredShow = nextChannel.epgList.firstOrNull {
-                    it.startTimestamp < foundingTime && it.stopTimestamp > foundingTime
-                } ?: nextChannel.epgList.firstOrNull {
-                    it.startTimestamp > foundingTime
-                } ?: nextChannel.epgList.lastOrNull {
-                    it.stopTimestamp < foundingTime
-                } ?: return null
+                // Bestimme die Suchzeit: ist die aktuelle Sendung live?
+                val foundingTime = if (currentChannelShow.isLiveShow) {
+                    System.currentTimeMillis() / 1000
+                } else {
+                    currentChannelShow.startTimestamp
+                }
+
+                val desiredShow = nextChannel.epgList.singleOrNull {
+                    it.startTimestamp <= foundingTime && it.stopTimestamp > foundingTime
+                } ?: nextChannel.epgList.firstOrNull() // Fallback zum ersten Element, falls kein Treffer
+
                 Pair(nextChannel, desiredShow)
             }
 
             MoveDirection.LEFT -> {
-                val currentChannelShow =
-                    currentChannel.epgList.singleOrNull { it.idByAccountData == showId } ?: return null
+                // Unveränderte Logik für die horizontale Navigation
                 val currentShowIndex = currentChannel.epgList.indexOf(currentChannelShow)
-                val desiredShow =
-                    currentChannel.epgList.getOrNull(currentShowIndex - 1) ?: return null
+                val desiredShow = currentChannel.epgList.getOrNull(currentShowIndex - 1) ?: return null
                 Pair(currentChannel, desiredShow)
             }
 
             MoveDirection.RIGHT -> {
-                val currentChannelShow =
-                    currentChannel.epgList.singleOrNull { it.idByAccountData == showId } ?: return null
+                // Unveränderte Logik für die horizontale Navigation
                 val currentShowIndex = currentChannel.epgList.indexOf(currentChannelShow)
-                val desiredShow =
-                    currentChannel.epgList.getOrNull(currentShowIndex + 1) ?: return null
+                val desiredShow = currentChannel.epgList.getOrNull(currentShowIndex + 1) ?: return null
                 Pair(currentChannel, desiredShow)
             }
 
             MoveDirection.NONE -> return null
         }
+
+        // Wenn keine gewünschte Sendung gefunden wird, breche ab
+        desiredShow ?: return null
+
         selectShow(channel, desiredShow)
         return lastSelectedShowView
     }
+
+    private val EpgDataOB.isLiveShow: Boolean
+        get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         return when {
@@ -243,8 +230,30 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             event.onEnterPressed() -> {
                 // Auf eine EPG-Sendung klicken.
                 lastSelectedShowView?.let {
-                    val tag = lastSelectedShowView?.tag.toString().split("#")
-                    listener?.onShowClick(tag[0], tag[1])
+                    val tag = it.tag.toString().split("#")
+                    // Das ist die richtige Stelle, um den Klick-Event zu verarbeiten
+                    if (tag.size == 2) {
+                        val channel = channels.first { it.tvChannelPosition.catAndChannelAccount == tag[0] }
+                        val epgData = channel.epgList.first { it.idByAccountData == tag[1] }
+                        listener?.onShowClick(channel.tvChannelPosition, epgData)
+                    }
+                }
+                true
+            }
+            event.onBackPressed() -> {
+                lastSelectedShowView?.let { lastShowView ->
+                    val tag = lastShowView.tag.toString().split("#")
+                    // Das ist die richtige Stelle, um den Klick-Event zu verarbeiten
+                    if (tag.size == 2) {
+                        val channel = channels.first { it.tvChannelPosition.catAndChannelAccount == tag[0] }
+                        val epgData = channel.epgList.first { it.idByAccountData == tag[1] }
+                        val isLive = epgData.isLiveShow
+                        if (isLive) {
+                            listener?.onShowExit()
+                        } else {
+                            selectAndScrollToNow()
+                        }
+                    }
                 }
                 true
             }
@@ -260,57 +269,80 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             }
             adapter = channelListAdapter
             setHasFixedSize(true)
-            addOnScrollListener(verticalScrollListener)
             onFocusChangeListener = focusListener
+            binding.rvChannels.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                    syncChannelLogoScroll()
+                }
+            })
         }
     }
 
-    fun updateTimeIndicator(withSubmit: Boolean = true) {
-        val now = DateTime()
+    private fun syncChannelLogoScroll() {
+        val channelLayoutManager = binding.rvChannels.layoutManager as LinearLayoutManager
+        val logoLayoutManager = binding.rvChannelsLogos.layoutManager as LinearLayoutManager
 
-        // Berechnet die aktuelle Position in Pixeln, basierend auf der vergangenen Zeit.
-        val indicatorPosition = EPGUtils.getCellWidth(EPGUtils.startTime, now)
+        val firstVisible = channelLayoutManager.findFirstVisibleItemPosition()
+        val offset = channelLayoutManager.findViewByPosition(firstVisible)?.top ?: 0
 
-        // Fügt den gleichen Puffer wie bei den Sendungen hinzu.
-        val bufferOffset = (15 * EPGUtils.minuteToPixel) / 2
+        logoLayoutManager.scrollToPositionWithOffset(firstVisible, offset)
+    }
 
-        // Die finale Position ist der Standard-Offset plus der Puffer.
-        val finalIndicatorPosition = indicatorPosition + bufferOffset
+    // Korrigierte updateTimeIndicator-Methode
+    fun updateTimeIndicator(now: DateTime) {
+        val indicatorPosition = EPGUtils.getCellWidth(com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime, now)
+        val relativePosition = indicatorPosition - timeLineScrollPosition
 
-        // Prüft, ob der Indikator im sichtbaren Bereich ist.
-        val isVisible = finalIndicatorPosition - timeLineScrollPosition in (0..binding.rvTimeLine.width)
+        val isVisible = relativePosition in (0..binding.rvTimeLine.width)
 
         binding.timeIndicator.isVisible = isVisible && EPGConfig.showTimeLine
-        binding.tvTimeLineLabel.isVisible = binding.timeIndicator.isVisible
+        binding.timeIndicatorBubble.isVisible = binding.timeIndicator.isVisible
 
-        // Setzt die neue, gepufferte Startposition für den Indikator.
         binding.timeIndicator.updateLayoutParams<LayoutParams> {
-            marginStart = finalIndicatorPosition
+            marginStart = relativePosition
         }
 
-        binding.tvTimeLineLabel.updateLayoutParams<LayoutParams> {
-            marginStart = binding.timeIndicator.marginStart - 25.dpToPx
-        }
+        binding.tvTimeLineLabel.text = now.toString("HH:mm")
 
-        binding.tvTimeLineLabel.text = DateTime().toString("HH:mm")
-        if (!withSubmit) return
-        binding.rvChannels.children.toList().map { it as? RecyclerView }.forEach {
-            it?.children?.toList()?.map { view -> view.tag?.toString() ?: "" }?.forEach { tag ->
-                if (tag.isNotEmpty() && tag.contains("#")) {
-                    val v = tag.split("#")
-                    val channelId = v.firstOrNull()
-                    channels.singleOrNull { channel -> channel.tvChannelPosition.catAndChannelAccount == channelId }?.let { channel ->
-                        val currentShow = channel.epgList.getCurrentShow()
-                        findViewWithTag<View>(tag).isActivated = currentShow?.idByAccountData == v[1]
-                    }
-                }
+    }
+
+    private fun updateVisibleEpgProgress(now: DateTime) {
+        val layoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
+
+        // Iteriere durch alle sichtbaren Channel-Views
+        for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
+            val channelRecycler = layoutManager.findViewByPosition(i) as? RecyclerWithPositionView ?: continue
+            val epgAdapter = channelRecycler.adapter as? TvGuideEpgAdapter ?: continue
+            val channelData = channels.getOrNull(i) ?: continue
+
+            val currentShow = channelData.epgList.getCurrentShow()
+
+            if (currentShow != null) {
+                val showIndex = channelData.epgList.indexOf(currentShow)
+
+                // Benutze einen Payload, um nur den Fortschrittsbalken zu aktualisieren
+                epgAdapter.notifyItemChanged(showIndex, now)
             }
         }
     }
 
-    private fun selectCurrentShow(channelId: Long?) {
+    private val handler = Handler(Looper.getMainLooper())
+    private val updateRunnable = object : Runnable {
+        override fun run() {
+            val now = DateTime()
+            updateTimeIndicator(now)
+            updateVisibleEpgProgress(now) // Korrigierter Aufruf
+            handler.postDelayed(this, 60000)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        handler.removeCallbacks(updateRunnable)
+    }
+    fun selectCurrentShow(channelId: String?) {
         val channel =
-            channels.singleOrNull { it.id == channelId } ?: channels.firstOrNull() ?: return
+            channels.singleOrNull { it.tvChannelPosition.catAndChannelAccount == channelId } ?: channels.firstOrNull() ?: return
         val channelIndex = channels.indexOf(channel)
         scrollVerticallyToPosition(channelIndex)
         val currentShow =
@@ -322,79 +354,63 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     }
 
     private fun scrollVerticallyToPosition(position: Int) {
-        val rowHeightPx = EPGConfig.rowHeight.dpToPx
-        val marginTopPx = EPGConfig.marginTop.dpToPx
-        val scrollToBot = marginTopPx * (position + 1) + rowHeightPx * (position + 1)
-        val scrollToTop = scrollToBot - rowHeightPx
-        val recycler = binding.rvChannelsLogos
-        val recyclerRange = recycler.verticalPosition..recycler.verticalPosition + recycler.height
-        if (scrollToTop in recyclerRange && scrollToBot in recyclerRange) return
-        val topScroll = abs(scrollToTop - recyclerRange.first)
-        val botScroll = abs(scrollToBot - recyclerRange.last)
-        if (topScroll < botScroll) {
-            scrollChannelsLogo(null, -topScroll)
-            scrollChannels(null, -topScroll)
-        } else {
-            scrollChannelsLogo(null, botScroll)
-            scrollChannels(null, botScroll)
-        }
-    }
+        val layoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
 
-    @Suppress("unused")
-    fun selectShow(
-        channelId: String, showId: String
-    ) {
-        val channel = channels.singleOrNull { it.tvChannelPosition.catAndChannelAccount == channelId } ?: return
-        val show = channel.epgList.singleOrNull { it.idByAccountData == showId } ?: return
-        selectShow(channel, show)
+        val rowHeightPx = EPGConfig.rowHeight.dpToPx
+        val recyclerHeight = binding.rvChannels.height
+
+        // Zieloffset so berechnen, dass die Zeile mittig steht
+        val offset = recyclerHeight / 2 - rowHeightPx / 2
+
+        // Grenzen beachten (erste und letzte Channels nicht nach außen ziehen)
+        if (position <= 0) {
+            layoutManager.scrollToPositionWithOffset(0, 0)
+        } else if (position >= channels.size - 1) {
+            layoutManager.scrollToPositionWithOffset(channels.size - 1, recyclerHeight - rowHeightPx)
+        } else {
+            layoutManager.scrollToPositionWithOffset(position, offset)
+        }
     }
 
     private fun selectShow(
         channel: TvChannelWithEpg, show: EpgDataOB
     ) {
         scrollVerticallyToPosition(channels.indexOf(channel))
-        val tag = "${channel.id}#${show.id}"
+        val tag = "${channel.tvChannelPosition.catAndChannelAccount}#${show.idByAccountData}"
+
         postDelayed({
             val channelRecycler =
                 binding.rvChannels.findViewWithTag<RecyclerWithPositionView>("channel_${channel.tvChannelPosition.catAndChannelAccount}")
                     ?: return@postDelayed
 
-            // Correct way to find the show's horizontal offset
+            // 1. Position der Sendung und sichtbare Breite berechnen
+            val epgVisibleWidth = resources.displayMetrics.widthPixels - 160.dpToPx - 5.dpToPx
             val showsBefore = channel.epgList.takeWhile { it.idByAccountData != show.idByAccountData }
-            var cumulativeWidth = 0
+            var showStartPosition = 0
             showsBefore.forEach { prevShow ->
                 val start = if (DateTime(prevShow.startTimestamp * 1000L).isBefore(EPGUtils.startTime)) EPGUtils.startTime else DateTime(prevShow.startTimestamp * 1000L)
                 val end = if (DateTime(prevShow.stopTimestamp * 1000L).isAfter(EPGUtils.endTime)) EPGUtils.endTime else DateTime(prevShow.stopTimestamp * 1000L)
-                cumulativeWidth += EPGUtils.getCellWidth(start, end)
-                cumulativeWidth += EPGConfig.marginEnd.dpToPx
+                showStartPosition += EPGUtils.getCellWidth(start, end)
+                showStartPosition += EPGConfig.marginEnd.dpToPx
             }
-
-            // Correct scroll position is the cumulative width of all previous shows
-            val scrollTo = cumulativeWidth
-
-            // The rest of your logic remains the same
             val showWidth = EPGUtils.getCellWidth(DateTime(show.startTimestamp * 1000L), DateTime(show.stopTimestamp * 1000L))
-            val scrollToEnd = scrollTo + showWidth
-            val recyclerRange =
-                channelRecycler.horizontalPosition..channelRecycler.horizontalPosition + channelRecycler.width
-            apply {
-                if (scrollTo in recyclerRange && scrollToEnd in recyclerRange) return@apply
-                if (showWidth <= channelRecycler.width) {
-                    val leftScroll = abs(scrollTo - recyclerRange.first)
-                    val rightScroll = abs(scrollToEnd - recyclerRange.last)
-                    if (leftScroll < rightScroll) {
-                        scrollTimeHeader(null, -leftScroll)
-                        scrollAll(null, -leftScroll)
-                    } else {
-                        scrollTimeHeader(null, rightScroll)
-                        scrollAll(null, rightScroll)
-                    }
-                } else {
-                    val scrollBy = scrollTo - timeLineScrollPosition
-                    scrollTimeHeader(null, scrollBy)
-                    scrollAll(null, scrollBy)
-                    updateTimeIndicator()
-                }
+
+            // 2. Gewünschte Scroll-Position für die Zentrierung berechnen
+            val desiredScrollPosition = showStartPosition - (epgVisibleWidth / 2) + (showWidth / 2)
+
+            // 3. Maximale horizontale Scroll-Position berechnen, um nicht über das Ende zu scrollen
+            // Sie müssen die Gesamtbreite aller Sendungen (totalTimelineWidth) selbst berechnen
+            val totalTimelineWidth = EPGUtils.getCellWidth(EPGUtils.startTime, EPGUtils.endTime)
+
+            // 4. Die gewünschte Position beschränken, um Überlauf zu verhindern
+            val maxScrollPosition = totalTimelineWidth - epgVisibleWidth
+            val finalScrollPosition = max(0, min(desiredScrollPosition, maxScrollPosition))
+
+            // 5. Scroll-Delta berechnen und den Scroll-Vorgang ausführen
+            val scrollBy = finalScrollPosition - timeLineScrollPosition
+            if (scrollBy != 0) {
+                scrollTimeHeader(null, scrollBy)
+                scrollAll(null, scrollBy)
             }
 
             val showView = channelRecycler.findViewWithTag<View>(tag) ?: return@postDelayed
@@ -402,21 +418,61 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             lastSelectedShowView?.isSelected = false
             lastSelectedShowView = showView
             showView.isSelected = true
-            listener?.onShowSelected(channel.tvChannelPosition.catAndChannelAccount, show.idByAccountData)
+            listener?.onShowSelected(channel.tvChannelPosition, show)
         }, EPGConfig.focusDelay)
     }
+
     @Suppress("unused")
-    fun scrollToNow() {
+    fun scrollToNow(now: DateTime) {
         post {
             val nowOffset = if (EPGUtils.dayShift == 0) EPGUtils.getCellWidth(
-                EPGUtils.startTime, DateTime()
+                EPGUtils.startTime, now
             ) - binding.rvChannels.width / 2
             else 0
             val scrollBy = nowOffset - timeLineScrollPosition
             scrollTimeHeader(null, scrollBy)
             scrollAll(null, scrollBy)
-            updateTimeIndicator()
+
+            // Aktualisieren Sie den Time Indicator mit demselben Zeitstempel
+            updateTimeIndicator(now)
         }
+    }
+
+    // In der TvGuideRecyclerview-Klasse
+    private fun selectAndScrollToNow() {
+        val now = DateTime()
+        // Schritt 1: Finde den aktuellen Kanal und die aktuelle Sendung
+        // Du musst hier den aktuell fokussierten Kanal finden oder den Standardkanal verwenden
+
+        val currentChannel = lastSelectedShowView?.let {
+            val tag = it.tag.toString().split("#")
+            // Das ist die richtige Stelle, um den Klick-Event zu verarbeiten
+            if (tag.size == 2) {
+                val channel = channels.first { it.tvChannelPosition.catAndChannelAccount == tag[0] }
+                channel
+            } else {
+                return
+            }
+        }
+
+        val currentShow = currentChannel?.epgList?.getCurrentShow()
+        if (currentShow == null) {
+            // Fallback-Logik, falls keine aktuelle Sendung gefunden wird
+            scrollToNow(now)
+            return
+        }
+
+        // Schritt 2: Scrolle horizontal zur aktuellen Zeit
+        val nowOffset = if (EPGUtils.dayShift == 0) EPGUtils.getCellWidth(
+            EPGUtils.startTime, now
+        ) - binding.rvChannels.width / 2
+        else 0
+        val scrollBy = nowOffset - timeLineScrollPosition
+        scrollTimeHeader(null, scrollBy)
+        scrollAll(null, scrollBy)
+
+        // Schritt 3: Setze den Fokus auf die aktuelle Sendung
+        selectShow(currentChannel, currentShow)
     }
 
     private fun setTimeHeader() {
@@ -431,7 +487,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             val timeLabel = currentTime.toString("HH:mm")
             val isFullHour = hourIndex % 2 == 0
             // 1. Die Logik für die Ausrichtung
-
 
             hours.add(
                 TimeLineData(
@@ -450,13 +505,20 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     }
 
 
+
     private fun setChannelsLogo(items: List<TvChannelWithEpg>) {
         channelLogosAdapter.submitList(items)
     }
 
-    private fun setChannels(items: List<TvChannelWithEpg>) {
-        Log.d("TVUGUIDE CHECK","CHANNELLISTSIZE: ${items.size}")
-        (binding.rvChannels.adapter as? TvGuideChannelListAdapter)?.submitList(items)
+    private fun setChannels(items: List<TvChannelWithEpg>, now: DateTime) {
+        (binding.rvChannels.adapter as? TvGuideChannelListAdapter)?.submitList(items) {
+            // Dieser Block wird ausgeführt, wenn das Rendering abgeschlossen ist
+            // Hier können wir sicher sein, dass die Views existieren
+            // Rufen Sie die Methode zum Aktualisieren des Fortschritts hier auf,
+            // um sicherzustellen, dass die Fortschrittsbalken initial korrekt sind
+            updateVisibleEpgProgress(now)
+            updateTimeIndicator(now)
+        }
     }
 
     private fun scrollAll(recyclerView: RecyclerView?, dx: Int) {
@@ -470,7 +532,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     private fun scrollTimeHeader(recyclerView: RecyclerView?, dx: Int) {
         timeLineScrollPosition = max(timeLineScrollPosition + dx, 0)
         EPGUtils.currentEpgTime = EPGUtils.startTime.plusMinutes(timeLineScrollPosition / EPGUtils.minuteToPixel)
-        updateTimeIndicator()
+        updateTimeIndicator(DateTime())
         if (binding.rvTimeLine != recyclerView) {
             binding.rvTimeLine.apply {
                 clearOnScrollListeners()
@@ -480,29 +542,10 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         }
     }
 
-    private fun scrollChannels(recyclerView: RecyclerView?, dy: Int) {
-        if (binding.rvChannels != recyclerView) {
-            binding.rvChannels.apply {
-                clearOnScrollListeners()
-                scrollBy(0, dy)
-                addOnScrollListener(verticalScrollListener)
-            }
-        }
-    }
-
-    private fun scrollChannelsLogo(recyclerView: RecyclerView?, dy: Int) {
-        if (binding.rvChannelsLogos != recyclerView) {
-            binding.rvChannelsLogos.apply {
-                clearOnScrollListeners()
-                scrollBy(0, dy)
-                addOnScrollListener(verticalScrollListener)
-            }
-        }
-    }
-
-
     private fun List<EpgDataOB>.getCurrentShow(): EpgDataOB? {
         val currentTime = System.currentTimeMillis() / 1000
         return this.find { it.startTimestamp < currentTime && it.stopTimestamp > currentTime }
     }
+
+
 }

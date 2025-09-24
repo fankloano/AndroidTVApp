@@ -18,7 +18,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import com.example.mj_player_tv.database.ObjectBox
 import com.example.mj_player_tv.database.entity.Accounts
-import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.Settings
 import com.example.mj_player_tv.databinding.ActivityMainBinding
 import com.example.mj_player_tv.repository.MatchEpgProcessState
@@ -27,8 +26,6 @@ import com.example.mj_player_tv.ui.HomeFragment
 import com.example.mj_player_tv.ui.MoviesFragment
 import com.example.mj_player_tv.ui.SeriesFragment
 import com.example.mj_player_tv.ui.TvChannelsFragment
-import com.example.mj_player_tv.ui.WatchHistoryFragment
-import com.example.mj_player_tv.ui.WatchListFragment
 import com.example.mj_player_tv.ui.adapter.EpgUpdateAdapter
 import com.example.mj_player_tv.ui.adapter.PlaylistUpdateAdapter
 import com.example.mj_player_tv.ui.settings.SettingsFragment
@@ -42,8 +39,6 @@ import com.example.mj_player_tv.viewmodel.PlaylistUpdateViewModel
 import com.example.mj_player_tv.viewmodel.PlaylistUpdateViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
 import com.example.mj_player_tv.viewmodel.StalkerViewModelFactory
-import com.example.mj_player_tv.viewmodel.XtreamViewModel
-import com.example.mj_player_tv.viewmodel.XtreamViewModelFactory
 import com.rubensousa.dpadrecyclerview.spacing.DpadLinearSpacingDecoration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -53,12 +48,13 @@ import kotlinx.coroutines.withContext
 import kotlin.system.exitProcess
 import android.Manifest
 import android.util.Log
+import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.core.animation.doOnEnd
 import com.example.mj_player_tv.database.entity.Accounts_
 import com.example.mj_player_tv.database.entity.Programme
 import com.example.mj_player_tv.ui.PlexFragment
 import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
-import io.sentry.Sentry
 import androidx.core.view.isGone
 import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.ui.WatchlistStatsFragment
@@ -864,25 +860,27 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
 
     }
 
-    private fun closeMenu() {
+    private fun closeMenu(onEnd: (() -> Unit)? = null) {
         val targetWidth = Common.getWidthInPercent(this, 5)
-
         val layoutParams = activityMainBinding.linLayoutMenu.layoutParams
         val startWidth = layoutParams.width
+
         ValueAnimator.ofInt(startWidth, targetWidth).apply {
-            duration = 120
+            duration = 300
+            interpolator = AccelerateDecelerateInterpolator()
             addUpdateListener { animation ->
                 layoutParams.width = animation.animatedValue as Int
                 activityMainBinding.linLayoutMenu.layoutParams = layoutParams
             }
+            doOnEnd {
+                isSideMenuEnabled = false
+                // kein requestFocus() hier mehr
+                onEnd?.invoke()
+            }
             start()
         }
 
-        // Stelle sicher, dass das Layout nach der Breitenänderung neu gezeichnet wird
         activityMainBinding.constMain.requestLayout()
-
-        isSideMenuEnabled = false
-        lastSelectedMenu?.requestFocus()
     }
 
 
@@ -923,11 +921,25 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
 
     private fun changeFragment(fragment: Fragment) {
         val transaction = supportFragmentManager.beginTransaction()
+
+        transaction.setCustomAnimations(
+            R.anim.slide_in_right,
+            R.anim.slide_out_left,
+            R.anim.slide_in_left,
+            R.anim.slide_out_right
+        )
+
         transaction.replace(R.id.navHostFragment, fragment)
         transaction.addToBackStack(null)
         transaction.commit()
-        closeMenu()
+
+        closeMenu {
+            if (fragment is TvGuideFragment) {
+                fragment.setFocusToAccountCategoryRV()  // Fokus erst nach Animation
+            }
+        }
     }
+
 
     @OptIn(UnstableApi::class)
     private fun resetNavHostFragment() {

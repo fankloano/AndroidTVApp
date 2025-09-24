@@ -125,8 +125,8 @@ class TvChannelsAdapter(
                             ?: 0
                     )
                     // Hilfsfunktion für verschobene Zeiten
-                    fun EpgDataOB.shiftedStart() = (this.startTimestamp ?: 0) + timeOffSetSec
-                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp ?: 0) + timeOffSetSec
+                    fun EpgDataOB.shiftedStart() = (this.startTimestamp) + timeOffSetSec
+                    fun EpgDataOB.shiftedStop()  = (this.stopTimestamp) + timeOffSetSec
                     val epg = tvChannelWithEpg.epgList
                     val currentProgram = epg.firstOrNull { it.shiftedStart() <= currentTimeSec && it.shiftedStop() > currentTimeSec }
                     val nextProgram = epg.firstOrNull { it.shiftedStart() > currentTimeSec }
