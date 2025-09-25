@@ -230,10 +230,6 @@ class HelpViewModel(application: Application): AndroidViewModel(application) {
 
     var clickedPlexMovieItem: Metadata? = null
 
-    var playMovieSelectionModified: Int? = null
-
-    var playSeriesSelectionModified: Int? = null
-
     var epgPreviewEpgDetail = false
 
     var isPlaylistEnableChanged: Boolean = false

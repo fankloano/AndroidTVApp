@@ -309,7 +309,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     private fun updateVisibleEpgProgress(now: DateTime) {
         val layoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
 
-        // Iteriere durch alle sichtbaren Channel-Views
         for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
             val channelRecycler = layoutManager.findViewByPosition(i) as? RecyclerWithPositionView ?: continue
             val epgAdapter = channelRecycler.adapter as? TvGuideEpgAdapter ?: continue
@@ -320,8 +319,8 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             if (currentShow != null) {
                 val showIndex = channelData.epgList.indexOf(currentShow)
 
-                // Benutze einen Payload, um nur den Fortschrittsbalken zu aktualisieren
-                epgAdapter.notifyItemChanged(showIndex, now)
+                // Übergib die aktuelle Sendung (EpgDataOB) als Payload
+                epgAdapter.notifyItemChanged(showIndex, currentShow)
             }
         }
     }
@@ -377,6 +376,8 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     ) {
         scrollVerticallyToPosition(channels.indexOf(channel))
         val tag = "${channel.tvChannelPosition.catAndChannelAccount}#${show.idByAccountData}"
+        lastSelectedShowView?.isSelected = false
+        lastSelectedShowView = null
 
         postDelayed({
             val channelRecycler =
@@ -415,9 +416,8 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
             val showView = channelRecycler.findViewWithTag<View>(tag) ?: return@postDelayed
             showView.requestFocus()
-            lastSelectedShowView?.isSelected = false
-            lastSelectedShowView = showView
             showView.isSelected = true
+            lastSelectedShowView = showView
             listener?.onShowSelected(channel.tvChannelPosition, show)
         }, EPGConfig.focusDelay)
     }

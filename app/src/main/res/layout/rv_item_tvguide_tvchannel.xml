@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="50dp"
     android:gravity="center_vertical"
-    android:background="?attr/backgroundDarkDark"
+    android:background="@drawable/gradient_background_tvguide_channel"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
@@ -48,6 +48,7 @@
         android:layout_width="15dp"
         android:layout_height="15dp"
         android:src="@drawable/ic_favorite"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
 
@@ -58,6 +59,7 @@
         android:src="@drawable/ic_catchup"
         android:layout_marginEnd="5dp"
         android:layout_marginTop="1dp"
+        android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@id/iv_favorite"
         app:layout_constraintTop_toTopOf="parent"/>
 

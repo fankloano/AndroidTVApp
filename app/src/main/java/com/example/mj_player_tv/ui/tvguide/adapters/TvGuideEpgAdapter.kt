@@ -37,15 +37,20 @@ class TvGuideEpgAdapter() : ListAdapter<EpgDataOB, RecyclerView.ViewHolder>(EpgD
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int, payloads: MutableList<Any>) {
         if (payloads.isNotEmpty()) {
             val payload = payloads[0]
-            if (payload is DateTime) {
-                // If the payload is a DateTime, update the progress bar only
-                (holder as? TvGuideEpgViewholder)?.updateProgress(getItem(position), payload)
+            if (payload is EpgDataOB) {
+                // Rufe die updateProgress-Methode des ViewHolders auf, um nur den Fortschritt zu aktualisieren
+                (holder as? TvGuideEpgViewholder)?.updateProgress(payload)
             }
         } else {
             // If there are no payloads, do the full initial binding
+            val item = getItem(position)
             when (holder) {
-                is TvGuideEpgViewholder -> holder.bind(getItem(position))
-                is TvGuideEmptyShowViewholder -> holder.bind(getItem(position))
+                is TvGuideEpgViewholder -> {
+                    holder.bind(item)
+                    holder.updateUiState(item) // Stellt den Hintergrund und die Sichtbarkeit ein
+                    holder.updateProgress(item) // Fortschritt immer aktualisieren
+                }
+                is TvGuideEmptyShowViewholder -> holder.bind(item)
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.example.mj_player_tv.ui.tvguide
 
+import com.volkov.EPGConfig
 import com.volkov.epgrecycler.dpToPx
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
@@ -32,9 +33,10 @@ object EPGUtils {
     val maxHour: Int
         get() = Hours.hoursBetween(startTime, endTime).hours
 
-    fun getCellWidth(from: DateTime, to: DateTime): Int {
-        val durationSeconds = Seconds.secondsBetween(from, to).seconds
-        return (durationSeconds * secondToPixel).toInt()
+    // In deiner EPGUtils-Klasse, getCellWidth
+    fun getCellWidth(start: DateTime, end: DateTime): Int {
+        val durationInMinutes = (end.millis - start.millis) / 1000 / 60
+        return (durationInMinutes * 5f).toInt()
     }
 
     // Diese Methode wird überflüssig, da getCellWidth jetzt in Sekunden arbeitet

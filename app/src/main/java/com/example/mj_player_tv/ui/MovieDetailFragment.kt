@@ -610,35 +610,6 @@ class MovieDetailFragment : Fragment(R.layout.fragment_movie_detail) {
         binding.fullscreenMovie.visibility = View.VISIBLE
     }
 
-    fun closeFullScreenMovie() {
-        helpViewModel.movieFullScreenOpened = false
-        binding.fullscreenMovie.visibility = View.GONE
-        helpViewModel.currentFocusedMovie?.let {
-            openMovieSettings(it)
-        }
-    }
-
-    private fun showPlayerSelectionDialog() {
-        val settings = helpViewModel.settings
-        if (settings != null) {
-            if (settings.playMoviesWithVlc) {
-                binding.vlcPlayerIcon.visibility = View.VISIBLE
-                binding.exoPlayerIcon.visibility = View.INVISIBLE
-                binding.linLayoutSelectVLCPlayer.requestFocus()
-            } else {
-                binding.exoPlayerIcon.visibility = View.VISIBLE
-                binding.vlcPlayerIcon.visibility = View.INVISIBLE
-                binding.linLayoutSelectExoPlayer.requestFocus()
-            }
-            binding.linlayoutSelectmovieplayer.visibility = View.VISIBLE
-        }
-    }
-
-    private fun closePlayerSelectionDialog() {
-        binding.linlayoutSelectmovieplayer.visibility = View.GONE
-        binding.btnPlay.requestFocus()
-    }
-
     var currentTmdbMovieDetailJob: Job? = null
 
     private fun getMovieImage() {

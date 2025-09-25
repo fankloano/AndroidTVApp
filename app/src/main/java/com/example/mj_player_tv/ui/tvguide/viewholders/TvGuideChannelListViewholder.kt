@@ -5,13 +5,13 @@ import android.view.View
 import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.RvItemTvguideChannellistBinding
-import com.example.mj_player_tv.databinding.RvItemTvguideTvchannelBinding
+import com.example.mj_player_tv.ui.tvguide.EpgItemDecoration
 import com.example.mj_player_tv.ui.tvguide.adapters.TvGuideEpgAdapter
 import com.example.mj_player_tv.utils.views.RecyclerWithPositionView
 import com.volkov.EPGConfig
-import com.volkov.epg_recycler.databinding.ItemChannelBinding
 import com.volkov.epgrecycler.EPGUtils
 import com.volkov.epgrecycler.dpToPx
 import dev.androidbroadcast.vbpd.viewBinding
@@ -47,6 +47,11 @@ class TvGuideChannelListViewholder(itemView: View) : RecyclerView.ViewHolder(ite
             adapter = epgAdapter
             layoutManager = lm
             setHasFixedSize(false)
+            val divider = EpgItemDecoration(
+                color = context.getColor(R.color.background_dark), // eigene Farbe im resources
+            )
+
+            horizontalRecyclerView.addItemDecoration(divider)
             this.scrollListener = horizontalScrollListener
         }
 

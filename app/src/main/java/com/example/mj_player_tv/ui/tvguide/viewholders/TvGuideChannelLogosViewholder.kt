@@ -48,6 +48,12 @@ class TvGuideChannelLogosViewholder(itemView: View) : RecyclerView.ViewHolder(it
             }
         }
 
+        binding.ivFavorite.visibility =
+            if (tvchannel.isFavorite) View.VISIBLE else View.GONE
+
+        binding.ivCatchup.visibility =
+            if (tvchannel.enable_tv_archive == 1) View.VISIBLE else View.INVISIBLE
+
         binding.root.updateLayoutParams<RecyclerView.LayoutParams> {
             height = EPGConfig.rowLogoHeight.dpToPx
             marginStart = EPGConfig.marginHorizontalChannelLogo.dpToPx

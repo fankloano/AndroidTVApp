@@ -17,12 +17,13 @@
         android:textColor="@android:color/white"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="@string/midnight_time" />
+        android:text="@string/midnight_time"
+        android:textSize="13sp"/>
 
     <View
         android:id="@+id/line"
         android:layout_width="1dp"
-        android:layout_height="15dp"
+        android:layout_height="10dp"
         android:background="@android:color/white" />
 
 </LinearLayout>

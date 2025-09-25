@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
@@ -563,7 +564,8 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
 
             override fun onShowClick(channelPosition: ChannelPositions, epgData: EpgDataOB) {
                 Log.d("ShowClick", "Geklickte Show: ${epgData.name} auf Kanal: ${channelPosition.tvchannel.target.showingName}")
-                // Füge hier deine Logik zum Starten des Players hinzu
+                helpViewModel.currentPlayingChannelPosition = channelPosition
+                playChannel(channelPosition)
             }
 
             override fun onShowExit() {
@@ -600,6 +602,7 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
             currentShowDetailHandler.post(currentShowDetailRunnable)
         } else {
             // Hide the ProgressBar and stop any updates
+            binding.tvRemainingTime.visibility = View.INVISIBLE
             binding.progressBar.visibility = View.INVISIBLE
         }
     }
@@ -660,6 +663,25 @@ class TvGuideFragment : Fragment(R.layout.fragment_tvguide) {
         (requireActivity() as? MainActivity)?.lastSelectFocus()
     }
 
+    private fun playChannel(channelPositions: ChannelPositions) {
+        if (binding.playerTv.isInvisible) {
+            openPlayerFragment()
+        } else {
+            if (helpViewModel.currentPlayingChannelPosition?.id != channelPositions.id) {
+                tvGuideViewModel.requestchangePlayingChannel(channelPositions)
+            } else {
+                return
+            }
+        }
+    }
+
+    private fun openPlayerFragment() {
+        val transaction = parentFragmentManager.beginTransaction()
+        transaction.add(R.id.player_tv, PlayTvFragment())
+        transaction.addToBackStack(null)
+        transaction.commit()
+        binding.playerTv.visibility = VISIBLE
+    }
 
     override fun onDestroy() {
         super.onDestroy()

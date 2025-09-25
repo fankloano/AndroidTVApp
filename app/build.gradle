@@ -46,11 +46,11 @@ dependencies {
     implementation 'androidx.leanback:leanback-preference:1.2.0'
 
     //Navigation
-    implementation "androidx.navigation:navigation-fragment-ktx:2.9.2"
-    implementation "androidx.navigation:navigation-ui-ktx:2.9.2"
+    implementation "androidx.navigation:navigation-fragment-ktx:2.9.4"
+    implementation "androidx.navigation:navigation-ui-ktx:2.9.4"
 
     // Architectural Components
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.2"
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4"
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
@@ -84,19 +84,16 @@ dependencies {
     //Paging
     implementation 'androidx.paging:paging-runtime-ktx:3.3.6'
 
-    //VLC
-    implementation 'org.videolan.android:libvlc-all:3.6.1'
-
     //Firebase Crashlytics
     //noinspection GradleCompatible
-    implementation 'com.google.firebase:firebase-crashlytics:20.0.0'
-    implementation 'com.google.firebase:firebase-crashlytics-ndk:20.0.0'
-    implementation(platform("com.google.firebase:firebase-bom:34.1.0"))
-    implementation 'com.google.firebase:firebase-perf:22.0.0'
+    implementation 'com.google.firebase:firebase-crashlytics:20.0.2'
+    implementation 'com.google.firebase:firebase-crashlytics-ndk:20.0.2'
+    implementation(platform("com.google.firebase:firebase-bom:34.3.0"))
+    implementation 'com.google.firebase:firebase-perf:22.0.2'
 
     // Sentry
-    implementation 'io.sentry:sentry-android:8.19.1'
-    implementation 'io.sentry:sentry-android-ndk:8.19.1'
+    implementation 'io.sentry:sentry-android:8.22.0'
+    implementation 'io.sentry:sentry-android-ndk:8.22.0'
 
     //Datum-Bearbeitung
     implementation "com.jakewharton.threetenabp:threetenabp:1.4.9"
@@ -109,13 +106,13 @@ dependencies {
 
     //String-Matching
     implementation 'org.apache.commons:commons-text:1.14.0'
-    implementation 'androidx.lifecycle:lifecycle-runtime-android:2.9.2'
+    implementation 'androidx.lifecycle:lifecycle-runtime-android:2.9.4'
 
-    implementation 'androidx.work:work-runtime-ktx:2.10.3'
+    implementation 'androidx.work:work-runtime-ktx:2.10.4'
     implementation'com.google.firebase:firebase-crashlytics-buildtools:3.0.6'
     implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation 'androidx.constraintlayout:constraintlayout-core:1.1.1'
-    implementation 'androidx.compose.animation:animation-core-android:1.9.0'
+    implementation 'androidx.compose.animation:animation-core-android:1.9.1'
 
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.14'
 

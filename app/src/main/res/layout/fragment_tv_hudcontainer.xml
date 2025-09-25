@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/hud_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background_hud_fullscreen"
+    android:focusable="true"
+    android:focusableInTouchMode="true"
+    android:visibility="invisible"
+    tools:layout_editor_absoluteX="0dp">
+
+        <LinearLayout
+            android:id="@+id/relLayout_seekbar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:layout_marginEnd="10dp"
+            android:layout_marginBottom="5dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:weightSum="1"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/relLayout_hudchannellogo"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/tv_currentTimeCatchup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:layout_weight="0.08"
+                android:paddingStart="8dp"
+                android:textColor="@color/light_grey"
+                tools:text="15:00:00" />
+
+            <androidx.media3.ui.DefaultTimeBar
+                android:id="@+id/seekBar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:layout_marginEnd="15dp"
+                android:layout_marginBottom="5dp"
+                android:layout_weight="0.85"
+                android:focusable="true"
+                android:visibility="invisible"
+                android:focusableInTouchMode="true"
+                app:buffered_color="#736E6E"
+                app:scrubber_color="@color/light_blue_darker"
+                app:played_color="@color/light_blue"
+                app:unplayed_color="@color/light_mid_grey"
+                app:scrubber_enabled_size="12dp"
+                app:scrubber_dragged_size="16dp"
+                app:scrubber_disabled_size="6dp"
+                app:bar_height="2.5dp" />
+
+            <TextView
+                android:id="@+id/tv_totalTimeCatchup"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.08"
+                android:textColor="@color/light_grey"
+                tools:text="15:00:50" />
+
+        </LinearLayout>
+
+        <RelativeLayout
+            android:id="@+id/relLayout_hudchannellogo"
+            android:layout_width="100dp"
+            android:layout_height="120dp"
+            android:layout_marginStart="10dp"
+            app:layout_constraintBottom_toTopOf="@id/const_programinfo"
+            app:layout_constraintHeight_percent="0.45"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/fullscreen_channelprevious"
+                android:layout_width="110dp"
+                android:layout_height="15dp"
+                android:layout_alignParentTop="true"
+                android:layout_centerHorizontal="true"
+                android:rotation="180"
+                android:src="@drawable/ic_arrow_down" />
+
+            <ImageView
+                android:id="@+id/fullscreen_channelnext"
+                android:layout_width="110dp"
+                android:layout_height="15dp"
+                android:layout_alignParentBottom="true"
+                android:layout_centerHorizontal="true"
+                android:src="@drawable/ic_arrow_down" />
+
+            <ImageView
+                android:id="@+id/hud_channel_logo"
+                android:layout_width="100dp"
+                android:layout_height="90dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/background_hud_chlogo_rounded"
+                android:padding="8dp"
+                android:scaleType="fitCenter"
+                tools:src="@drawable/skybundesliga" />
+
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/tv_hud_channelname"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="15dp"
+            android:background="@drawable/background_hud_chlogo_rounded"
+            android:ellipsize="marquee"
+            android:padding="3dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:singleLine="true"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toBottomOf="@id/relLayout_hudchannellogo"
+            app:layout_constraintStart_toEndOf="@id/relLayout_hudchannellogo"
+            tools:text="DE | SKY CINEMA Bundesliga 1 FHD (play only live events)" />
+
+        <!-- Channel-Quality-Info oben -->
+        <LinearLayout
+            android:id="@+id/channel_quality_info_fullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_hud_channelname"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="6dp"
+            android:orientation="horizontal"
+            app:layout_constraintBottom_toTopOf="@id/tv_hud_channelname"
+            app:layout_constraintStart_toEndOf="@id/relLayout_hudchannellogo">
+
+            <TextView
+                android:id="@+id/tv_fullscreen_channelQuality"
+                android:layout_width="60dp"
+                android:layout_height="wrap_content"
+                android:background="@drawable/background_hud_chlogo_rounded"
+                android:gravity="center"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:alpha="0.8"
+                tools:text="1280x7210" />
+
+            <TextView
+                android:id="@+id/tv_fullscreen_fps"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@drawable/background_hud_chlogo_rounded"
+                android:gravity="center"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:alpha="0.8"
+                tools:text="FPS: 25" />
+
+            <TextView
+                android:id="@+id/tv_fullscreen_audio"
+                android:layout_width="50dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:background="@drawable/background_hud_chlogo_rounded"
+                android:gravity="center"
+                android:padding="4dp"
+                android:textColor="@color/white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:alpha="0.8"
+                tools:text="5.1" />
+        </LinearLayout>
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/const_programinfo"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginEnd="10dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHeight_percent="0.37"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <RelativeLayout
+                android:id="@+id/relLayout_hud_currentprogram"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:padding="5dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintWidth_percent="0.50">
+
+                <LinearLayout
+                    android:id="@+id/linLayout_hud_currentTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/iv_playcatchup"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginEnd="10dp"
+                        android:visibility="gone"
+                        android:src="@drawable/ic_catchup"
+                        android:tint="@color/light_blue"/>
+
+                    <TextView
+                        android:id="@+id/tv_hud_currentProgramTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:textSize="14sp"
+                        tools:text="10:30 - 15:00" />
+
+                    <ProgressBar
+                        android:id="@+id/hudprogressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="120dp"
+                        android:layout_height="5dp"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="15dp"
+                        android:padding="1dp"
+                        android:progress="20"
+                        android:progressTint="?attr/mainPrimaryColor" />
+
+                    <TextView
+                        android:id="@+id/tv_remainingTimeCurrentProgram"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="15dp"
+                        android:textColor="?attr/textColorLight"
+                        android:textSize="12sp"
+                        tools:text="1h 25min remaining.." />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_hud_currenProgramName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_below="@id/linLayout_hud_currentTime"
+                    android:layout_centerVertical="true"
+                    android:layout_marginEnd="26dp"
+                    android:ellipsize="marquee"
+                    android:singleLine="true"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    tools:text="Der Herr der Ringe: Die Rückkehr des Königssad asdasdadasdsadasdadasdsa" />
+
+                <TextView
+                    android:id="@+id/tv_hud_currenProgramSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:layout_below="@id/tv_hud_currenProgramName"
+                    android:layout_centerVertical="true"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="26dp"
+                    android:ellipsize="marquee"
+                    android:singleLine="true"
+                    android:textColor="@color/light_grey"
+                    android:textSize="15sp"
+                    tools:text="Die Rückkehr des Königsadadasdadadadadadasdadadadasdsdadasdasdadadasdasdas" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/linLayout_hud_nextProgram"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:gravity="center_vertical"
+                android:padding="5dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintWidth_percent="0.42">
+
+                <LinearLayout
+                    android:id="@+id/linLayout_hudnextProgramTime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:layout_marginTop="3dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/fullscreen_channelpreviousepg"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="-5dp"
+                        android:rotation="90"
+                        android:src="@drawable/ic_arrow_down"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_hud_nextProgramTime"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="5dp"
+                        android:textSize="14sp"
+                        tools:text="10:30 - 15:00" />
+
+                    <ImageView
+                        android:id="@+id/fullscreen_channelnextepg"
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:rotation="270"
+                        android:src="@drawable/ic_arrow_down" />
+
+                    <TextView
+                        android:id="@+id/tv_hud_programinfo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="25dp"
+                        android:layout_marginStart="15dp"
+                        android:gravity="center_vertical"
+                        android:textColor="@color/light_grey"
+                        android:textSize="14sp"
+                        tools:text="Upcoming Program" />
+
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_hud_nextProgramName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="25dp"
+                    android:layout_below="@id/linLayout_hudnextProgramTime"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginEnd="26dp"
+                    android:ellipsize="marquee"
+                    android:gravity="bottom"
+                    android:singleLine="true"
+                    android:textSize="16sp"
+                    tools:text="Der Herr der Ringe: Die Rückkehr des Königssad asdasdadasdsadasdadasdsa" />
+
+                <TextView
+                    android:id="@+id/tv_hud_nextProgramSubtitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="20dp"
+                    android:layout_below="@id/tv_hud_nextProgramName"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="15dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="26dp"
+                    android:ellipsize="marquee"
+                    android:singleLine="true"
+                    android:textColor="@color/light_mid_grey"
+                    android:textSize="14sp"
+                    tools:text="Die Rückkehr des Königsadadasdadadadadadasdadadadasdsdadasdasdadadasdasdas" />
+
+            </RelativeLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

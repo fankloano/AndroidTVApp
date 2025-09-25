@@ -59,10 +59,6 @@ import io.objectbox.Box
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.videolan.libvlc.LibVLC
-import org.videolan.libvlc.Media
-import org.videolan.libvlc.MediaPlayer
-import org.videolan.libvlc.interfaces.IMedia
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.Locale
@@ -83,15 +79,9 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
     private val binding get() = _binding!!
 
-    private var mediaPlayer: MediaPlayer? = null
-    private var libVLC: LibVLC? = null
-
     private var player: ExoPlayer? = null
 
     private var isFirstOpen = true
-
-    private var playWithVlc = false
-
     private var stopRunnable = false
     private var currentMediaItemDuration = 0L
 
@@ -189,102 +179,39 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         showProgressBar()
         prepareRecyclerview()
 
-        playWithVlc = if (helpViewModel.playSeriesSelectionModified != null) {
-            if (helpViewModel.playSeriesSelectionModified == 0) {
-                false
-            } else {
-                true
-            }
-        } else {
-            val settings = helpViewModel.settings
-            if (settings != null) {
-                if (settings.playMoviesWithVlc) {
-                    true
+        binding.exoplayerVideoview.visibility = View.VISIBLE
+
+        binding.exoplayerVideoview.requestFocus()
+
+        binding.exoplayerVideoview.setOnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
+                if (!ishudContainerVisbile) {
+                    closeFragment()
+                    return@setOnKeyListener true
                 } else {
-                    false
-                }
-            } else {
-                false
-            }
-        }
-
-        if (playWithVlc) {
-            binding.exoplayerVideoview.visibility = View.GONE
-            binding.videoView.visibility = View.VISIBLE
-
-            val options = ArrayList<String>()
-            options.add("--http-reconnect")
-            options.add("--network-caching=1000")
-            options.add("--ffmpeg-hw")
-            libVLC = LibVLC(this@PlaySeriesFragment.requireContext(), options)
-            // Initialisiere den MediaPlayer
-            mediaPlayer = MediaPlayer(libVLC)
-
-            binding.videoView.requestFocus()
-            binding.videoView.setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile) {
-                        closeFragment()
-                        return@setOnKeyListener true
-                    } else {
-                        hideHudContainer()
-                        return@setOnKeyListener true
-                    }
-                }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile && mediaPlayer?.isPlaying == true) {
-                        showHudContainer()
-                    } else {
-                        hideHudContainer()
-                    }
+                    hideHudContainer()
                     return@setOnKeyListener true
                 }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile && isVideoPlaying) {
-                        showHudContainer()
-                    } else {
-                        hideHudContainer()
-                    }
-                }
-                return@setOnKeyListener true
             }
-        } else {
-            binding.videoView.visibility = View.GONE
-
-            binding.exoplayerVideoview.visibility = View.VISIBLE
-
-            binding.exoplayerVideoview.requestFocus()
-
-            binding.exoplayerVideoview.setOnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile) {
-                        closeFragment()
-                        return@setOnKeyListener true
-                    } else {
-                        hideHudContainer()
-                        return@setOnKeyListener true
-                    }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
+                if (!ishudContainerVisbile && player?.isPlaying == true) {
+                    showHudContainer()
+                    return@setOnKeyListener true
+                } else {
+                    hideHudContainer()
+                    return@setOnKeyListener true
                 }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile && player?.isPlaying == true) {
-                        showHudContainer()
-                        return@setOnKeyListener true
-                    } else {
-                        hideHudContainer()
-                        return@setOnKeyListener true
-                    }
-                }
-                if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && event.action == KeyEvent.ACTION_DOWN) {
-                    if (!ishudContainerVisbile && isVideoPlaying) {
-                        showHudContainer()
-                        return@setOnKeyListener true
-                    } else {
-                        hideHudContainer()
-                        return@setOnKeyListener true
-                    }
-                }
-                return@setOnKeyListener true
             }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT && event.action == KeyEvent.ACTION_DOWN) {
+                if (!ishudContainerVisbile && isVideoPlaying) {
+                    showHudContainer()
+                    return@setOnKeyListener true
+                } else {
+                    hideHudContainer()
+                    return@setOnKeyListener true
+                }
+            }
+            return@setOnKeyListener true
         }
 
         getData()
@@ -297,11 +224,8 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             }
             if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
                 isVideoPlaying = false
-                if (playWithVlc) {
-                    mediaPlayer?.pause()
-                } else {
-                    player?.pause()
-                }
+                player?.pause()
+
                 handler.removeCallbacks(hideHudRunnable)
                 binding.ivPauseVideo.visibility = View.GONE
                 binding.ivPlayVideo.visibility = View.VISIBLE
@@ -343,11 +267,8 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             }
             if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER && event.action == KeyEvent.ACTION_DOWN) {
                 isVideoPlaying = true
-                if (playWithVlc) {
-                    mediaPlayer?.play()
-                } else {
-                    player?.play()
-                }
+                player?.play()
+
                 handler.removeCallbacks(hideHudRunnable)
                 handler.postDelayed(hideHudRunnable, 8000)
                 binding.ivPlayVideo.visibility = View.GONE
@@ -802,7 +723,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                 KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT -> {
                     val isForward = keyCode == KeyEvent.KEYCODE_DPAD_RIGHT
                     var increment = 10000L // 30 Sekunden Schritte
-                    val maxPosition = if (playWithVlc) mediaPlayer?.length ?: 0 else player?.duration ?: 0
+                    val maxPosition = player?.duration ?: 0
 
                     when (event.action) {
                         KeyEvent.ACTION_DOWN -> {
@@ -812,7 +733,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                             isSpooling = true
 
                             // Initiale Position setzen
-                            spoolPosition = if (playWithVlc) mediaPlayer?.time ?: 0 else player?.currentPosition ?: 0
+                            spoolPosition = player?.currentPosition ?: 0
 
                             // Vorherige Callbacks entfernen (wenn vorhanden)
                             spoolHandler.removeCallbacksAndMessages(null)
@@ -846,11 +767,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                             spoolHandler.removeCallbacksAndMessages(null)
 
                             // Nach dem Spulen zur neuen Position springen
-                            if (playWithVlc) {
-                                mediaPlayer?.time = spoolPosition
-                            } else {
-                                player?.seekTo(spoolPosition)
-                            }
+                            player?.seekTo(spoolPosition)
 
                             // UI aktualisieren
                             updateUI()
@@ -870,16 +787,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         }
 
         binding.tvAspectratioDefault.setOnClickListener {
-            if (playWithVlc) {
-                val formattedAspectRatio = if (defaultAspectRatio.contains(":")) {
-                    defaultAspectRatio.substringBefore(":")
-                } else {
-                    defaultAspectRatio
-                }
-                mediaPlayer?.aspectRatio = formattedAspectRatio
-            } else {
-                setExoPlayerAspectRatio(defaultAspectRatio)
-            }
+            setExoPlayerAspectRatio(defaultAspectRatio)
             binding.tvAspectratio.text = defaultAspectRatio
             currentAspectRatio = defaultAspectRatio
             binding.tvAspectratioDefault.visibility = View.GONE
@@ -888,7 +796,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
     // Aktualisiere UI nach dem Spulen
     fun updateUI() {
-        binding.tvCurrentTime.text = formatTime(player?.currentPosition ?: mediaPlayer?.time ?: 0)
+        binding.tvCurrentTime.text = formatTime(player?.currentPosition ?: 0)
         binding.seekBar.requestFocus()
     }
 
@@ -1032,7 +940,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         val currentSeasonIndex = helpViewModel.focusedSeasons?.indexOf(helpViewModel.currentFocusedSeason)
         updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
         if (currentEpisodeIndex != null && currentEpisodeIndex > 0) {
-            player?.stop() ?: mediaPlayer?.stop()
+            player?.stop()
             val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
             val newEpisode = helpViewModel.focusedEpisodes?.get(currentEpisodeIndex - 1)
             helpViewModel.currentFocusedEpisode = newEpisode
@@ -1055,7 +963,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         val seasonIndexes = (helpViewModel.focusedSeasons?.size?.minus(1)) ?: 0
         updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
         if (currentEpisodeIndex != null && currentEpisodeIndex < episodeIndexes) {
-            player?.stop() ?: mediaPlayer?.stop()
+            player?.stop()
             val currentSeasonNumber = helpViewModel.currentFocusedEpisode?.seasonNumber
             val newEpisode = helpViewModel.focusedEpisodes?.get(currentEpisodeIndex + 1)
             helpViewModel.currentFocusedEpisode = newEpisode
@@ -1074,24 +982,14 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
 
     private fun seekForward() {
         // Hier wird die Wiedergabeposition vorwärts verschoben
-        if (playWithVlc) {
-            val newPosition = mediaPlayer?.time?.plus(10000)?.coerceAtMost(mediaPlayer?.length ?: 0) ?: 0
-            mediaPlayer?.time = newPosition
-        } else {
-            val newPosition = (player?.currentPosition?.plus(10000))?.coerceAtMost(player?.duration ?: 0) ?: 0
-            player?.seekTo(newPosition)
-        }
+        val newPosition = (player?.currentPosition?.plus(10000))?.coerceAtMost(player?.duration ?: 0) ?: 0
+        player?.seekTo(newPosition)
     }
 
     private fun seekBackward() {
         // Hier wird die Wiedergabeposition rückwärts verschoben
-        if (playWithVlc) {
-            val newPosition = mediaPlayer?.time?.minus(10000)?.coerceAtLeast(0) ?: 0
-            mediaPlayer?.time = newPosition
-        } else {
-            val newPosition = (player?.currentPosition?.minus(10000))?.coerceAtLeast(0) ?: 0
-            player?.seekTo(newPosition)
-        }
+        val newPosition = (player?.currentPosition?.minus(10000))?.coerceAtLeast(0) ?: 0
+        player?.seekTo(newPosition)
     }
 
     private fun showHudContainer() {
@@ -1123,11 +1021,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         handler.removeCallbacks(hideHudRunnable)
         ishudContainerVisbile = false
         binding.hudContainer.visibility = View.GONE
-        if (playWithVlc) {
-            binding.videoView.requestFocus()
-        } else {
-            binding.exoplayerVideoview.requestFocus()
-        }
+        binding.exoplayerVideoview.requestFocus()
     }
 
     private fun startDatabaseRunnable() {
@@ -1142,8 +1036,8 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     private val updateDatabaseRunnable = object: Runnable {
         private var lastUpdateTime = 0L
         override fun run() {
-            currentMediaItemDuration = mediaPlayer?.media?.duration ?: player?.duration ?: 0L
-            val currentPosition = mediaPlayer?.time ?: player?.currentPosition ?: 0L
+            currentMediaItemDuration = player?.duration ?: 0L
+            val currentPosition = player?.currentPosition ?: 0L
             val percentagePlayed =
                 if (currentMediaItemDuration > 0) {
                     currentPosition.toDouble() / currentMediaItemDuration
@@ -1533,247 +1427,6 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
         updateExoPlayerHandler.removeCallbacks(updateExoPlayerRunnable)
     }
 
-    private var vlcDialogCallbacks: org.videolan.libvlc.Dialog.Callbacks? = null
-
-    private fun initializePlayer(url: String) {
-        binding.seriesPlayingError.visibility = View.INVISIBLE
-        if (helpViewModel.currentFocusedSerie != null) {
-            currentSeriesUrl = url
-            stopRunnable = false
-
-            // Erstelle das Media-Objekt
-            val media = Media(libVLC, Uri.parse(url))
-
-            // Setting up video output
-            mediaPlayer?.attachViews(binding.videoView, null, false, false)
-            // Setze die Media auf den MediaPlayer
-            mediaPlayer?.media = media
-
-            mediaPlayer?.play()
-            vlcDialogCallbacks = object : org.videolan.libvlc.Dialog.Callbacks {
-                    override fun onDisplay(dialog: org.videolan.libvlc.Dialog.ErrorMessage) {
-                        // Fehlerdialog anzeigen
-                        binding.playerProgressBar.visibility = View.GONE
-                        stopDatabaseRunnable()
-                        binding.seriesPlayingError.visibility = View.VISIBLE
-                        binding.seriesPlayingError.text = dialog.title
-                        viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
-                            delay(4000)
-                            parentFragmentManager.popBackStack()
-                            val mainFragment =
-                                parentFragmentManager.findFragmentById(R.id.navHostFragment)
-                            if (mainFragment is SeriesFragment) {
-                                mainFragment.setFocusToSeries()
-                            }
-                        }
-                    }
-
-                    override fun onDisplay(dialog: org.videolan.libvlc.Dialog.LoginDialog) {
-                        Log.d("VLC ERROR", "LOGIN: ${dialog.title}")
-
-                    }
-
-                    override fun onDisplay(dialog: org.videolan.libvlc.Dialog.QuestionDialog) {
-                        Log.d("VLC ERROR", "QUESTION: ${dialog.title}")
-
-                    }
-
-                    override fun onDisplay(dialog: org.videolan.libvlc.Dialog.ProgressDialog) {
-                        // Fortschrittsdialog anzeigen
-                        Log.d("VLC ERROR", "PROGRESS: ${dialog.title}")
-
-                    }
-
-                    override fun onCanceled(dialog: org.videolan.libvlc.Dialog) {
-                        when (dialog) {
-                            is org.videolan.libvlc.Dialog.ErrorMessage -> {
-                                Log.d("VLC ERROR", "CANCEL: ${dialog.title}")
-                            }
-                        }
-                    }
-                    override fun onProgressUpdate(dialog: org.videolan.libvlc.Dialog.ProgressDialog) {
-                        // Fortschritt aktualisieren, falls nötig
-                        Log.d("VLC ERROR", "PROGRESSUPDATE: ${dialog.title}")
-                    }
-                }
-
-                mediaPlayer?.setEventListener { event ->
-                    when (event.type) {
-                        MediaPlayer.Event.Opening -> {
-                            // Der Player öffnet das Medium
-                            // Hier kannst du Aufgaben vor dem Start der Wiedergabe ausführen
-                            binding.hudContainer.visibility = View.INVISIBLE
-                            binding.fps.visibility = View.INVISIBLE
-                            binding.resolution.visibility = View.INVISIBLE
-                            binding.relLayoutPlaybackControls.visibility = View.INVISIBLE
-                        }
-                        MediaPlayer.Event.Playing -> {
-
-                            isVideoPlaying = true
-                            binding.ivPlayVideo.visibility = View.INVISIBLE
-                            binding.ivPauseVideo.visibility = View.VISIBLE
-                            if (isFirstOpen) {
-                                mediaPlayer?.time = helpViewModel.currentFocusedMovie?.currentPosition ?: 0
-                                totalDuration = mediaPlayer?.media?.duration ?: 0L
-                                if (helpViewModel.currentSeriesAccount!!.isXtream) {
-                                    helpViewModel.currentFocusedSerie?.seriesTime = (player?.duration?.div(
-                                        (1000)
-                                    ))?.toInt()
-                                } else {
-                                    helpViewModel.currentFocusedSerie?.seriesTime = (player?.duration?.div(
-                                        (1000 * 60)
-                                    ))?.toInt()
-                                }
-                                helpViewModel.currentFocusedSerie?.let { updateSeriesInRV() }
-                                val formattedMaxDuration = formatTime(totalDuration)
-                                binding.tvTotalTime.text = formattedMaxDuration
-                                binding.seekBar.setDuration(totalDuration)
-                                hideProgressBar()
-                                binding.playSeriesname.text = helpViewModel.currentFocusedSerie?.seriesName ?: "NO NAME"
-                                getVLCQualityInfo()
-                                isFirstOpen = false
-                                getVlcTracks()
-                            }
-                            startDatabaseRunnable()
-                        }
-                        MediaPlayer.Event.Paused -> {
-                            // Die Wiedergabe wurde pausiert
-                            // Hier kannst du auf das Pausieren der Wiedergabe reagieren
-                            binding.ivPauseVideo.visibility = View.INVISIBLE
-                            binding.ivPlayVideo.visibility = View.VISIBLE
-                            binding.relLayoutPlaybackControls.visibility = View.VISIBLE
-                            stopDatabaseRunnable()
-                        }
-                        MediaPlayer.Event.Stopped -> {
-                            showProgressBar()
-                            isVideoPlaying = false
-                            // Die Wiedergabe wurde gestoppt
-                            // Hier kannst du auf das Stoppen der Wiedergabe reagieren
-                            stopDatabaseRunnable()
-                        }
-                        MediaPlayer.Event.EndReached -> {
-                            isVideoPlaying = false
-                            stopDatabaseRunnable()
-                            mediaPlayer!!.release()
-                            libVLC!!.release()
-                            parentFragmentManager.popBackStack()
-                            // Das Video wurde bis zum Ende abgespielt
-                            // Hier kannst du auf das Erreichen des Endes der Wiedergabe reagieren
-                        }
-                        MediaPlayer.Event.Buffering -> {
-                        }
-                        MediaPlayer.Event.TimeChanged -> {
-                            if (!isSpooling) {
-                                mediaPlayer?.let {
-                                    binding.seekBar.setPosition(it.time)
-                                    binding.tvCurrentTime.text = formatTime(it.time)
-                                }
-                            }
-                        }
-                        MediaPlayer.Event.ESSelected -> {
-                            audioTracks.clear()
-                            videoTracks.clear()
-                            subTitleTacks.clear()
-                            getVlcTracks()
-                        }
-                        // Weitere Ereignisse können hier behandelt werden
-                        else -> {
-                            // Anderes Ereignis
-                    }
-                }
-            }
-        }
-    }
-
-
-
-    private fun getVLCQualityInfo() {
-        val videoTrack = mediaPlayer?.currentVideoTrack
-        videoTrack?.let {
-            val fps = (it.frameRateNum.toDouble() / it.frameRateDen.toDouble()).toInt()
-            if (fps != 0) {
-                binding.fps.visibility = View.VISIBLE
-                binding.fps.text = "FPS: $fps"
-            } else {
-                binding.fps.visibility = View.INVISIBLE
-            }
-            binding.resolution.visibility = View.VISIBLE
-            binding.resolution.text = "${it.width}x${it.height}"
-            val ar = mediaPlayer?.aspectRatio
-            if (ar.isNullOrEmpty()) {
-                val aspectRatio = it.width.toFloat() / it.height.toFloat()
-                val format = matchAspectRatio(aspectRatio)
-                binding.tvAspectratio.text = format
-                currentAspectRatio = format
-                defaultAspectRatio = format
-            } else {
-                binding.tvAspectratio.text = ar
-                currentAspectRatio = ar
-                defaultAspectRatio = ar
-            }
-        }
-        val tracks = mediaPlayer!!.media!!.trackCount
-        for (i in 0..tracks) {
-            val track = mediaPlayer!!.media!!.getTrack(i)
-            if (track != null) {
-                when (track.type) {
-                    IMedia.Track.Type.Audio -> {
-                        (track as? IMedia.AudioTrack)?.let {
-                            val audio = getAudioFormatDescription(it.channels)
-                            binding.audio.visibility = View.VISIBLE
-                            binding.audio.text = audio
-                        }
-                    }
-                }
-            }
-        }
-        binding.hudContainer.visibility = View.VISIBLE
-        binding.relLayoutPlaybackControls.visibility = View.VISIBLE
-        showHudContainer()
-    }
-
-    private fun getVlcTracks() {
-        val currentVideoTrack = mediaPlayer?.currentVideoTrack
-        videoTracks = mediaPlayer?.videoTracks?.map {
-            val isSelected = it.id == currentVideoTrack?.id
-            val trackInfo = TrackInfo(
-                it.name,
-                it.id,
-                isSelected,
-                true,
-                null
-            )
-            trackInfo
-        }?.toMutableList() ?: mutableListOf()
-
-        val currentAudioTrackId = mediaPlayer?.audioTrack
-        audioTracks = mediaPlayer?.audioTracks?.map {
-            val isSelected = it.id == currentAudioTrackId
-            val trackInfo = TrackInfo(
-                it.name,
-                it.id,
-                isSelected,
-                true,
-                null
-            )
-            trackInfo
-        }?.toMutableList() ?: mutableListOf()
-
-        val currentSubtitleTrack = mediaPlayer?.spuTrack
-        subTitleTacks = mediaPlayer?.spuTracks?.map {
-            val isSelected = it.id == currentSubtitleTrack
-            val trackInfo = TrackInfo(
-                it.name,
-                it.id,
-                isSelected,
-                true,
-                null
-            )
-            trackInfo
-        }?.toMutableList() ?: mutableListOf()
-
-    }
-
     private fun hideProgressBar() {
         binding.playerProgressBar.visibility = View.INVISIBLE
     }
@@ -1841,11 +1494,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                                         response.data.toString().removePrefix("ffmpeg ").trim()
                                     try {
                                         hideProgressBar()
-                                        if (playWithVlc) {
-                                            initializePlayer(playToken)
-                                        } else {
-                                            initializeExoPlayer(playToken)
-                                        }
+                                        initializeExoPlayer(playToken)
                                     } catch (e: IllegalArgumentException) {
                                         // handle the exception, for example:
                                         Toast.makeText(
@@ -1862,11 +1511,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                         }
                     } else {
                         val url = "${accountData.stalkerUrl}/series/${accountData.username}/${accountData.macAddress}/${helpViewModel.currentFocusedEpisode!!.episodeCmd}.${helpViewModel.currentFocusedEpisode!!.containerExtension}"
-                        if (playWithVlc) {
-                            initializePlayer(url)
-                        } else {
-                            initializeExoPlayer(url)
-                        }
+                        initializeExoPlayer(url)
                     }
                 }
             }
@@ -1876,25 +1521,13 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     private val onClickListener = SeriesSelectionAdapter.OnClickListener { selection ->
         if (helpViewModel.movieSelectionOption == 0) {
             changedAudioTrack = true
-            if (playWithVlc) {
-                mediaPlayer?.setAudioTrack(selection.trackId)
-            } else {
-                changeExoTrack(selection)
-            }
+            changeExoTrack(selection)
         } else if (helpViewModel.movieSelectionOption == 1) {
             changedSubtitleTrack = true
-            if (playWithVlc) {
-                mediaPlayer?.setSpuTrack(selection.trackId)
-            } else {
-                changeExoTrack(selection)
-            }
+            changeExoTrack(selection)
         } else if (helpViewModel.movieSelectionOption == 2) {
             changedVideoTrack = true
-            if (playWithVlc) {
-                mediaPlayer?.setVideoTrack(selection.trackId)
-            } else {
-                changeExoTrack(selection)
-            }
+            changeExoTrack(selection)
         } else if (helpViewModel.movieSelectionOption == 3) {
             if (selection.trackName != defaultAspectRatio) {
                 binding.rvSeriesSelection.nextFocusUpId = R.id.tv_aspectratio_default
@@ -1905,16 +1538,7 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
                 binding.tvAspectratioDefault.text = ""
                 binding.tvAspectratioDefault.visibility = View.GONE
             }
-            if (playWithVlc) {
-                val formattedAspectRatio = if (selection.trackName.contains(":")) {
-                    selection.trackName.substringBefore(":")
-                } else {
-                    selection.trackName
-                }
-                mediaPlayer?.aspectRatio = formattedAspectRatio
-            } else {
-                setExoPlayerAspectRatio(selection.trackName)
-            }
+            setExoPlayerAspectRatio(selection.trackName)
             binding.tvAspectratio.text = selection.trackName
             currentAspectRatio = selection.trackName
         } else {
@@ -2100,27 +1724,6 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             val image = serie.screenshot_uri
             binding.tvDialogSeriesSeasonepisode.text = "Season ${episode?.seasonNumber}  |  Episode ${episode?.episodeNumber}"
 
-        if (playWithVlc) {
-            val videoTrack = mediaPlayer?.currentVideoTrack
-            if (videoTrack != null) {
-                binding.tvDialogSeriesVideodetailscodec.text = "Codec: ${videoTrack.codec}"
-            } else {
-                binding.tvDialogSeriesVideodetailscodec.visibility = View.INVISIBLE
-            }
-            val audioTrackId = mediaPlayer?.audioTrack
-            val audioTrack = audioTrackId?.let { mediaPlayer?.media?.getTrack(it) }
-            if (audioTrack != null && audioTrack.type == IMedia.Track.Type.Audio) {
-                val audiolanguage = audioTrack.language ?: "Keine Sprache angegeben"
-                val codec = audioTrack.codec ?: "Unbekannter Codec"
-                val audiodescription = audioTrack.description ?: "Keine Beschreibung"
-                binding.tvDialogSeriesAudiodetailformat.text = audiodescription
-                binding.tvDialogSeriesAudiodetailslang.text = audiolanguage
-                binding.tvDialogSeriesAudiodetailscodec.text = codec
-            } else {
-                Toast.makeText(this@PlaySeriesFragment.requireActivity(), "KEIN AUDIOTRACK", Toast.LENGTH_SHORT).show()
-            }
-
-        } else {
             val videoTrack = player?.videoFormat
             if (videoTrack != null) {
                 Log.d("INFODETAIL", "VIDEO: $videoTrack")
@@ -2141,7 +1744,6 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
             } else {
                 Toast.makeText(this@PlaySeriesFragment.requireActivity(), "KEIN AUDIOTRACK", Toast.LENGTH_SHORT).show()
             }
-        }
             val fpsFullscreen = binding.fps.text.toString()
             binding.tvDialogSeriesVideodetailsfps.text = if (fpsFullscreen.isNotEmpty()) {
                 "FPS: $fpsFullscreen"
@@ -2399,11 +2001,9 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     private fun closeFragment() {
         stopRunnable = true
         player?.release()
-        mediaPlayer?.release()
         isVideoPlaying = false
         currentSeriesUrl = ""
         updateSerieSeasonEpisode(helpViewModel.currentFocusedEpisode, helpViewModel.currentFocusedSeason, helpViewModel.currentFocusedSerie)
-        helpViewModel.playMovieSelectionModified = null
         helpViewModel.serieFullScreenOpened = false
         seriesViewModel.requestFocusOnNextEpisode()
         parentFragmentManager.popBackStack()
@@ -2412,63 +2012,39 @@ class PlaySeriesFragment : Fragment(R.layout.fragment_play_series) {
     override fun onResume() {
         super.onResume()
         if (currentSeriesUrl.isNotEmpty()) {
-            if (playWithVlc) {
-                startDatabaseRunnable()
-                initializePlayer(currentSeriesUrl)
-            } else {
-                player?.addListener(playerErrorListener)
-                player?.addListener(handlePlaybackStateListener)
-                player?.addAnalyticsListener(analyticsListener)
-                player?.setVideoFrameMetadataListener(videoFrameMetadataListener)
-                startPeriodicExoPlayerUpdate()
-                startDatabaseRunnable()
-                initializeExoPlayer(currentSeriesUrl)
-            }
+            player?.addListener(playerErrorListener)
+            player?.addListener(handlePlaybackStateListener)
+            player?.addAnalyticsListener(analyticsListener)
+            player?.setVideoFrameMetadataListener(videoFrameMetadataListener)
+            startPeriodicExoPlayerUpdate()
+            startDatabaseRunnable()
+            initializeExoPlayer(currentSeriesUrl)
         }
     }
 
     override fun onStop() {
         super.onStop()
-        if (playWithVlc) {
-            stopDatabaseRunnable()
-            mediaPlayer?.release()
-            mediaPlayer = null
-            binding.ivPauseVideo.visibility = View.GONE
-            binding.ivPlayVideo.visibility = View.VISIBLE
-        } else {
-            player?.removeListener(playerErrorListener)
-            player?.removeListener(handlePlaybackStateListener)
-            player?.removeAnalyticsListener(analyticsListener)
-            player?.clearVideoFrameMetadataListener(videoFrameMetadataListener)
-            stopPeriodicExoPlayerUpdate()
-            stopDatabaseRunnable()
-            player?.release()
-            player = null
-        }
+        player?.removeListener(playerErrorListener)
+        player?.removeListener(handlePlaybackStateListener)
+        player?.removeAnalyticsListener(analyticsListener)
+        player?.clearVideoFrameMetadataListener(videoFrameMetadataListener)
+        stopPeriodicExoPlayerUpdate()
+        stopDatabaseRunnable()
+        player?.release()
+        player = null
     }
 
     override fun onDestroy() {
         super.onDestroy()
         stopDatabaseRunnable()
         stopPeriodicExoPlayerUpdate()
-        if (playWithVlc) {
-            org.videolan.libvlc.Dialog.setCallbacks(libVLC, null)
-            vlcDialogCallbacks = null
-            playWithVlc = false
-            mediaPlayer?.media?.release()
-            mediaPlayer?.release()
-            libVLC?.release()
-            mediaPlayer = null
-            libVLC = null
-        } else {
-            player?.removeListener(playerErrorListener)
-            player?.removeListener(handlePlaybackStateListener)
-            player?.removeAnalyticsListener(analyticsListener)
-            player?.clearVideoFrameMetadataListener(videoFrameMetadataListener)
-            stopPeriodicExoPlayerUpdate()
-            player?.release()
-            player = null
-        }
+        player?.removeListener(playerErrorListener)
+        player?.removeListener(handlePlaybackStateListener)
+        player?.removeAnalyticsListener(analyticsListener)
+        player?.clearVideoFrameMetadataListener(videoFrameMetadataListener)
+        stopPeriodicExoPlayerUpdate()
+        player?.release()
+        player = null
         handler.removeCallbacks(hideHudRunnable)
         _binding = null
     }

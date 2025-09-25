@@ -66,13 +66,15 @@
         app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
         app:layout_constraintWidth_percent="1.0"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHeight_percent="0.30">
+        app:layout_constraintHeight_percent="0.34">
 
         <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/player_tv"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.3"
             android:background="@color/background_dark_dark"
+            android:visibility="invisible"
             android:layout_margin="3dp"/>
 
         <RelativeLayout

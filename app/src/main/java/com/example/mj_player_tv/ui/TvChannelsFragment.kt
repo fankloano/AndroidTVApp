@@ -158,10 +158,7 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private val spoolHandler = Handler(Looper.getMainLooper())
     private var incrementChangeDelay: Long = 2000L
 
-    private var increment = 1000L
     private var maxIncrement = 16000L
-
-    private var lastIncrementUpdate = 0L
 
     private var catchupDuration: Long? = 0L
 
@@ -170,7 +167,6 @@ class TvChannelsFragment: Fragment(R.layout.fragment_tv_channels) {
     private var focusedChannelLastEpgIdByAccountData: String = ""
 
     private var player: ExoPlayer? = null
-    private var playbackPosition = 0L
 
     private val handler = Handler(Looper.getMainLooper())
     private val hideHudRunnable = Runnable {
