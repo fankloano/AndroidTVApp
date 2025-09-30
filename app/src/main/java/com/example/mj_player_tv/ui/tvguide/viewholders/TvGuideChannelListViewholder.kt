@@ -31,8 +31,6 @@ class TvGuideChannelListViewholder(itemView: View) : RecyclerView.ViewHolder(ite
     ) { // 1. Tag setzen (mit Ihrer neuen ID)
         binding.root.tag = "channel_${item.tvChannelPosition.catAndChannelAccount}"
 
-        Log.d("TVGUIDE CHANNELLISTADAPTER", "CHANNELLISTTAG: channel_${item.tvChannelPosition.catAndChannelAccount}")
-
         // 2. Layout-Parameter setzen
         binding.root.updateLayoutParams<RecyclerView.LayoutParams> {
             height = EPGConfig.rowHeight.dpToPx
@@ -50,7 +48,6 @@ class TvGuideChannelListViewholder(itemView: View) : RecyclerView.ViewHolder(ite
             val divider = EpgItemDecoration(
                 color = context.getColor(R.color.background_dark), // eigene Farbe im resources
             )
-
             horizontalRecyclerView.addItemDecoration(divider)
             this.scrollListener = horizontalScrollListener
         }

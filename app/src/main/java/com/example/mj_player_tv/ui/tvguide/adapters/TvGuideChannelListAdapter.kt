@@ -24,7 +24,7 @@ class TvGuideChannelListAdapter(
         holder.setIsRecyclable(false)
         holder.bind(
             getItem(position),
-            horizontalScrollListener,
+            horizontalScrollListener
         )
     }
 }

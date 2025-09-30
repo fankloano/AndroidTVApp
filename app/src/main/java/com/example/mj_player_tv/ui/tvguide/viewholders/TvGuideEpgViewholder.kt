@@ -12,6 +12,7 @@ import androidx.core.view.updateLayoutParams
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.entity.EpgDataOB
+import com.example.mj_player_tv.database.help.ShowTag
 import com.example.mj_player_tv.databinding.RvItemTvguideEpgBinding
 import com.volkov.epgrecycler.EPGUtils.getCellWidth
 import com.volkov.EPGConfig
@@ -32,8 +33,6 @@ class TvGuideEpgViewholder(itemView: View, private val channelId: String) : Recy
     @SuppressLint("SetTextI18n")
     fun bind(item: EpgDataOB) {
 
-        binding.root.tag = "${channelId}#${item.idByAccountData}"
-
         val itemstartDate = DateTime(item.startTimestamp * 1000L)
         val itemendDate = DateTime(item.stopTimestamp * 1000L)
 
@@ -48,6 +47,10 @@ class TvGuideEpgViewholder(itemView: View, private val channelId: String) : Recy
         } else {
             binding.tvSubTitleProgram.visibility = View.GONE
         }
+
+        binding.root.tag = ShowTag(channelId, item.idByAccountData)
+        Log.d("SHOWTAG", "LIST OF CHANNEL: ${channelId} = ${item.idByAccountData}")
+
 
         // Die Breite der Ansicht wird basierend auf der sichtbaren Dauer auf der Timeline berechnet.
         if (!hide) {

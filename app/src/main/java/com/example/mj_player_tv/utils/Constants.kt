@@ -13,4 +13,6 @@ object Constants {
     const val FRAGMENT_SETTINGS = "settings"
     const val FRAGMENT_WATCHLIST = "watchlist"
     const val FRAGMENT_WATCHHISTORY = "watchhistory"
+
+    const val TIME_HEADER = "time_header"
 }
