@@ -29,6 +29,7 @@ data class TvChannelOB(
     @Index
     var showingName: String = "",
     var xmltv_id: String = "",
+    var extern_xmltv_id: String? = null,
     @Uid(9015815363700429417L)
     var enable_tv_archive: Int? = null,
     var tv_archive_duration: Int? = null,

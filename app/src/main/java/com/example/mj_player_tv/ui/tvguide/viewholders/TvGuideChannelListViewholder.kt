@@ -25,44 +25,41 @@ class TvGuideChannelListViewholder(itemView: View) : RecyclerView.ViewHolder(ite
     private val horizontalRecyclerView: RecyclerWithPositionView
         get() = binding.root
 
-    fun bind(
-        item: TvChannelWithEpg,
-        horizontalScrollListener: RecyclerView.OnScrollListener
-    ) { // 1. Tag setzen (mit Ihrer neuen ID)
-        binding.root.tag = "channel_${item.tvChannelPosition.catAndChannelAccount}"
+    init {
+        horizontalRecyclerView.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            adapter = epgAdapter
+            setHasFixedSize(false)
+            addItemDecoration(
+                EpgItemDecoration(color = context.getColor(R.color.background_dark))
+            )
+        }
+    }
 
-        // 2. Layout-Parameter setzen
+    fun syncHorizontalScroll(offset: Int) {
+        horizontalRecyclerView.scrollTo(offset, 0) // absoluter Offset
+    }
+
+    fun bind(item: TvChannelWithEpg, getCurrentHorizontalOffset: () -> Int) {
+        val tag = "channel_${item.tvChannelPosition.catAndChannelAccount}"
+        binding.root.tag = tag
+        Log.d("CHANNEL_BIND", "Binding ViewHolder tag=$tag position=$bindingAdapterPosition epgSize=${item.epgList.size}")
+
+        // Layout-Parameter
         binding.root.updateLayoutParams<RecyclerView.LayoutParams> {
             height = EPGConfig.rowHeight.dpToPx
             topMargin = EPGConfig.marginVerticalChannelLogo.dpToPx
             bottomMargin = EPGConfig.marginVerticalChannelLogo.dpToPx
         }
 
-        // 3. Horizontalen RecyclerView einrichten
-        // Sie müssen den Adapter nur einmal einrichten, nicht bei jedem Bind
-        horizontalRecyclerView.apply {
-            val lm = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
-            adapter = epgAdapter
-            layoutManager = lm
-            setHasFixedSize(false)
-            val divider = EpgItemDecoration(
-                color = context.getColor(R.color.background_dark), // eigene Farbe im resources
-            )
-            horizontalRecyclerView.addItemDecoration(divider)
-            this.scrollListener = horizontalScrollListener
-        }
-
+        // Adapter-Daten setzen
         epgAdapter.channelId = item.tvChannelPosition.catAndChannelAccount
-        // 4. Daten an den EPG-Adapter übergeben
         epgAdapter.submitList(item.epgList) {
-            // 5. Zur aktuellen Zeit scrollen
-            horizontalRecyclerView.post {
-                // Die Logik für die Scroll-Position muss noch angepasst werden
-                // um mit Ihren Long-Zeitstempeln zu arbeiten.
-                val nowInSeconds = System.currentTimeMillis() / 1000
-                val startEpgInSeconds = EPGUtils.startTime.millis / 1000
-                val scrollOffset = EPGUtils.getCellWidth(DateTime(startEpgInSeconds), DateTime(nowInSeconds))
-                horizontalRecyclerView.scrollHorizontallyTo(scrollOffset)
+            binding.rvShows.apply {
+                post {
+                    val offset = getCurrentHorizontalOffset()
+                    scrollHorizontallyTo(offset)
+                }
             }
         }
     }

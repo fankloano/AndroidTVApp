@@ -1,5 +1,6 @@
 package com.example.mj_player_tv.ui.tvguide.adapters
 
+import android.util.Log
 import android.view.ViewGroup
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -10,7 +11,7 @@ import com.example.mj_player_tv.ui.tvguide.viewholders.TvGuideChannelListViewhol
 import com.example.mj_player_tv.utils.Common.getView
 
 class TvGuideChannelListAdapter(
-    private val horizontalScrollListener: RecyclerView.OnScrollListener
+    private val getCurrentHorizontalOffset: () -> Int
 ) : ListAdapter<TvChannelWithEpg, TvGuideChannelListViewholder>(DiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TvGuideChannelListViewholder {
@@ -22,9 +23,8 @@ class TvGuideChannelListAdapter(
         position: Int
     ) {
         holder.setIsRecyclable(false)
-        holder.bind(
-            getItem(position),
-            horizontalScrollListener
-        )
+        holder.bind(getItem(position), getCurrentHorizontalOffset)
+        val currentOffset = getCurrentHorizontalOffset()
+        holder.syncHorizontalScroll(currentOffset)
     }
 }

@@ -57,9 +57,10 @@ import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
 import androidx.core.view.isGone
 import com.example.mj_player_tv.ui.TvGuideFragment
+import com.example.mj_player_tv.ui.TvGuideTestFragment
 import com.example.mj_player_tv.ui.WatchlistStatsFragment
 
-
+@UnstableApi
 class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
 
     private lateinit var activityMainBinding: ActivityMainBinding
@@ -355,7 +356,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                 toggleActivateOnMenu(it)
                 toggleVisibilityOfMainContainer(true)
                 lastOpenedFragment = Constants.FRAGMENT_TVGUIDE
-                changeFragment(TvGuideFragment())
+                changeFragment(TvGuideTestFragment())
                 activityMainBinding.navHostFragment.requestFocus()
             }
         }

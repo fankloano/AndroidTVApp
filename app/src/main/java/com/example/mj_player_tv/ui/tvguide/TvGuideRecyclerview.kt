@@ -8,7 +8,6 @@ import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import androidx.core.view.isVisible
-import androidx.core.view.marginStart
 import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.lifecycleScope
@@ -21,10 +20,8 @@ import com.example.mj_player_tv.database.help.ShowTag
 import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.TvguideRecyclerviewBinding
-import com.example.mj_player_tv.ui.tvguide.EPGUtils.currentEpgTime
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.dayShift
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.getCellWidth
-import com.example.mj_player_tv.ui.tvguide.EPGUtils.minuteToPixel
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.startEpgTime
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.startTime
 import com.example.mj_player_tv.ui.tvguide.adapters.TimeLineAdapter
@@ -42,9 +39,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
-import org.joda.time.Minutes
 import kotlin.math.abs
-import kotlin.math.max
 
 class TvGuideRecyclerview @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -64,16 +59,49 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
     var listener: OnEventListener? = null
 
+    private var isLoadingNewData = false
+
     enum class MoveDirection { UP, DOWN, LEFT, RIGHT, NONE }
 
     private val horizontalScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             super.onScrolled(recyclerView, dx, dy)
-            scrollAll(recyclerView, dx)
-            scrollTimeHeader(recyclerView, dx)
+            Log.d("TVGUIDE_SCROLL", "onScrolled source=${debugRvDesc(recyclerView)} dx=$dx isSyncing=$isSyncingHorizontal")
+
+            // Wenn wir gerade programmgesteuert synchronisieren, nur Offset updaten, NICHT neu propagieren
+            if (isSyncingHorizontal) {
+                timeLineScrollPosition = currentTimeLineOffset()
+                logAllOffsets("onScrolled (ignored)")
+                return
+            }
+
+            // Wenn von Timeline, aktualisiere offset
+            if (recyclerView == binding.rvTimeLine) {
+                timeLineScrollPosition = currentTimeLineOffset()
+            }
+
+            // Propagiere (dies ruft syncHorizontalScroll, welches isSyncing setzt)
+            syncHorizontalScroll(recyclerView, dx)
+
             updateTimeIndicator(withSubmit = false, DateTime())
+
+            // existing load-more logic (unchanged)
+            if (!isLoadingNewData) {
+                val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+                val lastVisible = layoutManager.findLastVisibleItemPosition()
+                val firstVisible = layoutManager.findFirstVisibleItemPosition()
+                Log.d("NACHLADEN TV GUIDE", "DX: $dx FIRSTVISIBLE: $firstVisible")
+                if (dx > 0 && lastVisible >= timeAdapter.itemCount - 5) {
+                    isLoadingNewData = true
+                    Log.d("NACHLADEN TV GUIDE", "ZUKUNFT")
+                } else if (dx < 0 && firstVisible <= 1) {
+                    isLoadingNewData = true
+                    Log.d("NACHLADEN TV GUIDE", "VERGANGENHEIT")
+                }
+            }
         }
     }
+
 
     @Suppress("unused")
     fun setTimeZone(zone: DateTimeZone) {
@@ -95,6 +123,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
     private val verticalScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            Log.d("VERTICAL SCROLL", "dy: $dy")
             scrollChannels(recyclerView, dy)
             scrollChannelsLogo(recyclerView, dy)
         }
@@ -103,6 +132,30 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     private val timeAdapter = TimeLineAdapter()
     private val channelLogosAdapter = TvGuideChannelLogosAdapter()
     private var timeLineScrollPosition = 0
+
+    // Prevent feedback-loop when programmatically syncing scrolls
+    private var isSyncingHorizontal = false
+
+    private fun currentTimeLineOffset(): Int = binding.rvTimeLine.computeHorizontalScrollOffset()
+
+    private fun debugRvDesc(rv: RecyclerView?): String =
+        when {
+            rv == null -> "null"
+            rv == binding.rvTimeLine -> "timeline"
+            else -> rv.tag?.toString() ?: "child@${rv.hashCode()}"
+        }
+
+    private fun logAllOffsets(prefix: String = "") {
+        try {
+            val t = currentTimeLineOffset()
+            val childOffsets = binding.rvChannels.children.mapNotNull { it as? RecyclerWithPositionView }
+                .mapIndexed { i, r -> "c$i:${r.computeHorizontalScrollOffset()}" }
+                .joinToString(",")
+            Log.d("TVGUIDE_OFFSETS", "$prefix timeline=$t children=[$childOffsets]")
+        } catch (e: Exception) {
+            Log.w("TVGUIDE_OFFSETS", "logAllOffsets failed: ${e.message}")
+        }
+    }
 
     private val focusListener = OnFocusChangeListener { _, hasFocus ->
         if (hasFocus) lastSelectedShowView?.isSelected = true
@@ -211,7 +264,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     // --- Recycler setup ---
     private fun initChannelRecycler() {
         binding.rvChannels.apply {
-            val channelListAdapter = TvGuideChannelListAdapter(horizontalScrollListener)
+            val channelListAdapter = TvGuideChannelListAdapter(this@TvGuideRecyclerview::currentTimeLineOffset)
             layoutManager = object : LinearLayoutManager(context) {
                 override fun onInterceptFocusSearch(focused: View, direction: Int) = null
             }
@@ -303,29 +356,28 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     }
 
     private fun scrollVerticallyToPosition(position: Int) {
-        val layoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
+        val epgLayoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
+        val logosLayoutManager = binding.rvChannelsLogos.layoutManager as? LinearLayoutManager ?: return
+
         val rowHeightPx = EPGConfig.rowHeight.dpToPx
         val recyclerHeight = binding.rvChannels.height
         val offset = recyclerHeight / 2 - rowHeightPx / 2
 
         when {
-            position <= 0 -> layoutManager.scrollToPositionWithOffset(0, 0)
-            position >= channels.size - 1 -> layoutManager.scrollToPositionWithOffset(channels.size - 1, recyclerHeight - rowHeightPx)
-            else -> layoutManager.scrollToPositionWithOffset(position, offset)
+            position <= 0 -> {
+                epgLayoutManager.scrollToPositionWithOffset(0, 0)
+                logosLayoutManager.scrollToPositionWithOffset(0, 0)
+            }
+            position >= channels.size - 1 -> {
+                epgLayoutManager.scrollToPositionWithOffset(channels.size - 1, recyclerHeight - rowHeightPx)
+                logosLayoutManager.scrollToPositionWithOffset(channels.size - 1, recyclerHeight - rowHeightPx)
+            }
+            else -> {
+                epgLayoutManager.scrollToPositionWithOffset(position, offset)
+                logosLayoutManager.scrollToPositionWithOffset(position, offset)
+            }
         }
     }
-
-    private fun syncChannelLogoScroll() {
-        val channelLayoutManager = binding.rvChannels.layoutManager as LinearLayoutManager
-        val logoLayoutManager = binding.rvChannelsLogos.layoutManager as LinearLayoutManager
-
-        val firstVisible = channelLayoutManager.findFirstVisibleItemPosition()
-        val offset = channelLayoutManager.findViewByPosition(firstVisible)?.top ?: 0
-
-        logoLayoutManager.scrollToPositionWithOffset(firstVisible, offset)
-    }
-
-
     @Suppress("unused")
     fun selectShow(
         channelId: String, showId: String
@@ -357,7 +409,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
             val showWidth = showEndPx - showStartPx
 
             // 2. Sichtbaren Bereich und Abmessungen ermitteln
-            val visibleStartPx = timeLineScrollPosition
+            val visibleStartPx = currentTimeLineOffset()
             val visibleEndPx = visibleStartPx + binding.rvTimeLine.width
             val recyclerWidth = binding.rvTimeLine.width
 
@@ -375,23 +427,24 @@ class TvGuideRecyclerview @JvmOverloads constructor(
                 // D: Sendung ist am rechten Rand abgeschnitten UND zu breit -> zum Start der Sendung scrollen
                 else -> showStartPx
             }
-
+            Log.d("WOHIN SCROLL HORIZONTAL", "TARGETSCROLL: $targetScrollPosition TIMELINESCROLLPOS: $timeLineScrollPosition")
             // 4. Scroll-Differenz berechnen und ausführen
-            val scrollBy = targetScrollPosition - timeLineScrollPosition
+            val scrollBy = targetScrollPosition - visibleStartPx
 
             if (scrollBy != 0) {
-                scrollTimeHeader(null, scrollBy)
-                scrollAll(null, scrollBy)
+                syncHorizontalScroll(null, scrollBy)
             }
 
-            // 5. Fokusverwaltung
-            val showView = channelRecycler.findViewWithTag<View>(showTag) ?: return@postDelayed
-            lastSelectedShowView?.isSelected = false
-            showView.setShowTag(showTag.channelId, showTag.showId)
-            lastSelectedShowView = showView
-            showView.isSelected = true
-            showView.requestFocus()
-            listener?.onShowSelected(channel.tvChannelPosition, show)
+            binding.rvChannels.post {
+                val showView = channelRecycler.findViewWithTag<View>(showTag) ?: return@post
+                lastSelectedShowView?.isSelected = false
+                showView.setShowTag(showTag.channelId, showTag.showId)
+                lastSelectedShowView = showView
+                showView.isSelected = true
+                showView.requestFocus()
+                listener?.onShowSelected(channel.tvChannelPosition, show)
+                Log.d("TVGUIDE_SELECT", "focused view for show ${show.idByAccountData}")
+            }
 
         }, EPGConfig.focusDelay)
     }
@@ -399,15 +452,13 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     @Suppress("unused")
     fun scrollToNow(now: DateTime) {
         post {
-            val nowOffset = if (dayShift == 0) getCellWidth(
-                startTime, now
-            ) - binding.rvChannels.width / 2
-            else 0
-            val scrollBy = nowOffset - timeLineScrollPosition
-            scrollTimeHeader(null, scrollBy)
-            scrollAll(null, scrollBy)
+            val nowOffset = if (dayShift == 0) getCellWidth(startTime, now) - binding.rvChannels.width / 2 else 0
+            val scrollBy = nowOffset - currentTimeLineOffset()
+            Log.d("TVGUIDE_NOW", "scrollToNow nowOffset=$nowOffset current=${currentTimeLineOffset()} scrollBy=$scrollBy")
+            if (scrollBy != 0) syncHorizontalScroll(null, scrollBy)
             updateTimeIndicator(false, now)
         }
+
     }
 
 
@@ -449,29 +500,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         }
     }
 
-    private fun scrollAll(recyclerView: RecyclerView?, dx: Int) {
-        val rvChildren =
-            binding.rvChannels.children.map { it as? RecyclerWithPositionView }.toList()
-        rvChildren.forEach {
-            if (recyclerView != it) it?.scrollHorizontallyBy(dx)
-        }
-    }
-
-
-    private fun scrollTimeHeader(recyclerView: RecyclerView?, dx: Int) {
-        timeLineScrollPosition = max(timeLineScrollPosition + dx, 0)
-        currentEpgTime = startTime.plusMinutes(timeLineScrollPosition / minuteToPixel)
-        if (binding.rvTimeLine != recyclerView) {
-            binding.rvTimeLine.apply {
-                clearOnScrollListeners()
-                scrollBy(dx, 0)
-                addOnScrollListener(horizontalScrollListener)
-                updateTimeIndicator(false, DateTime())
-                checkForEndOfTimeline(dx)
-            }
-        }
-    }
-
     // --- Neue Funktion zum Prüfen des Timeline-Endes ---
     private fun checkForEndOfTimeline(dx: Int) {
         Log.d("NACHLADEN GEFÄLLIG", "JO LAD MAL")
@@ -490,27 +518,54 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     }
 
     private fun scrollChannels(recyclerView: RecyclerView?, dy: Int) {
-        if (binding.rvChannels != recyclerView) {
-            binding.rvChannels.apply {
-                clearOnScrollListeners()
-                scrollBy(0, dy)
-                addOnScrollListener(verticalScrollListener)
-            }
+        // If the event came from the Logos Recycler, scroll the Channels Recycler
+        if (binding.rvChannelsLogos == recyclerView) {
+            binding.rvChannels.scrollBy(0, dy)
         }
     }
 
     private fun scrollChannelsLogo(recyclerView: RecyclerView?, dy: Int) {
-        if (binding.rvChannelsLogos != recyclerView) {
-            binding.rvChannelsLogos.apply {
-                clearOnScrollListeners()
-                scrollBy(0, dy)
-                addOnScrollListener(verticalScrollListener)
-            }
+        // If the event came from the Channels Recycler, scroll the Logos Recycler
+        if (binding.rvChannels == recyclerView) {
+            binding.rvChannelsLogos.scrollBy(0, dy)
         }
     }
 
     private fun List<EpgDataOB>.getCurrentShow(): EpgDataOB? {
         val currentTime = System.currentTimeMillis() / 1000
         return this.find { it.startTimestamp < currentTime && it.stopTimestamp > currentTime }
+    }
+
+    private fun syncHorizontalScroll(sourceRv: RecyclerView?, dx: Int) {
+        if (dx == 0) return
+        if (isSyncingHorizontal) {
+            Log.d("TVGUIDE_SYNC", "sync suppressed (already syncing) source=${debugRvDesc(sourceRv)} dx=$dx")
+            return
+        }
+
+        isSyncingHorizontal = true
+        Log.d("TVGUIDE_SYNC", ">>> start sync from=${debugRvDesc(sourceRv)} dx=$dx")
+        logAllOffsets("before")
+
+        try {
+            if (binding.rvTimeLine != sourceRv) {
+                binding.rvTimeLine.scrollBy(dx, 0)
+                Log.d("TVGUIDE_SYNC", "timeline scrolled by $dx → offset=${binding.rvTimeLine.computeHorizontalScrollOffset()}")
+            }
+
+            val rvChildren = binding.rvChannels.children.mapNotNull { it as? RecyclerWithPositionView }.toList()
+            rvChildren.forEach { childRv ->
+                if (childRv != sourceRv) {
+                    childRv.scrollBy(dx, 0)
+                    Log.d("TVGUIDE_SYNC", "childRv scrolled by $dx → offset=${childRv.computeHorizontalScrollOffset()}")
+                }
+            }
+
+            timeLineScrollPosition = currentTimeLineOffset()
+            logAllOffsets("after")
+            Log.d("TVGUIDE_SYNC", "<<< end sync offset=$timeLineScrollPosition")
+        } finally {
+            this.post { isSyncingHorizontal = false }
+        }
     }
 }
