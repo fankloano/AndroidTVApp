@@ -10,9 +10,11 @@ import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.RvItemTvguideTvchannelBinding
 import com.example.mj_player_tv.databinding.RvItemTvguideTvepgBinding
+import com.example.mj_player_tv.utils.EpgScrollSyncManager
 
 class ProgramGuideChannelAdapter(
-    private val manager: ProgramGuideManager
+    private val manager: ProgramGuideManager,
+    private val scrollSyncHelper: EpgScrollSyncManager
 ) : ListAdapter<TvChannelWithEpg, ProgramGuideChannelViewHolder>(DIFF_CALLBACK) {
 
     private val epgAdapter = ProgramGuideEpgAdapter()
@@ -33,7 +35,7 @@ class ProgramGuideChannelAdapter(
     }
 
     override fun onBindViewHolder(holder: ProgramGuideChannelViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), scrollSyncHelper)
         holder.binding.constTvchannel.isFocusable = false
     }
 }

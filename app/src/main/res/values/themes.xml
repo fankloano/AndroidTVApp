@@ -21,6 +21,13 @@
         <item name="transparentColor">@color/transparent</item>
         <item name="android:fontFamily">@font/roboto_condensed_regular</item>
         <item name="alertDialogTheme">@style/CustomAlertDialog</item>
+
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorSurface">@color/background_dark_dark</item>
+        <item name="colorControlHighlight">@color/light_grey</item>
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.MaterialComponents.SmallComponent</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.MaterialComponents.MediumComponent</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.MaterialComponents.LargeComponent</item>
     </style>
 
     <style name="Theme.MJ_Player_TV_Light" parent="@style/Theme.Leanback">

@@ -161,7 +161,7 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
     //ACCOUNTS
 
     fun focusEpgRecycler() {
-
+        binding.epgView.focusEpgData()
     }
 
     private fun prepareAccountCategoryRecyclerView() {

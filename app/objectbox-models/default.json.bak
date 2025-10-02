@@ -651,7 +651,7 @@
     },
     {
       "id": "8:5250873882140024923",
-      "lastPropertyId": "46:7801139692376184907",
+      "lastPropertyId": "47:5084062374984619915",
       "name": "TvChannelOB",
       "properties": [
         {
@@ -836,6 +836,11 @@
           "id": "46:7801139692376184907",
           "name": "isFavorite",
           "type": 1
+        },
+        {
+          "id": "47:5084062374984619915",
+          "name": "extern_xmltv_id",
+          "type": 9
         }
       ],
       "relations": []
