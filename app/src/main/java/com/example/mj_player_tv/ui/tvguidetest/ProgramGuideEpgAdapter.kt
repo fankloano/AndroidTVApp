@@ -44,10 +44,20 @@ class ProgramGuideEpgAdapter :
 
             val startTime = DateTime(epgDataOB.startTimestamp * 1000L)
             val endTime = DateTime(epgDataOB.stopTimestamp * 1000L)
-            // Breite = Dauer in Minuten * 5 Pixel
 
-            binding.relLayoutFullepgitem.layoutParams.width = ProgramGuideUtils.getCellWidth(startTime, endTime)
-            Log.d("PROGRAM GUIDE TEST EPG", "${epgDataOB.name} = START: $startTime END: $endTime WIDTH === ${binding.relLayoutFullepgitem.layoutParams.width}")
+            val hide = endTime.isBefore(ProgramGuideUtils.epgStartTime)
+
+            if (!hide) {
+                val itemStart =
+                    if (startTime.isBefore(ProgramGuideUtils.epgStartTime)) ProgramGuideUtils.epgStartTime else startTime
+                val itemEnd =
+                    if (endTime.isAfter(ProgramGuideUtils.epgEndTime)) ProgramGuideUtils.epgEndTime else endTime
+                // Breite = Dauer in Minuten * 5 Pixel
+                binding.relLayoutFullepgitem.layoutParams.width =
+                    ProgramGuideUtils.getCellWidth(itemStart, itemEnd)
+            } else {
+                binding.relLayoutFullepgitem.layoutParams.width = 0
+            }
         }
 
         private val EpgDataOB.isLiveShow: Boolean

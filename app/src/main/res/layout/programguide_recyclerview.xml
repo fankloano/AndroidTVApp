@@ -6,6 +6,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_begin="160dp" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_time_line"
         android:layout_width="0dp"
@@ -16,11 +23,12 @@
         android:orientation="horizontal"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toStartOf="@id/guideline_vertical"
         app:layout_constraintTop_toTopOf="parent"
         tools:listitem="@layout/rv_item_tvguide_timeline" />
 
-    <com.example.mj_player_tv.ui.tvguidetest.ProgramGuideRecyclerView
+
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_channels"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -28,33 +36,27 @@
         android:focusableInTouchMode="false"
         android:background="?attr/backgroundDark"
         app:layout_constraintBottom_toBottomOf="parent"
+        tools:listitem="@layout/rv_item_tvguide_tvepg"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rv_time_line" />
-
-    <View
-        android:layout_width="15dp"
-        android:layout_height="0dp"
-        android:foreground="@drawable/gradient_overlay_fromleft"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/rv_time_line"
-        app:layout_constraintTop_toBottomOf="@id/rv_time_line"/>
 
     <View
         android:id="@+id/time_indicator"
         android:layout_width="1dp"
         android:layout_height="0dp"
         android:background="@color/light_grey"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/rv_time_line"
-        tools:layout_marginStart="200dp" />
+        app:layout_constraintStart_toStartOf="@id/guideline_vertical"
+        app:layout_constraintTop_toBottomOf="@id/rv_time_line"/>
 
     <View
         android:id="@+id/time_indicator_bubble"
         android:layout_width="4dp"
         android:layout_height="3dp"
         android:background="@color/light_grey"
+        android:visibility="invisible"
         app:layout_constraintStart_toStartOf="@id/time_indicator"
         app:layout_constraintEnd_toEndOf="@id/time_indicator"
         app:layout_constraintBottom_toBottomOf="@id/rv_time_line"/>

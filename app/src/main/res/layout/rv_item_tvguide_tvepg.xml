@@ -9,12 +9,11 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/const_tvchannel"
-        android:layout_width="0dp"
+        android:layout_width="160dp"
         android:layout_height="50dp"
         android:background="@drawable/selector_tvguide_channel"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintWidth_percent="0.2">
+        app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:layout_width="0dp"
@@ -76,7 +75,6 @@
         android:id="@+id/rv_channel_programs"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:layout_marginStart="10dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         tools:listitem="@layout/rv_item_tvguide_epg"
@@ -86,5 +84,12 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/const_tvchannel"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <View
+        android:layout_width="15dp"
+        android:layout_height="50dp"
+        android:foreground="@drawable/gradient_overlay_fromleft"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/const_tvchannel"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

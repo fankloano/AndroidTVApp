@@ -32,10 +32,11 @@ class EpgItemDecoration(
 
             // Rechte Linie (außer beim letzten Item)
             if (i < childCount - 1) {
-                val left = child.right.toFloat() - thickness / 2f
-                val right = child.right.toFloat() + thickness / 2f
+                val left = child.right.toFloat() - thickness
+                val right = child.right.toFloat()
                 c.drawRect(left, child.top.toFloat(), right, child.bottom.toFloat(), paint)
             }
+
         }
     }
 }
