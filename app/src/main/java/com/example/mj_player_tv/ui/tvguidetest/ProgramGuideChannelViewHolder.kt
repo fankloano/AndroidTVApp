@@ -17,9 +17,9 @@ class ProgramGuideChannelViewHolder(
     private val manager: ProgramGuideManager
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    private val epgAdapter = ProgramGuideEpgAdapter()
-
     fun bind(channelWithEpg: TvChannelWithEpg, scrollSyncHelper: EpgScrollSyncManager) {
+        val tag = "channel_${channelWithEpg.tvChannelPosition.catAndChannelAccount}"
+        binding.root.tag = tag
         val tvchannelPos = channelWithEpg.tvChannelPosition
         val tvChannel = tvchannelPos.tvchannel.target
         val account = tvChannel.account.target
@@ -57,7 +57,7 @@ class ProgramGuideChannelViewHolder(
             LinearLayoutManager.HORIZONTAL,
             false
         )
-
+        val epgAdapter = ProgramGuideEpgAdapter(channelWithEpg.tvChannelPosition.catAndChannelAccount)
         binding.rvChannelPrograms.apply {
             adapter = epgAdapter
             addItemDecoration(

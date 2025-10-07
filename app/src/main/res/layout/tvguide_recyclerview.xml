@@ -13,10 +13,10 @@
         android:background="?attr/backgroundDark"
         android:focusable="false"
         android:focusableInTouchMode="false"
-        android:nextFocusRight="@id/rv_channels"
+        android:nextFocusRight="@id/rv_channellogos"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/rv_channels" />
+        app:layout_constraintTop_toTopOf="@id/rv_channellogos" />
 
     <com.example.mj_player_tv.utils.views.RecyclerWithPositionView
         android:id="@+id/rv_time_line"
@@ -33,7 +33,7 @@
         tools:listitem="@layout/rv_item_tvguide_timeline" />
 
     <com.example.mj_player_tv.utils.views.RecyclerWithPositionView
-        android:id="@+id/rv_channels"
+        android:id="@+id/rv_channellogos"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:focusable="false"

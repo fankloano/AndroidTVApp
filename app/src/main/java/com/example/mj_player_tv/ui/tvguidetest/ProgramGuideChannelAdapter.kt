@@ -17,7 +17,6 @@ class ProgramGuideChannelAdapter(
     private val scrollSyncHelper: EpgScrollSyncManager
 ) : ListAdapter<TvChannelWithEpg, ProgramGuideChannelViewHolder>(DIFF_CALLBACK) {
 
-    private val epgAdapter = ProgramGuideEpgAdapter()
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<TvChannelWithEpg>() {

@@ -77,10 +77,9 @@
         android:layout_height="50dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
+        android:descendantFocusability="blocksDescendants"
         tools:listitem="@layout/rv_item_tvguide_epg"
         android:background="@color/background_dark_dark"
-        android:focusableInTouchMode="true"
-        android:focusable="true"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toEndOf="@id/const_tvchannel"
         app:layout_constraintEnd_toEndOf="parent"/>

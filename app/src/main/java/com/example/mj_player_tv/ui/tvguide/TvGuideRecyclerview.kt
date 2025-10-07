@@ -148,7 +148,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     private fun logAllOffsets(prefix: String = "") {
         try {
             val t = currentTimeLineOffset()
-            val childOffsets = binding.rvChannels.children.mapNotNull { it as? RecyclerWithPositionView }
+            val childOffsets = binding.rvChannellogos.children.mapNotNull { it as? RecyclerWithPositionView }
                 .mapIndexed { i, r -> "c$i:${r.computeHorizontalScrollOffset()}" }
                 .joinToString(",")
             Log.d("TVGUIDE_OFFSETS", "$prefix timeline=$t children=[$childOffsets]")
@@ -263,7 +263,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
     // --- Recycler setup ---
     private fun initChannelRecycler() {
-        binding.rvChannels.apply {
+        binding.rvChannellogos.apply {
             val channelListAdapter = TvGuideChannelListAdapter(this@TvGuideRecyclerview::currentTimeLineOffset)
             layoutManager = object : LinearLayoutManager(context) {
                 override fun onInterceptFocusSearch(focused: View, direction: Int) = null
@@ -301,19 +301,19 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         binding.tvTimeLineLabel.text = DateTime().toString("HH:mm")
 
         if (!withSubmit) return
-        binding.rvChannels.children.mapNotNull { it as? RecyclerView }.forEach {
+        binding.rvChannellogos.children.mapNotNull { it as? RecyclerView }.forEach {
             it.children.mapNotNull { view -> view.getShowTag() }.forEach { showTag ->
                 val channel = channels.singleOrNull { channel -> channel.tvChannelPosition.catAndChannelAccount == showTag.channelId }
                 val currentShow = channel?.epgList?.getCurrentShow()
 
                 // Finde die Ansicht, die dem aktuellen ShowTag entspricht, und setze den Status
-                binding.rvChannels.findViewWithTag<View>(showTag)?.isActivated = currentShow?.idByAccountData == showTag.showId
+                binding.rvChannellogos.findViewWithTag<View>(showTag)?.isActivated = currentShow?.idByAccountData == showTag.showId
             }
         }
     }
 
     private fun updateVisibleEpgProgress(now: DateTime) {
-        val layoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
+        val layoutManager = binding.rvChannellogos.layoutManager as? LinearLayoutManager ?: return
         for (i in layoutManager.findFirstVisibleItemPosition()..layoutManager.findLastVisibleItemPosition()) {
             val channelRecycler = layoutManager.findViewByPosition(i) as? RecyclerWithPositionView
                 ?: continue
@@ -356,11 +356,11 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     }
 
     private fun scrollVerticallyToPosition(position: Int) {
-        val epgLayoutManager = binding.rvChannels.layoutManager as? LinearLayoutManager ?: return
+        val epgLayoutManager = binding.rvChannellogos.layoutManager as? LinearLayoutManager ?: return
         val logosLayoutManager = binding.rvChannelsLogos.layoutManager as? LinearLayoutManager ?: return
 
         val rowHeightPx = EPGConfig.rowHeight.dpToPx
-        val recyclerHeight = binding.rvChannels.height
+        val recyclerHeight = binding.rvChannellogos.height
         val offset = recyclerHeight / 2 - rowHeightPx / 2
 
         when {
@@ -396,7 +396,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
         postDelayed({
             val channelRecycler =
-                binding.rvChannels.findViewWithTag<RecyclerWithPositionView>("channel_${channel.tvChannelPosition.catAndChannelAccount}")
+                binding.rvChannellogos.findViewWithTag<RecyclerWithPositionView>("channel_${channel.tvChannelPosition.catAndChannelAccount}")
                     ?: return@postDelayed
 
             // 1. Pixelpositionen und Abmessungen berechnen
@@ -435,7 +435,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
                 syncHorizontalScroll(null, scrollBy)
             }
 
-            binding.rvChannels.post {
+            binding.rvChannellogos.post {
                 val showView = channelRecycler.findViewWithTag<View>(showTag) ?: return@post
                 lastSelectedShowView?.isSelected = false
                 showView.setShowTag(showTag.channelId, showTag.showId)
@@ -452,7 +452,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     @Suppress("unused")
     fun scrollToNow(now: DateTime) {
         post {
-            val nowOffset = if (dayShift == 0) getCellWidth(startTime, now) - binding.rvChannels.width / 2 else 0
+            val nowOffset = if (dayShift == 0) getCellWidth(startTime, now) - binding.rvChannellogos.width / 2 else 0
             val scrollBy = nowOffset - currentTimeLineOffset()
             Log.d("TVGUIDE_NOW", "scrollToNow nowOffset=$nowOffset current=${currentTimeLineOffset()} scrollBy=$scrollBy")
             if (scrollBy != 0) syncHorizontalScroll(null, scrollBy)
@@ -495,7 +495,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
     private fun setChannelsLogo(items: List<TvChannelWithEpg>) { channelLogosAdapter.submitList(items) }
     private fun setChannels(items: List<TvChannelWithEpg>, now: DateTime) {
-        (binding.rvChannels.adapter as? TvGuideChannelListAdapter)?.submitList(items) {
+        (binding.rvChannellogos.adapter as? TvGuideChannelListAdapter)?.submitList(items) {
             updateVisibleEpgProgress(now)
         }
     }
@@ -520,13 +520,13 @@ class TvGuideRecyclerview @JvmOverloads constructor(
     private fun scrollChannels(recyclerView: RecyclerView?, dy: Int) {
         // If the event came from the Logos Recycler, scroll the Channels Recycler
         if (binding.rvChannelsLogos == recyclerView) {
-            binding.rvChannels.scrollBy(0, dy)
+            binding.rvChannellogos.scrollBy(0, dy)
         }
     }
 
     private fun scrollChannelsLogo(recyclerView: RecyclerView?, dy: Int) {
         // If the event came from the Channels Recycler, scroll the Logos Recycler
-        if (binding.rvChannels == recyclerView) {
+        if (binding.rvChannellogos == recyclerView) {
             binding.rvChannelsLogos.scrollBy(0, dy)
         }
     }
@@ -553,7 +553,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
                 Log.d("TVGUIDE_SYNC", "timeline scrolled by $dx → offset=${binding.rvTimeLine.computeHorizontalScrollOffset()}")
             }
 
-            val rvChildren = binding.rvChannels.children.mapNotNull { it as? RecyclerWithPositionView }.toList()
+            val rvChildren = binding.rvChannellogos.children.mapNotNull { it as? RecyclerWithPositionView }.toList()
             rvChildren.forEach { childRv ->
                 if (childRv != sourceRv) {
                     childRv.scrollBy(dx, 0)

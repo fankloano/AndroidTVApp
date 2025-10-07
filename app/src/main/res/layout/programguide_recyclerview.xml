@@ -21,6 +21,7 @@
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:orientation="horizontal"
+        android:descendantFocusability="blocksDescendants"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="@id/guideline_vertical"
@@ -29,12 +30,13 @@
 
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_channels"
+        android:id="@+id/rv_channellogos"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:background="?attr/backgroundDark"
+        android:descendantFocusability="blocksDescendants"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:listitem="@layout/rv_item_tvguide_tvepg"
         app:layout_constraintEnd_toEndOf="parent"

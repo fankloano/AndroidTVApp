@@ -9,10 +9,14 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
+import com.example.mj_player_tv.database.entity.TvChannelOB_.channelId
+import com.example.mj_player_tv.database.help.ShowTag
 import com.example.mj_player_tv.databinding.RvItemTvguideEpgBinding
 import org.joda.time.DateTime
 
-class ProgramGuideEpgAdapter :
+class ProgramGuideEpgAdapter(
+    private val channelId: String
+) :
     ListAdapter<EpgDataOB, ProgramGuideEpgAdapter.ProgramViewHolder>(DIFF_CALLBACK) {
 
     companion object {
@@ -58,6 +62,7 @@ class ProgramGuideEpgAdapter :
             } else {
                 binding.relLayoutFullepgitem.layoutParams.width = 0
             }
+            binding.root.tag = ShowTag(channelId, epgDataOB.idByAccountData)
         }
 
         private val EpgDataOB.isLiveShow: Boolean
