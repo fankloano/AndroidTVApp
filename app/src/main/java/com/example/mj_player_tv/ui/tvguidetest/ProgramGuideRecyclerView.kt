@@ -7,7 +7,9 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
@@ -18,9 +20,13 @@ import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.ProgramguideRecyclerviewBinding
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.dayShift
+import com.example.mj_player_tv.ui.tvguide.EPGUtils.startTime
+import com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
 import com.example.mj_player_tv.ui.tvguidetest.ProgramGuideUtils.epgStartTime
 import com.example.mj_player_tv.ui.tvguidetest.ProgramGuideUtils.getCellWidth
 import com.example.mj_player_tv.utils.EpgScrollSyncManager
+import com.example.mj_player_tv.utils.views.RecyclerWithPositionView
+import com.volkov.EPGConfig
 import org.joda.time.DateTime
 import org.joda.time.Minutes
 import kotlin.math.abs
@@ -37,6 +43,7 @@ class ProgramGuideRecyclerView @JvmOverloads constructor(
     init {
         val view = LayoutInflater.from(context).inflate(R.layout.programguide_recyclerview, this, true)
         binding = ProgramguideRecyclerviewBinding.bind(view)
+
     }
     // Interfaces für Fokus & Selektion
     var manager = ProgramGuideManager()
@@ -112,7 +119,6 @@ class ProgramGuideRecyclerView @JvmOverloads constructor(
         focusedProgramIndex = currentProgramIndex
         focusFirstProgram(focusedChannelIndex, focusedProgramIndex)
         setTimeIndicator()
-
     }
 
     private fun getNextShowByDirection(direction: MoveDirection): View? {
@@ -142,83 +148,124 @@ class ProgramGuideRecyclerView @JvmOverloads constructor(
         }
 
         desiredShow ?: return null
-        selectShow(channels.indexOf(channel), channel, channel.epgList.indexOf(desiredShow), desiredShow)
+        selectShow(channel, desiredShow)
         return lastSelectedShowView
     }
 
-    private fun selectShow(channelIndex: Int, channel: TvChannelWithEpg, programIndex: Int, show: EpgDataOB) {
-        scrollChannelToPivot(channelIndex)
+    private fun selectShow(
+        channel: TvChannelWithEpg, show: EpgDataOB
+    ) {
+        // Vertikal zum ausgewählten Kanal scrollen
+        scrollChannelToPivot(channels.indexOf(channel))
+        val showTag = ShowTag(channel.tvChannelPosition.catAndChannelAccount, show.idByAccountData)
 
         postDelayed({
-            // Hol den ViewHolder für den Channel
-            val vh = binding.rvChannellogos.findViewHolderForAdapterPosition(channelIndex)
-                    as? ProgramGuideChannelViewHolder ?: return@postDelayed
+            binding.rvChannellogos.post {
+                val vh = binding.rvChannellogos.findViewHolderForAdapterPosition(channels.indexOf(channel))
+                        as? ProgramGuideChannelViewHolder
 
-            // Das horizontale RecyclerView im ViewHolder
-            val channelRecycler = vh.binding.rvChannelPrograms
+                if (vh == null) {
+                    // Der ViewHolder ist noch nicht gebunden/wieder sichtbar. Erneut versuchen,
+                    // wenn das Layout sich beruhigt hat.
+                    binding.rvChannellogos.postDelayed({
+                        selectShow(channel, show)
+                    }, 50) // Kurze Verzögerung für Wiederholungsversuch
+                    return@post
+                }
+                val recyclerView = vh.binding.rvChannelPrograms
+                // 1. Pixelpositionen und Abmessungen berechnen
+                val showStartPx = getCellWidth(
+                    epgStartTime, DateTime(show.startTimestamp * 1000L)
+                )
+                val showEndPx = getCellWidth(
+                    epgStartTime, DateTime(show.stopTimestamp * 1000L)
+                )
+                val showWidth = showEndPx - showStartPx
 
-            val lm = channelRecycler.layoutManager ?: return@postDelayed
-            val child = lm.findViewByPosition(programIndex) ?: return@postDelayed
+                // 2. Sichtbaren Bereich und Abmessungen ermitteln
+                val visibleStartPx = currentTimeLineOffset()
+                val visibleEndPx = visibleStartPx + binding.rvTimeLine.width
+                val recyclerWidth = binding.rvTimeLine.width
 
-            // Zentriere das Item horizontal
-            val childCenter = (child.left + child.right) / 2
-            val rvCenter = channelRecycler.width / 2
-            val targetGlobalOffset = scrollSyncHelper.getTotalScrollX() + (childCenter - rvCenter)
-            scrollSyncHelper.jumpSyncTo(targetGlobalOffset)
+                // 3. Ziel-Scroll-Position festlegen
+                val targetScrollPosition = when {
+                    // A: Sendung ist vollständig sichtbar -> nicht scrollen
+                    showStartPx >= visibleStartPx && showEndPx <= visibleEndPx -> currentTimeLineOffset()
 
-            // Fokus setzen
-            channelRecycler.post {
-                lastSelectedShowView?.isSelected = false
-                lastSelectedShowView = child
-                child.isSelected = true
-                child.requestFocus()
-                programSelectionListener?.onShowSelected(channel.tvChannelPosition, show)
+                    // B: Sendung ist am linken Rand abgeschnitten -> zum Start der Sendung scrollen
+                    showStartPx < visibleStartPx -> showStartPx
+
+                    // C: Sendung ist am rechten Rand abgeschnitten UND passt auf den Bildschirm -> mittig platzieren
+                    showWidth <= recyclerWidth -> showStartPx - (recyclerWidth / 2) + (showWidth / 2)
+
+                    // D: Sendung ist am rechten Rand abgeschnitten UND zu breit -> zum Start der Sendung scrollen
+                    else -> showStartPx
+                }
+                // 4. Scroll-Differenz berechnen und ausführen
+                val scrollBy = targetScrollPosition - visibleStartPx
+
+                if (scrollBy != 0) {
+                    scrollSyncHelper.jumpSyncTo(scrollBy)
+                }
+
+                recyclerView.post {
+                    val showView =
+                        recyclerView.findViewWithTag<View>(showTag)
+                            ?: return@post
+                    lastSelectedShowView?.isSelected = false
+                    showView.setShowTag(showTag.channelId, showTag.showId)
+                    lastSelectedShowView = showView
+                    showView.isSelected = true
+                    showView.requestFocus()
+                    programSelectionListener?.onShowSelected(channel.tvChannelPosition, show)
+                    Log.d("TVGUIDE_SELECT", "focused view for show ${show.idByAccountData}")
+                }
             }
-
         }, 100)
     }
-
 
     fun selectAndScrollToNow() {
 
     }
 
     private fun scrollChannelToPivot(channelIndex: Int) {
-        val lm = binding.rvChannellogos.layoutManager as? LinearLayoutManager ?: return
-        val rvHeight = height
-        val totalChannels = channels.size
+        val layoutManager = binding.rvChannellogos.layoutManager as? LinearLayoutManager ?: return
+        val rvHeight = binding.rvChannellogos.height
+        val totalItems = layoutManager.itemCount
 
-        // Höhe eines Channels schätzen (oder fix nehmen)
-        val childHeight = getChildAt(channelIndex)?.height ?: 100 // z.B. 100px fallback
+        // Hole die ViewHolder-Höhe (falls nicht verfügbar, Defaultwert)
+        val vh = binding.rvChannellogos.findViewHolderForAdapterPosition(channelIndex)
+        val itemHeight = vh?.itemView?.height ?: 50
 
-        // Ziel: Fokus in der Mitte
-        var desiredOffset = rvHeight / 2 - childHeight / 2
-        val tschennel = channels[channelIndex].tvChannelPosition.tvchannel.target.showingName
-        // Sonderfälle: erster/letzter Channel
-        if (channelIndex == 0) desiredOffset = 0
-        if (channelIndex == totalChannels - 1) desiredOffset = rvHeight - childHeight
-        Log.d("SCROLL VERTICALLY", "SCROLL PIVOT: $tschennel")
+        // Maximaler Offset, um keine Lücken unten zu erzeugen
+        val maxOffset = rvHeight - itemHeight
 
-        lm.scrollToPositionWithOffset(channelIndex, desiredOffset)
+        // Ideales Offset für mittige Positionierung
+        val centerOffset = (rvHeight - itemHeight) / 2
+
+        val offset = when {
+            // Erster Channel → oben
+            channelIndex == 0 -> 0
+
+            // Letzter Channel → unten
+            channelIndex == totalItems - 1 -> maxOffset
+
+            // Alle anderen → mittig
+            else -> centerOffset
+        }
+
+        layoutManager.scrollToPositionWithOffset(channelIndex, offset)
     }
 
-    fun focusFirstProgram(channelIndex: Int, programIndex: Int) {
-        val vh = binding.rvChannellogos.findViewHolderForAdapterPosition(channelIndex) as? ProgramGuideChannelViewHolder ?: return
-        val rv = vh.binding.rvChannelPrograms
-        val layoutManager = rv.layoutManager as? LinearLayoutManager ?: return
 
-        val child = layoutManager.findViewByPosition(programIndex)
-        if (child == null) {
-            return
-        } else {
-            val channelWithEpg = channels[channelIndex]
-            val show = channelWithEpg.epgList[programIndex]
-            selectShow(channelIndex, channelWithEpg, programIndex, show)
-            programSelectionListener?.onShowSelected(
-                channelWithEpg.tvChannelPosition,
-                channelWithEpg.epgList[programIndex]
-            )
-        }
+    fun focusFirstProgram(channelIndex: Int, programIndex: Int) {
+        val channelWithEpg = channels[channelIndex]
+        val show = channelWithEpg.epgList[programIndex]
+        selectShow( channelWithEpg, show)
+        programSelectionListener?.onShowSelected(
+            channelWithEpg.tvChannelPosition,
+            channelWithEpg.epgList[programIndex]
+        )
     }
 
     fun initFirstView(channelList: List<TvChannelWithEpg>) {
@@ -323,7 +370,7 @@ class ProgramGuideRecyclerView @JvmOverloads constructor(
         val channelIndex = channels.indexOf(channel)
         scrollChannelToPivot(channelIndex)
         val currentShow = if (dayShift == 0) channel.epgList.getCurrentShow() ?: channel.epgList.firstOrNull() else channel.epgList.firstOrNull()
-        currentShow?.let { selectShow(channelIndex, channel, channel.epgList.indexOf(currentShow), it) }
+        currentShow?.let { selectShow(channel, it) }
     }
     fun getCurrentProgram(epgList: List<EpgDataOB>): Int {
         val currentTimeInSeconds = System.currentTimeMillis() / 1000

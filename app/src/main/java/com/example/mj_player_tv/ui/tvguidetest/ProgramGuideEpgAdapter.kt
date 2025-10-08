@@ -15,9 +15,10 @@ import com.example.mj_player_tv.databinding.RvItemTvguideEpgBinding
 import org.joda.time.DateTime
 
 class ProgramGuideEpgAdapter(
-    private val channelId: String
 ) :
     ListAdapter<EpgDataOB, ProgramGuideEpgAdapter.ProgramViewHolder>(DIFF_CALLBACK) {
+
+    var channelId = ""
 
     companion object {
         private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<EpgDataOB>() {

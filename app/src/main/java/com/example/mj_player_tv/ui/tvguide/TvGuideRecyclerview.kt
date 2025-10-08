@@ -234,6 +234,77 @@ class TvGuideRecyclerview @JvmOverloads constructor(
         return lastSelectedShowView
     }
 
+    @Suppress("unused")
+    fun selectShow(
+        channelId: String, showId: String
+    ) {
+        val channel = channels.singleOrNull { it.tvChannelPosition.catAndChannelAccount == channelId } ?: return
+        val show = channel.epgList.singleOrNull { it.idByAccountData == showId } ?: return
+        selectShow(channel, show)
+    }
+
+    private fun selectShow(
+        channel: TvChannelWithEpg, show: EpgDataOB
+    ) {
+        // Vertikal zum ausgewählten Kanal scrollen
+        scrollVerticallyToPosition(channels.indexOf(channel))
+        val showTag = ShowTag(channel.tvChannelPosition.catAndChannelAccount, show.idByAccountData)
+
+        postDelayed({
+            val channelRecycler =
+                binding.rvChannellogos.findViewWithTag<RecyclerWithPositionView>("channel_${channel.tvChannelPosition.catAndChannelAccount}")
+                    ?: return@postDelayed
+
+            // 1. Pixelpositionen und Abmessungen berechnen
+            val showStartPx = getCellWidth(
+                startTime, DateTime(show.startTimestamp * 1000L)
+            )
+            val showEndPx = getCellWidth(
+                startTime, DateTime(show.stopTimestamp * 1000L)
+            )
+            val showWidth = showEndPx - showStartPx
+
+            // 2. Sichtbaren Bereich und Abmessungen ermitteln
+            val visibleStartPx = currentTimeLineOffset()
+            val visibleEndPx = visibleStartPx + binding.rvTimeLine.width
+            val recyclerWidth = binding.rvTimeLine.width
+
+            // 3. Ziel-Scroll-Position festlegen
+            val targetScrollPosition = when {
+                // A: Sendung ist vollständig sichtbar -> nicht scrollen
+                showStartPx >= visibleStartPx && showEndPx <= visibleEndPx -> timeLineScrollPosition
+
+                // B: Sendung ist am linken Rand abgeschnitten -> zum Start der Sendung scrollen
+                showStartPx < visibleStartPx -> showStartPx
+
+                // C: Sendung ist am rechten Rand abgeschnitten UND passt auf den Bildschirm -> mittig platzieren
+                showWidth <= recyclerWidth -> showStartPx - (recyclerWidth / 2) + (showWidth / 2)
+
+                // D: Sendung ist am rechten Rand abgeschnitten UND zu breit -> zum Start der Sendung scrollen
+                else -> showStartPx
+            }
+            Log.d("WOHIN SCROLL HORIZONTAL", "TARGETSCROLL: $targetScrollPosition TIMELINESCROLLPOS: $timeLineScrollPosition")
+            // 4. Scroll-Differenz berechnen und ausführen
+            val scrollBy = targetScrollPosition - visibleStartPx
+
+            if (scrollBy != 0) {
+                syncHorizontalScroll(null, scrollBy)
+            }
+
+            binding.rvChannellogos.post {
+                val showView = channelRecycler.findViewWithTag<View>(showTag) ?: return@post
+                lastSelectedShowView?.isSelected = false
+                showView.setShowTag(showTag.channelId, showTag.showId)
+                lastSelectedShowView = showView
+                showView.isSelected = true
+                showView.requestFocus()
+                listener?.onShowSelected(channel.tvChannelPosition, show)
+                Log.d("TVGUIDE_SELECT", "focused view for show ${show.idByAccountData}")
+            }
+
+        }, EPGConfig.focusDelay)
+    }
+
     private val EpgDataOB.isLiveShow: Boolean
         get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
 
@@ -377,76 +448,6 @@ class TvGuideRecyclerview @JvmOverloads constructor(
                 logosLayoutManager.scrollToPositionWithOffset(position, offset)
             }
         }
-    }
-    @Suppress("unused")
-    fun selectShow(
-        channelId: String, showId: String
-    ) {
-        val channel = channels.singleOrNull { it.tvChannelPosition.catAndChannelAccount == channelId } ?: return
-        val show = channel.epgList.singleOrNull { it.idByAccountData == showId } ?: return
-        selectShow(channel, show)
-    }
-
-    private fun selectShow(
-        channel: TvChannelWithEpg, show: EpgDataOB
-    ) {
-        // Vertikal zum ausgewählten Kanal scrollen
-        scrollVerticallyToPosition(channels.indexOf(channel))
-        val showTag = ShowTag(channel.tvChannelPosition.catAndChannelAccount, show.idByAccountData)
-
-        postDelayed({
-            val channelRecycler =
-                binding.rvChannellogos.findViewWithTag<RecyclerWithPositionView>("channel_${channel.tvChannelPosition.catAndChannelAccount}")
-                    ?: return@postDelayed
-
-            // 1. Pixelpositionen und Abmessungen berechnen
-            val showStartPx = getCellWidth(
-                startTime, DateTime(show.startTimestamp * 1000L)
-            )
-            val showEndPx = getCellWidth(
-                startTime, DateTime(show.stopTimestamp * 1000L)
-            )
-            val showWidth = showEndPx - showStartPx
-
-            // 2. Sichtbaren Bereich und Abmessungen ermitteln
-            val visibleStartPx = currentTimeLineOffset()
-            val visibleEndPx = visibleStartPx + binding.rvTimeLine.width
-            val recyclerWidth = binding.rvTimeLine.width
-
-            // 3. Ziel-Scroll-Position festlegen
-            val targetScrollPosition = when {
-                // A: Sendung ist vollständig sichtbar -> nicht scrollen
-                showStartPx >= visibleStartPx && showEndPx <= visibleEndPx -> timeLineScrollPosition
-
-                // B: Sendung ist am linken Rand abgeschnitten -> zum Start der Sendung scrollen
-                showStartPx < visibleStartPx -> showStartPx
-
-                // C: Sendung ist am rechten Rand abgeschnitten UND passt auf den Bildschirm -> mittig platzieren
-                showWidth <= recyclerWidth -> showStartPx - (recyclerWidth / 2) + (showWidth / 2)
-
-                // D: Sendung ist am rechten Rand abgeschnitten UND zu breit -> zum Start der Sendung scrollen
-                else -> showStartPx
-            }
-            Log.d("WOHIN SCROLL HORIZONTAL", "TARGETSCROLL: $targetScrollPosition TIMELINESCROLLPOS: $timeLineScrollPosition")
-            // 4. Scroll-Differenz berechnen und ausführen
-            val scrollBy = targetScrollPosition - visibleStartPx
-
-            if (scrollBy != 0) {
-                syncHorizontalScroll(null, scrollBy)
-            }
-
-            binding.rvChannellogos.post {
-                val showView = channelRecycler.findViewWithTag<View>(showTag) ?: return@post
-                lastSelectedShowView?.isSelected = false
-                showView.setShowTag(showTag.channelId, showTag.showId)
-                lastSelectedShowView = showView
-                showView.isSelected = true
-                showView.requestFocus()
-                listener?.onShowSelected(channel.tvChannelPosition, show)
-                Log.d("TVGUIDE_SELECT", "focused view for show ${show.idByAccountData}")
-            }
-
-        }, EPGConfig.focusDelay)
     }
 
     @Suppress("unused")

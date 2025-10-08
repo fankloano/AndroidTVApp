@@ -19,6 +19,7 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.ChangeBounds
 import androidx.transition.TransitionManager
 import com.example.mj_player_tv.MainActivity
@@ -34,8 +35,13 @@ import com.example.mj_player_tv.databinding.FragmentTvguideBinding
 import com.example.mj_player_tv.databinding.FragmentTvguideTestBinding
 import com.example.mj_player_tv.repository.TvGuideScrollSyncManager
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryAdapter
+import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryEpgAdapter
 import com.example.mj_player_tv.ui.adapter.TvGuideAccountCategoryTestAdapter
 import com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
+import com.example.mj_player_tv.ui.tvguidetest.EpgChannelAdapter
+import com.example.mj_player_tv.ui.tvguidetest.EpgRecyclerview
+import com.example.mj_player_tv.ui.tvguidetest.EpgTimeLineAdapter
+import com.example.mj_player_tv.ui.tvguidetest.EpgUtil
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
@@ -52,7 +58,7 @@ import org.joda.time.DateTime
 import org.joda.time.DateTimeZone
 
 @UnstableApi
-class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
+class EpgTestFragment : Fragment(R.layout.fragment_tvguide_test) {
 
     private var _binding: FragmentTvguideTestBinding? = null
 
@@ -62,7 +68,13 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
 
     private val tvCatBox: Box<TvCategoryOB> = ObjectBox.store.boxFor(TvCategoryOB::class.java)
 
-    private lateinit var tvGuideAccountCategoryAdapter: TvGuideAccountCategoryTestAdapter
+    private lateinit var tvGuideAccountCategoryAdapter: TvGuideAccountCategoryEpgAdapter
+
+    private lateinit var epgRecyclerview: EpgRecyclerview
+
+    private lateinit var epgChannelAdapter: EpgChannelAdapter
+
+    private lateinit var epgTimeLineAdapter: EpgTimeLineAdapter
 
     var firstChannelId = ""
 
@@ -116,6 +128,8 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
         }
 
         prepareAccountCategoryRecyclerView()
+        prepareEpgRecyclerView()
+        prepareEpgTimeLineRecyclerView()
         var accountsList = listOf<AccountTvCategory>()
 
         helpViewModel.tvAccountsWithCategoriesLiveData.observe(viewLifecycleOwner) { accounts ->
@@ -161,10 +175,11 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
     //ACCOUNTS
 
     fun focusEpgRecycler() {
+        focusCurrentShow()
     }
 
     private fun prepareAccountCategoryRecyclerView() {
-        tvGuideAccountCategoryAdapter = TvGuideAccountCategoryTestAdapter(
+        tvGuideAccountCategoryAdapter = TvGuideAccountCategoryEpgAdapter(
             ::onAccountClicked,
             { currentList },
             helpViewModel,
@@ -317,7 +332,7 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
 
         if (item.categories.isEmpty()) {
             Toast.makeText(
-                this@TvGuideTestFragment.requireActivity(),
+                this@EpgTestFragment.requireActivity(),
                 "No categories enabled!",
                 Toast.LENGTH_SHORT
             ).show()
@@ -448,8 +463,10 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
                         }.sortedBy { it.tvChannelPosition.position }
                         firstChannelId = channelsWithEpg.firstOrNull()?.tvChannelPosition?.catAndChannelAccount ?: ""
                         withContext(Dispatchers.Main) {
-
+                            epgChannelAdapter.submitList(channelsWithEpg)
+                            epgTimeLineAdapter.submitList(EpgUtil.createTimelineData())
                         }
+
                     }
                 }
             }
@@ -655,6 +672,42 @@ class TvGuideTestFragment : Fragment(R.layout.fragment_tvguide_test) {
         transaction.addToBackStack(null)
         transaction.commit()
         binding.playerTv.visibility = VISIBLE
+    }
+
+    private fun prepareEpgRecyclerView() {
+        epgRecyclerview = binding.epgView
+
+        epgChannelAdapter = EpgChannelAdapter(epgRecyclerview)
+        binding.epgView.apply {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            adapter = epgChannelAdapter
+            setHasFixedSize(true)
+        }
+    }
+
+    private fun prepareEpgTimeLineRecyclerView() {
+        epgTimeLineAdapter = EpgTimeLineAdapter()
+        binding.rvTimeLine.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = epgTimeLineAdapter
+        }
+    }
+
+    private fun focusCurrentShow() {
+        val firstChannel = epgChannelAdapter.currentList.firstOrNull() ?: return
+        val currentShow = EpgUtil.findCurrentShow(firstChannel) ?: return
+
+        // 1. Finde die Position der Show im EpgDataAdapter
+        val showIndex = firstChannel.epgList.indexOf(currentShow)
+        if (showIndex == -1) return
+
+        // 2. Scroll horizontal zum aktuellen Programm
+        val channelViewHolder = binding.epgView.findViewHolderForAdapterPosition(0) as? EpgChannelAdapter.ChannelViewHolder
+        channelViewHolder?.binding?.rvChannelPrograms?.scrollToPosition(showIndex)
+
+        // 3. Fokus auf das View-Item setzen (falls nötig)
+        val showView = channelViewHolder?.binding?.rvChannelPrograms?.findViewHolderForAdapterPosition(showIndex)?.itemView
+        showView?.requestFocus()
     }
 
     override fun onDestroy() {

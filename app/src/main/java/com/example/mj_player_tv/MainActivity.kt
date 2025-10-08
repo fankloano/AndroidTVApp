@@ -56,6 +56,7 @@ import com.example.mj_player_tv.ui.PlexFragment
 import com.example.mj_player_tv.viewmodel.PlexViewModel
 import com.example.mj_player_tv.viewmodel.PlexViewModelFactory
 import androidx.core.view.isGone
+import com.example.mj_player_tv.ui.EpgTestFragment
 import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.ui.TvGuideTestFragment
 import com.example.mj_player_tv.ui.WatchlistStatsFragment
@@ -356,7 +357,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                 toggleActivateOnMenu(it)
                 toggleVisibilityOfMainContainer(true)
                 lastOpenedFragment = Constants.FRAGMENT_TVGUIDE
-                changeFragment(TvGuideTestFragment())
+                changeFragment(EpgTestFragment())
                 activityMainBinding.navHostFragment.requestFocus()
             }
         }

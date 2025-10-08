@@ -29,14 +29,13 @@
         tools:listitem="@layout/rv_item_tvguide_timeline" />
 
 
-    <androidx.recyclerview.widget.RecyclerView
+    <com.example.mj_player_tv.utils.views.RecyclerWithPositionView
         android:id="@+id/rv_channellogos"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:focusable="false"
         android:focusableInTouchMode="false"
         android:background="?attr/backgroundDark"
-        android:descendantFocusability="blocksDescendants"
         app:layout_constraintBottom_toBottomOf="parent"
         tools:listitem="@layout/rv_item_tvguide_tvepg"
         app:layout_constraintEnd_toEndOf="parent"

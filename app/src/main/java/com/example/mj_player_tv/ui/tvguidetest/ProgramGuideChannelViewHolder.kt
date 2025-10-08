@@ -11,11 +11,14 @@ import com.example.mj_player_tv.databinding.RvItemTvguideTvepgBinding
 import com.example.mj_player_tv.ui.tvguide.EpgItemDecoration
 import com.example.mj_player_tv.ui.tvguide.adapters.TvGuideEpgAdapter
 import com.example.mj_player_tv.utils.EpgScrollSyncManager
+import com.example.mj_player_tv.utils.views.NoFocusSearchLinearLayoutManager
 
 class ProgramGuideChannelViewHolder(
     val binding: RvItemTvguideTvepgBinding,
     private val manager: ProgramGuideManager
 ) : RecyclerView.ViewHolder(binding.root) {
+
+    val epgAdapter = ProgramGuideEpgAdapter()
 
     fun bind(channelWithEpg: TvChannelWithEpg, scrollSyncHelper: EpgScrollSyncManager) {
         val tag = "channel_${channelWithEpg.tvChannelPosition.catAndChannelAccount}"
@@ -52,18 +55,17 @@ class ProgramGuideChannelViewHolder(
             }
         }
 
-        binding.rvChannelPrograms.layoutManager = LinearLayoutManager(
+        binding.rvChannelPrograms.layoutManager = NoFocusSearchLinearLayoutManager(
             binding.rvChannelPrograms.context,
-            LinearLayoutManager.HORIZONTAL,
-            false
         )
-        val epgAdapter = ProgramGuideEpgAdapter(channelWithEpg.tvChannelPosition.catAndChannelAccount)
+
         binding.rvChannelPrograms.apply {
             adapter = epgAdapter
             addItemDecoration(
                 EpgItemDecoration(color = context.getColor(R.color.background_dark))
             )
         }
+        epgAdapter.channelId = channelWithEpg.tvChannelPosition.catAndChannelAccount
         epgAdapter.submitList(channelWithEpg.epgList)
         // wichtig: direkt nach dem Layout auf globale Position springen
         binding.rvChannelPrograms.post {

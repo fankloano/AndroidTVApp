@@ -196,13 +196,27 @@
 
     </LinearLayout>
 
-    <com.example.mj_player_tv.ui.tvguidetest.ProgramGuideRecyclerView
+    <com.example.mj_player_tv.ui.tvguidetest.EpgRecyclerview
         android:id="@+id/epgView"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        tools:listitem="@layout/rv_item_tvguide_tvepg"
         app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
         app:layout_constraintWidth_percent="1.0"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/rv_time_line"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_time_line"
+        android:layout_width="0dp"
+        android:layout_height="34dp"
+        android:layout_marginStart="160dp"
+        android:background="?attr/backgroundDarkDark"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:orientation="horizontal"
+        app:layout_constraintStart_toEndOf="@id/linLayout_tvAccounts_menu"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/relLayout_tvpreview"/>
 
     <!-- Programmdetails Overlay -->
