@@ -60,6 +60,7 @@ import com.example.mj_player_tv.ui.EpgTestFragment
 import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.ui.TvGuideTestFragment
 import com.example.mj_player_tv.ui.WatchlistStatsFragment
+import com.example.mj_player_tv.ui.epg.TvFragment
 
 @UnstableApi
 class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
@@ -357,7 +358,7 @@ class MainActivity : FragmentActivity(), View.OnFocusChangeListener {
                 toggleActivateOnMenu(it)
                 toggleVisibilityOfMainContainer(true)
                 lastOpenedFragment = Constants.FRAGMENT_TVGUIDE
-                changeFragment(EpgTestFragment())
+                changeFragment(TvFragment())
                 activityMainBinding.navHostFragment.requestFocus()
             }
         }

@@ -7,7 +7,6 @@ import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import org.joda.time.DateTime
-import java.text.SimpleDateFormat
 
 object EpgUtil {
 
@@ -128,7 +127,7 @@ object EpgUtil {
         val halfHourWidth = 30 * pixelPerMinute // 150 px pro Halbstunde
 
         while (current <= end) {
-            val timeId = current.toString("HHmm")
+            val timeId = current
             val displayText = current.toString("HH:mm")
 
             timeline.add(

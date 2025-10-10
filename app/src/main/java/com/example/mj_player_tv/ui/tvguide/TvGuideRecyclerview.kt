@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.*
-import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.children
 import androidx.core.view.isVisible
@@ -487,7 +486,7 @@ class TvGuideRecyclerview @JvmOverloads constructor(
 
         while (currentTime <= EPGUtils.endTime) {
             val timeLabel = currentTime.toString("HH:mm")
-            hours.add(TimeLineData(timeId = currentTime.toString(), time = timeLabel, width = stepWidthPx, gravity = Gravity.CENTER, textSizeSp = if (hourIndex % 2 == 0) 13f else 11f))
+            hours.add(TimeLineData(timeId = currentTime, time = timeLabel, width = stepWidthPx, gravity = Gravity.CENTER, textSizeSp = if (hourIndex % 2 == 0) 13f else 11f))
             currentTime = currentTime.plusMinutes(timeStepMinutes)
             hourIndex++
         }

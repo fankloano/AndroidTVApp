@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linLayout_tvAccounts_menu"
+    android:background="@drawable/background_border_test_right">
+
+        <TextView
+            android:id="@+id/tv_allAccounts"
+            android:layout_width="match_parent"
+            android:layout_height="45dp"
+            android:text="TV ACCOUNTS"
+            android:gravity="center_vertical"
+            android:background="@color/background_dark"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginEnd="2dp"
+            android:layout_marginTop="2dp"
+            android:layout_marginStart="2dp"
+            android:textSize="15sp"
+            android:textColor="?attr/textMainColor" />
+
+        <com.rubensousa.dpadrecyclerview.DpadRecyclerView
+            android:id="@+id/rv_layout_tvAccounts_menu"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_allAccounts"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:paddingEnd="1dp"
+            android:paddingTop="2dp"
+            android:layout_marginTop="1dp"
+            android:orientation="vertical"
+            tools:listitem="@layout/rv_item_activated_accounts" />
+
+        <TextView
+            android:id="@+id/tv_noTvAccounts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_active_accounts"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_allAccounts"
+            android:visibility="invisible"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:layout_marginTop="40dp"/>
+
+   </androidx.constraintlayout.widget.ConstraintLayout>

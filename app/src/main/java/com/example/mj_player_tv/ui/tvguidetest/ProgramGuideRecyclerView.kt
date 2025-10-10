@@ -7,9 +7,7 @@ import android.view.Gravity
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.core.view.postDelayed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
@@ -20,13 +18,9 @@ import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.ProgramguideRecyclerviewBinding
 import com.example.mj_player_tv.ui.tvguide.EPGUtils.dayShift
-import com.example.mj_player_tv.ui.tvguide.EPGUtils.startTime
-import com.example.mj_player_tv.ui.tvguide.TvGuideRecyclerview
 import com.example.mj_player_tv.ui.tvguidetest.ProgramGuideUtils.epgStartTime
 import com.example.mj_player_tv.ui.tvguidetest.ProgramGuideUtils.getCellWidth
 import com.example.mj_player_tv.utils.EpgScrollSyncManager
-import com.example.mj_player_tv.utils.views.RecyclerWithPositionView
-import com.volkov.EPGConfig
 import org.joda.time.DateTime
 import org.joda.time.Minutes
 import kotlin.math.abs
@@ -295,7 +289,7 @@ class ProgramGuideRecyclerView @JvmOverloads constructor(
             val timeLabel = currentTime.toString("HH:mm")
             hours.add(
                 TimeLineData(
-                    timeId = timeLabel,
+                    timeId = currentTime,
                     time = timeLabel,
                     width = stepWidthPx,
                     gravity = Gravity.CENTER,

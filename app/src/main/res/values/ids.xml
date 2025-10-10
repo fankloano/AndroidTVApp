@@ -2,5 +2,6 @@
 <resources>
     <item name="tag_sync_registered" type="id"/>
     <item name="epg_registered" type="id"/>
+    <item name="program_data_tag" type="id" />
     <item type="id" name="tag_epg_show"/>
 </resources>
