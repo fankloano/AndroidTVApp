@@ -1,5 +1,6 @@
 package com.example.mj_player_tv.ui.epg
 
+import android.util.Log
 import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.VerticalGridView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -21,6 +22,10 @@ class EpgScrollSynchronizer {
 
     // Flag zur Vermeidung von Endlosschleifen bei Scroll-Ereignissen
     private var isSyncScrolling = false
+
+    // Flag, um Sync bei Fokuswechsel zu unterdrücken
+    var suppressSyncForNextFocusChange = false
+
 
     // --- Initialisierung ---
 
@@ -44,6 +49,9 @@ class EpgScrollSynchronizer {
     private val verticalScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (isSyncScrolling || dy == 0) return
+            // stoppe laufende Scrolls der alten HGVs
+            horizontalViewsToSync.forEach { it.get()?.stopScroll() }
+
             isSyncScrolling = true
 
             // ProgramGridView als Master
@@ -65,21 +73,49 @@ class EpgScrollSynchronizer {
     private val horizontalScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
             if (isSyncScrolling || dx == 0) return
+            if (suppressSyncForNextFocusChange) {
+                suppressSyncForNextFocusChange = false
+                return
+            }
 
             isSyncScrolling = true
+
+            val focusedChild = recyclerView.findFocus()
+            val focusedTag = focusedChild?.tag ?: "none"
+            val hasFocus = recyclerView.hasFocus()
+            val offset = recyclerView.computeHorizontalScrollOffset()
+
+            Log.d(
+                "EpgSync",
+                "📍 HGV ${recyclerView.hashCode()} scrolled dx=$dx offset=$offset " +
+                        "focusedChildTag=$focusedTag ${if (hasFocus) "← HAS FOCUS" else ""}"
+            )
 
             for (ref in horizontalViewsToSync.toList()) {
                 val syncView = ref.get()
                 if (syncView == null) {
-                    horizontalViewsToSync.remove(ref) // Aufräumen
+                    horizontalViewsToSync.remove(ref)
                     continue
                 }
-                if (syncView !== recyclerView) syncView.scrollBy(dx, 0)
+                if (syncView !== recyclerView) {
+                    syncView.scrollBy(dx, 0)
+
+                    val syncFocused = syncView.findFocus()?.tag ?: "none"
+                    val syncHasFocus = syncView.hasFocus()
+                    val syncOffset = syncView.computeHorizontalScrollOffset()
+
+                    Log.d(
+                        "EpgSync",
+                        "   → Synced HGV ${syncView.hashCode()} offset=$syncOffset " +
+                                "focused=$syncFocused ${if (syncHasFocus) "← HAS FOCUS" else ""}"
+                    )
+                }
             }
 
             isSyncScrolling = false
         }
     }
+
 
     // --- Live-Zeit Indikator Helper ---
 

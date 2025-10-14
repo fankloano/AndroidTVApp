@@ -74,6 +74,29 @@ class TvGuideViewModel(application: Application) : AndroidViewModel(application)
     fun clearFocusOnTvGuide() {
         _focusToTvGuideRequest.value = null
     }
+
+    private val _showMenuAndAccountsRequest = MutableLiveData<Unit?>()
+    val showMenuAndAccountsRequest: LiveData<Unit?> = _showMenuAndAccountsRequest
+
+    fun requestShowMenuAndAccounts() {
+        _showMenuAndAccountsRequest.value = Unit
+    }
+
+    fun clearShowMenuAndAccounts() {
+        _showMenuAndAccountsRequest.value = null
+    }
+
+    private val _hideMenuAndAccountsRequest = MutableLiveData<Unit?>()
+    val hideMenuAndAccountsRequest: LiveData<Unit?> = _hideMenuAndAccountsRequest
+
+    fun requestHideMenuAndAccounts() {
+        _hideMenuAndAccountsRequest.value = Unit
+    }
+
+    fun clearHideMenuAndAccounts() {
+        _hideMenuAndAccountsRequest.value = null
+    }
+
     fun getCurrentTimeMarks(now: DateTime): List<TimeLineData> {
         val timeStepMinutes = 30
         val stepWidthPx = timeStepMinutes * EpgUtils.minuteToPixel

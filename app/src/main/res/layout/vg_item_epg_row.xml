@@ -4,17 +4,21 @@
     android:layout_width="match_parent"
     android:layout_height="50dp"
     xmlns:tools="http://schemas.android.com/tools"
+    android:background="?attr/backgroundDark"
+    android:paddingTop="1dp"
+
+    android:paddingBottom="1dp"
     android:focusable="false">
 
-    <androidx.leanback.widget.HorizontalGridView
+    <com.example.mj_player_tv.ui.epg.CustomEpgHorizontalGridView
         android:id="@+id/inner_program_row"
         android:layout_width="0dp"
         android:layout_height="match_parent"
+        android:orientation="horizontal"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:flow_horizontalAlign="start"
         tools:listitem="@layout/vg_item_epg_program"
         android:focusable="true"
         android:focusableInTouchMode="true"/>

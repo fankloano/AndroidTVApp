@@ -91,9 +91,6 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
             onProgramClick = { programData ->
                 // Handle Klick
             },
-            onRowViewAttached = { hgv ->
-                synchronizer.registerHorizontalView(hgv) // Immer noch im onCreateViewHolder
-            },
             synchronizer = synchronizer // ⬅️ NEU: Synchronizer übergeben
         )
 
@@ -117,32 +114,12 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
 
         // 2. Timeline zur horizontalen Synchronisation registrieren
         synchronizer.registerHorizontalView(binding.timelineHeaderView)
+        binding.programGridView.synchronizer = synchronizer
     }
 
     // --- Fokus & Time Indicator Logik ---
 
-    private fun updateTimeIndicator() {
-        // 1. Berechnung des absoluten Offsets vom EPG-Start (z.B. 00:00 Uhr) bis jetzt.
-        val offsetFromStartPx = EpgUtils.getEpgWidth(EpgUtils.timeLineStartTime, DateTime.now())
 
-        // 2. Abrufen des aktuellen Scroll-Offsets des Benutzers.
-        val currentScrollX = synchronizer.getCurrentHorizontalScrollOffset()
-
-        // 3. Berechnung der finalen X-Position (relativ zum sichtbaren Grid-Start).
-        val finalXPosition = offsetFromStartPx - currentScrollX
-
-        // 4. Prüfen der Sichtbarkeit
-        val epgGridWidthPx = binding.programGridView.width // Breite des Programmraster-Containers
-
-        if (finalXPosition >= 0 && finalXPosition <= epgGridWidthPx) {
-            // Im sichtbaren Bereich
-            binding.currentTimeIndicator.translationX = finalXPosition.toFloat()
-            binding.currentTimeIndicator.visibility = View.VISIBLE
-        } else {
-            // Außerhalb des sichtbaren Bereichs
-            binding.currentTimeIndicator.visibility = View.INVISIBLE
-        }
-    }
 
     private fun focusToTvGuide() {
         // Beispiel: fokussiere erste Zeile, erste Sendung

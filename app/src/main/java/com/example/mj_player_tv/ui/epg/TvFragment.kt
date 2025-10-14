@@ -10,6 +10,7 @@ import androidx.core.view.postDelayed
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.media3.common.util.UnstableApi
+import com.example.mj_player_tv.MainActivity
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.databinding.FragmentHomeBinding
 import com.example.mj_player_tv.databinding.FragmentTvBinding
@@ -71,6 +72,20 @@ class TvFragment : Fragment(R.layout.fragment_tv) {
                 setEpgFragment()
             }
         }
+
+        tvGuideViewModel.showMenuAndAccountsRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                showMenuAndAccounts()
+                tvGuideViewModel.clearShowMenuAndAccounts()
+            }
+        }
+
+        tvGuideViewModel.hideMenuAndAccountsRequest.observe(viewLifecycleOwner) { request ->
+            if (request != null) {
+                hideMenuAndAccounts()
+                tvGuideViewModel.clearHideMenuAndAccounts()
+            }
+        }
     }
 
     private fun setAccountsWithCategoriesFragment() {
@@ -90,6 +105,27 @@ class TvFragment : Fragment(R.layout.fragment_tv) {
         transaction.addToBackStack(null)
         transaction.commit()
     }
+
+    private fun showMenuAndAccounts() {
+        binding.motionLayout.transitionToStart {
+            showMainMenu()
+        }
+    }
+
+    private fun hideMenuAndAccounts() {
+        binding.motionLayout.transitionToEnd {
+            hideMainMenu()
+        }
+    }
+
+    private fun showMainMenu() {
+        (requireActivity() as? MainActivity)?.showMenu()
+    }
+
+    private fun hideMainMenu() {
+        (requireActivity() as? MainActivity)?.hideMenu()
+    }
+
 
     fun closeFragment() {
         parentFragmentManager.popBackStack()

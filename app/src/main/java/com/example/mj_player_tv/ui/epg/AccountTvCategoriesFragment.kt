@@ -15,7 +15,7 @@ import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.entity.TvCategoryOB
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.databinding.FragmentAccountTvcategoriesBinding
-import com.example.mj_player_tv.ui.adapter.AccountTvCategoriesAdapter
+import com.example.mj_player_tv.ui.epg.AccountTvCategoriesAdapter
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
@@ -172,6 +172,7 @@ class AccountTvCategoriesFragment : Fragment(R.layout.fragment_account_tvcategor
     }
 
     fun focusTvGuide() {
+        tvGuideViewModel.requestHideMenuAndAccounts()
         tvGuideViewModel.requestFocusOnTvGuide()
     }
 

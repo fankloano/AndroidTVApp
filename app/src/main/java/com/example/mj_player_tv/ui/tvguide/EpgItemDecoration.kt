@@ -36,7 +36,6 @@ class EpgItemDecoration(
                 val right = child.right.toFloat()
                 c.drawRect(left, child.top.toFloat(), right, child.bottom.toFloat(), paint)
             }
-
         }
     }
 }

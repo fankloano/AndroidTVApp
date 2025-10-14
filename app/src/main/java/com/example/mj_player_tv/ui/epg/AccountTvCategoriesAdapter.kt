@@ -1,4 +1,4 @@
-package com.example.mj_player_tv.ui.adapter
+package com.example.mj_player_tv.ui.epg
 
 import android.os.Handler
 import android.os.Looper
@@ -11,16 +11,11 @@ import android.view.ViewGroup
 import androidx.media3.common.util.UnstableApi
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mj_player_tv.database.entity.Accounts
 import com.example.mj_player_tv.database.help.AccountTvCategory
 import com.example.mj_player_tv.databinding.RvItemTvaccountsBinding
 import com.example.mj_player_tv.databinding.RvItemTvcategoryBinding
-import com.example.mj_player_tv.ui.epg.AccountTvCategoriesFragment
-import com.example.mj_player_tv.ui.TvChannelsFragment
-import com.example.mj_player_tv.ui.TvGuideFragment
 import com.example.mj_player_tv.ui.adapter.DiffUtil.AccountTvCategoryDiffCallback
 import com.example.mj_player_tv.viewmodel.HelpViewModel
-import java.security.Key
 
 @UnstableApi
 class AccountTvCategoriesAdapter(
@@ -388,4 +383,3 @@ class AccountTvCategoriesAdapter(
         }
     }
 }
-

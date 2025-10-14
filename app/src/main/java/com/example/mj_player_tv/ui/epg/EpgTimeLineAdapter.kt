@@ -23,13 +23,10 @@ class EpgTimeLineAdapter : ListAdapter<TimeLineData, EpgTimeLineAdapter.TimeView
         init {
             // Stellen Sie sicher, dass die Kachel NICHT fokussierbar ist
             binding.root.isFocusable = false
-            // Dynamische Breitenanpassung (wie im vorherigen Beispiel)
-            val params = binding.root.layoutParams
-            params.width = (TIME_BLOCK_WIDTH_DP * binding.root.context.resources.displayMetrics.density).toInt()
-            binding.root.layoutParams = params
         }
 
         fun bind(item: TimeLineData) {
+            binding.root.layoutParams.width = item.width
             binding.tvTime.text = item.time // Angenommen tvTime ist die ID im Layout
         }
     }
