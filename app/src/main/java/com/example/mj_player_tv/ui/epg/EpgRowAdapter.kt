@@ -15,6 +15,7 @@ import com.example.mj_player_tv.databinding.VgItemEpgRowBinding
 import com.example.mj_player_tv.ui.tvguide.EpgItemDecoration
 import com.google.api.Distribution
 import com.volkov.epgrecycler.context
+import androidx.core.view.isEmpty
 
 // ProgramRowAdapter.kt
 
@@ -56,9 +57,12 @@ class EpgRowAdapter(
         holder.bind(item, onProgramClick)
 
         val hgv = holder.horizontalGridView
-        synchronizer.registerHorizontalView(hgv)
         // Wende Offset an (synchronizer macht intern post wenn View width == 0)
-        hgv.post { synchronizer.setInitialHorizontalOffset(hgv) }
+        if (holder.itemView.isAttachedToWindow.not()) {
+            synchronizer.registerHorizontalView(hgv)
+            if (hgv.isEmpty()) synchronizer.setInitialHorizontalOffset(hgv)
+
+        }
 
         Log.d("HGV_Key", "HGV index: ${holder.bindingAdapterPosition} HASHCODE: ${hgv.hashCode()}")
         holder.itemView.tag = item.tvChannelPosition.tvchannel.target.showingName

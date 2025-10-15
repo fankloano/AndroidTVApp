@@ -1,6 +1,7 @@
 package com.example.mj_player_tv.ui.epg
 
 import android.util.Log
+import android.view.ViewTreeObserver
 import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.VerticalGridView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,7 +26,7 @@ class EpgScrollSynchronizer {
     // Flag, um Sync bei Fokuswechsel zu unterdrücken
     var suppressSyncForNextFocusChange = false
 
-
+    private var currentHorizontalScrollOffset = 0
     // --- Initialisierung ---
 
 
@@ -40,6 +41,7 @@ class EpgScrollSynchronizer {
 
     fun registerHorizontalView(view: RecyclerView) {
         horizontalViewsToSync.add(WeakReference(view))
+        view.addOnScrollListener(horizontalScrollListener)
     }
 
     // --- Vertikale Synchronisation (Channel List <-> Program Grid) ---
@@ -67,57 +69,74 @@ class EpgScrollSynchronizer {
         }
     }
 
-    // --- Horizontale Synchronisation (Timeline <-> Alle Program Rows) ---
-
-
-    // Felder zur Protokollierung der Rekursion
+    // In EpgScrollSynchronizer Klasse
+    private var isSyncScrollingHorizontal = false
     private var syncScrollCounter = 0
     private var syncScrollId = 0
-    // In EpgScrollSynchronizer
+// private var suppressSyncForNextFocusChange = false // (Falls in Ihrer Klasse vorhanden)
 
-    // In EpgScrollSynchronizer
 
-    // NEUE HILFSMETHODE
-    fun syncAllViewsToMaster(masterView: RecyclerView, scrollOffSet: Int) {
-
-        // Beachte: Wir müssen hier die gleichen Checks wie im Listener durchführen!
-        if (isSyncScrolling) {
-            Log.d("EpgSync_FORCE", "🚫 Sync blockiert, bereits aktiv.")
-            return
-        }
-
-        isSyncScrolling = true
-        syncScrollId++
-
-        val targetOffset = scrollOffSet
-
-        // 🔥 WICHTIG: Prüfen Sie den Ziel-Offset, um Redundanzen zu vermeiden
-        if (targetOffset == 0) {
-            isSyncScrolling = false
-            return
-        }
-
-        Log.d("EpgSync_FORCE", "📍 MASTER (FORCE): HGV ${masterView.hashCode()} (ID ${syncScrollId}) scrollt zu Ziel=$targetOffset")
-
-        for (ref in horizontalViewsToSync.toList()) {
-            val syncView = ref.get()
-            if (syncView == null) {
-                horizontalViewsToSync.remove(ref)
-                continue
+    private val horizontalScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            // 1. ZUERST: Rekursionsschutz und Ignorieren von Null-Bewegungen (dx=0)
+            if (isSyncScrollingHorizontal || dx == 0) {
+                if (isSyncScrollingHorizontal && dx != 0) {
+                    // Protokollierung der Rekursion, falls sie doch auftritt
+                    Log.d("EpgSync_RECURSION", "🚫 ABGEFANGEN: HGV ${recyclerView.hashCode()} (ID ${syncScrollId}) während Sync-Block ausgeführt. Zähler: ${syncScrollCounter}")
+                    syncScrollCounter++
+                }
+                return
             }
 
-            if (syncView !== masterView) {
-                // Setze die absolute Position
-                syncView.scrollTo(targetOffset, 0)
-                Log.d("EpgSync_FORCE", "   → Synced Program Row ${syncView.hashCode()}")
-            }
-        }
+            // --- Optionale Fokus-Unterdrückung (falls benötigt) ---
+            // if (suppressSyncForNextFocusChange) {
+            //     suppressSyncForNextFocusChange = false
+            //     Log.d("EpgSync", "🚫 Auto-Scroll unterdrückt.")
+            //     return
+            // }
 
-        isSyncScrolling = false
+            // --- Synchronisationslogik START ---
+
+            isSyncScrollingHorizontal = true // Starte den Sync-Block
+            syncScrollId++         // Starte eine neue Sync-ID
+            syncScrollCounter = 1  // Setze den Zähler zurück
+
+            val masterView = recyclerView
+
+            // 🔥 Hole den aktuellen ABSOLUTEN Scroll-Offset des Masters.
+            // Dies ist der stabile Zielwert für alle Slaves.
+            currentHorizontalScrollOffset += dx
+            val targetOffset = currentHorizontalScrollOffset
+
+            Log.d("EpgSync_START", "📍 MASTER: HGV ${masterView.hashCode()} (ID ${syncScrollId}) scrollt zu Ziel=$targetOffset (dx=$dx)")
+
+            // Synchronisiere alle anderen Views
+            for (ref in horizontalViewsToSync.toList()) {
+                val syncView = ref.get()
+
+                // Garbage Collection Check
+                if (syncView == null) {
+                    horizontalViewsToSync.remove(ref)
+                    continue
+                }
+
+                // Wichtig: Nur die Views scrollen, die NICHT der Master sind
+                if (syncView !== masterView) {
+
+                    // 🔥 Stabile Synchronisation mit scrollTo (absolute Position)
+                    syncView.scrollBy(dx, 0)
+
+                    // Protokolliere die gescrollte View
+                    Log.d("EpgSync_SYNCED", "   → Synced HGV ${syncView.hashCode()} zu $targetOffset (ID ${syncScrollId})")
+                }
+            }
+
+            isSyncScrollingHorizontal = false // Beende den Sync-Block
+        }
     }
+
     fun getCurrentHorizontalScrollOffset(): Int {
-        val firstView = horizontalViewsToSync.firstOrNull()?.get()
-        return firstView?.computeHorizontalScrollOffset() ?: 0
+        return currentHorizontalScrollOffset
     }
 
     // Fügen Sie diese Methode zu Ihrer EpgScrollSynchronizer Klasse hinzu:
@@ -137,16 +156,19 @@ class EpgScrollSynchronizer {
 //Wendet den aktuellen horizontalen Synchronisations-Offset auf eine neue View an.
     fun setInitialHorizontalOffset(view: RecyclerView) {
         val targetOffset = getCurrentHorizontalScrollOffset()
-        Log.d("EPGSynch NEU GEBUNDEN", "${view.hashCode()} = SCROLL: $targetOffset")
-        if (targetOffset != 0) {
-            // 1. Setze das Flag, um das Auslösen eines Events durch das Scrollen zu verhindern
-            isSyncScrolling = true
+        if (targetOffset == 0) return
 
-            // 2. Wende den Offset auf die neue View an (absolutes Scrollen ist hier richtig)
-            view.scrollTo(targetOffset, 0)
+        view.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                view.viewTreeObserver.removeOnGlobalLayoutListener(this)
 
-            // 3. Setze das Flag zurück, damit weitere manuelle Scrolls Events auslösen
-            isSyncScrolling = false
-        }
+                // Jetzt ist das Layout wirklich bereit
+                isSyncScrollingHorizontal = true
+                view.scrollBy(targetOffset, 0)
+                isSyncScrollingHorizontal = false
+
+                Log.d("EpgSync_INIT", "✅ Initial scroll applied to ${view.hashCode()} → $targetOffset")
+            }
+        })
     }
 }

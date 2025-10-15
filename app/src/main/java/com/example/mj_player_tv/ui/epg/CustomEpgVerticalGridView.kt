@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
 import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.VerticalGridView
 import kotlin.math.abs
@@ -50,6 +51,9 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
 
         bestView?.let { candidate ->
             targetHgv.isScrollEnabled = false
+            targetHgv.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+            targetHgv.isFocusable = true
+            targetHgv.isFocusableInTouchMode = true
             synchronizer?.suppressSyncForNextFocusChange = true
             Log.d("HGV_Key", "→ targetHGV=${targetHgv.hashCode()} erhält Fokus auf ${candidate.tag}")
             return candidate
