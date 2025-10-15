@@ -15,7 +15,6 @@ class EpgScrollSynchronizer {
 
     // Liste aller HorizontalGridViews (Programmzeilen) und der Timeline
     private val horizontalViewsToSync = mutableSetOf<WeakReference<RecyclerView>>()
-
     // Die beiden vertikalen Views
     private var channelListView: RecyclerView? = null
     private var programGridView: VerticalGridView? = null
@@ -29,6 +28,7 @@ class EpgScrollSynchronizer {
 
     // --- Initialisierung ---
 
+
     fun setupVerticalSync(channelList: RecyclerView, programGrid: VerticalGridView) {
         this.channelListView = channelList
         this.programGridView = programGrid
@@ -40,7 +40,6 @@ class EpgScrollSynchronizer {
 
     fun registerHorizontalView(view: RecyclerView) {
         horizontalViewsToSync.add(WeakReference(view))
-        view.addOnScrollListener(horizontalScrollListener)
     }
 
     // --- Vertikale Synchronisation (Channel List <-> Program Grid) ---
@@ -70,59 +69,52 @@ class EpgScrollSynchronizer {
 
     // --- Horizontale Synchronisation (Timeline <-> Alle Program Rows) ---
 
-    private val horizontalScrollListener = object : RecyclerView.OnScrollListener() {
-        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            if (isSyncScrolling || dx == 0) return
-            if (suppressSyncForNextFocusChange) {
-                suppressSyncForNextFocusChange = false
-                return
-            }
 
-            isSyncScrolling = true
+    // Felder zur Protokollierung der Rekursion
+    private var syncScrollCounter = 0
+    private var syncScrollId = 0
+    // In EpgScrollSynchronizer
 
-            val focusedChild = recyclerView.findFocus()
-            val focusedTag = focusedChild?.tag ?: "none"
-            val hasFocus = recyclerView.hasFocus()
-            val offset = recyclerView.computeHorizontalScrollOffset()
+    // In EpgScrollSynchronizer
 
-            Log.d(
-                "EpgSync",
-                "📍 HGV ${recyclerView.hashCode()} scrolled dx=$dx offset=$offset " +
-                        "focusedChildTag=$focusedTag ${if (hasFocus) "← HAS FOCUS" else ""}"
-            )
+    // NEUE HILFSMETHODE
+    fun syncAllViewsToMaster(masterView: RecyclerView, scrollOffSet: Int) {
 
-            for (ref in horizontalViewsToSync.toList()) {
-                val syncView = ref.get()
-                if (syncView == null) {
-                    horizontalViewsToSync.remove(ref)
-                    continue
-                }
-                if (syncView !== recyclerView) {
-                    syncView.scrollBy(dx, 0)
-
-                    val syncFocused = syncView.findFocus()?.tag ?: "none"
-                    val syncHasFocus = syncView.hasFocus()
-                    val syncOffset = syncView.computeHorizontalScrollOffset()
-
-                    Log.d(
-                        "EpgSync",
-                        "   → Synced HGV ${syncView.hashCode()} offset=$syncOffset " +
-                                "focused=$syncFocused ${if (syncHasFocus) "← HAS FOCUS" else ""}"
-                    )
-                }
-            }
-
-            isSyncScrolling = false
+        // Beachte: Wir müssen hier die gleichen Checks wie im Listener durchführen!
+        if (isSyncScrolling) {
+            Log.d("EpgSync_FORCE", "🚫 Sync blockiert, bereits aktiv.")
+            return
         }
+
+        isSyncScrolling = true
+        syncScrollId++
+
+        val targetOffset = scrollOffSet
+
+        // 🔥 WICHTIG: Prüfen Sie den Ziel-Offset, um Redundanzen zu vermeiden
+        if (targetOffset == 0) {
+            isSyncScrolling = false
+            return
+        }
+
+        Log.d("EpgSync_FORCE", "📍 MASTER (FORCE): HGV ${masterView.hashCode()} (ID ${syncScrollId}) scrollt zu Ziel=$targetOffset")
+
+        for (ref in horizontalViewsToSync.toList()) {
+            val syncView = ref.get()
+            if (syncView == null) {
+                horizontalViewsToSync.remove(ref)
+                continue
+            }
+
+            if (syncView !== masterView) {
+                // Setze die absolute Position
+                syncView.scrollTo(targetOffset, 0)
+                Log.d("EpgSync_FORCE", "   → Synced Program Row ${syncView.hashCode()}")
+            }
+        }
+
+        isSyncScrolling = false
     }
-
-
-    // --- Live-Zeit Indikator Helper ---
-
-    /**
-     * Liefert den aktuellen horizontalen Scroll-Offset des EPG-Rasters.
-     * Nützlich für die Positionierung des CurrentTime-Indikators.
-     */
     fun getCurrentHorizontalScrollOffset(): Int {
         val firstView = horizontalViewsToSync.firstOrNull()?.get()
         return firstView?.computeHorizontalScrollOffset() ?: 0
@@ -133,10 +125,6 @@ class EpgScrollSynchronizer {
         channelListView?.removeOnScrollListener(verticalScrollListener)
         programGridView?.removeOnScrollListener(verticalScrollListener)
 
-        // Entferne alle horizontalen Listener
-        for (ref in horizontalViewsToSync.toList()) {
-            ref.get()?.removeOnScrollListener(horizontalScrollListener)
-        }
         horizontalViewsToSync.clear()
 
         // Setze die starken Referenzen zurück
@@ -149,7 +137,7 @@ class EpgScrollSynchronizer {
 //Wendet den aktuellen horizontalen Synchronisations-Offset auf eine neue View an.
     fun setInitialHorizontalOffset(view: RecyclerView) {
         val targetOffset = getCurrentHorizontalScrollOffset()
-
+        Log.d("EPGSynch NEU GEBUNDEN", "${view.hashCode()} = SCROLL: $targetOffset")
         if (targetOffset != 0) {
             // 1. Setze das Flag, um das Auslösen eines Events durch das Scrollen zu verhindern
             isSyncScrolling = true

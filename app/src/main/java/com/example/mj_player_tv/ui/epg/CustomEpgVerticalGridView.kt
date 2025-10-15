@@ -19,8 +19,9 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
     override fun focusSearch(focused: View?, direction: Int): View? {
         Log.d("CustomVGV", "focusSearch dir=$direction from=${focused?.tag}")
 
-        if (direction != View.FOCUS_DOWN && direction != View.FOCUS_UP)
+        if (direction != View.FOCUS_DOWN && direction != View.FOCUS_UP) {
             return super.focusSearch(focused, direction)
+        }
 
         val currentVH = findContainingViewHolder(focused ?: return super.focusSearch(focused, direction))
                 as? EpgRowAdapter.RowViewHolder ?: return super.focusSearch(focused, direction)
@@ -48,13 +49,11 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
         }
 
         bestView?.let { candidate ->
-            targetHgv.suppressAutoScrollForNextFocus()
+            targetHgv.isScrollEnabled = false
             synchronizer?.suppressSyncForNextFocusChange = true
-            Log.d("CustomVGV", "→ targetHGV=${targetHgv.hashCode()} erhält Fokus auf ${candidate.tag}")
+            Log.d("HGV_Key", "→ targetHGV=${targetHgv.hashCode()} erhält Fokus auf ${candidate.tag}")
             return candidate
         }
-
-
         return super.focusSearch(focused, direction)
     }
 }

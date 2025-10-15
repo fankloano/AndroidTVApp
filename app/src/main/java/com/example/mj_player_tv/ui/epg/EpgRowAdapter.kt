@@ -60,7 +60,7 @@ class EpgRowAdapter(
         // Wende Offset an (synchronizer macht intern post wenn View width == 0)
         hgv.post { synchronizer.setInitialHorizontalOffset(hgv) }
 
-
+        Log.d("HGV_Key", "HGV index: ${holder.bindingAdapterPosition} HASHCODE: ${hgv.hashCode()}")
         holder.itemView.tag = item.tvChannelPosition.tvchannel.target.showingName
     }
 
