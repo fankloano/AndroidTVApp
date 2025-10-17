@@ -33,13 +33,16 @@ class EpgRowAdapter(
         fun bind(row: TvChannelWithEpg, onProgramClick: (EpgDataOB) -> Unit) {
             val adapter = horizontalGridView.adapter as? EpgProgramAdapter
             if (adapter == null) {
-                val newAdapter = EpgProgramAdapter(onProgramClick)
+                val newAdapter = EpgProgramAdapter(onProgramClick, row.tvChannelPosition.tvchannel.target.showingName)
                 horizontalGridView.adapter = newAdapter
+                horizontalGridView.isScrollEnabled = false
+
                 horizontalGridView.addItemDecoration(
                     EpgItemDecoration(color = binding.root.context.getColor(R.color.background_dark))
                 )
                 newAdapter.submitList(row.epgList)
             } else {
+                adapter.updateChannelName(row.tvChannelPosition.tvchannel.target.showingName)
                 adapter.submitList(row.epgList)
             }
         }
@@ -56,15 +59,6 @@ class EpgRowAdapter(
         val item = getItem(position)
         holder.bind(item, onProgramClick)
 
-        val hgv = holder.horizontalGridView
-        // Wende Offset an (synchronizer macht intern post wenn View width == 0)
-        if (holder.itemView.isAttachedToWindow.not()) {
-            synchronizer.registerHorizontalView(hgv)
-            if (hgv.isEmpty()) synchronizer.setInitialHorizontalOffset(hgv)
-
-        }
-
-        Log.d("HGV_Key", "HGV index: ${holder.bindingAdapterPosition} HASHCODE: ${hgv.hashCode()}")
         holder.itemView.tag = item.tvChannelPosition.tvchannel.target.showingName
     }
 
@@ -74,5 +68,29 @@ class EpgRowAdapter(
 
         override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg): Boolean =
             oldItem == newItem
+    }
+
+    override fun onViewAttachedToWindow(holder: RowViewHolder) {
+        super.onViewAttachedToWindow(holder)
+
+        val hgv = holder.horizontalGridView
+
+        // 1. **Registrieren**: Nur registrieren, wenn die View bereit ist und nur einmal.
+        // Die Registrierung sollte idealerweise beim ersten Layout passieren.
+        // Da Sie Lazy-Loading (VerticalGridView) haben, ist dieser Zeitpunkt ideal.
+        synchronizer.registerHorizontalView(hgv)
+
+        // 2. **Initial Scroll**: Jetzt ist die View sicher gelayoutet.
+        synchronizer.setInitialHorizontalOffset(hgv)
+
+        Log.d("VGV FIND FOCUS", "${hgv.hashCode()} HGV ATTACHED: ${holder.bindingAdapterPosition}")
+    }
+
+    override fun onViewDetachedFromWindow(holder: RowViewHolder) {
+        super.onViewDetachedFromWindow(holder)
+        // Aufräumen ist immer eine gute Idee
+        // 🔥 WICHTIG: Abbrechen des Layout-Listeners, bevor die View recycelt wird.
+        synchronizer.cancelInitialScroll(holder.horizontalGridView)
+        synchronizer.unregisterHorizontalView(holder.horizontalGridView)
     }
 }

@@ -25,9 +25,12 @@ import kotlin.math.min
 
 // ProgramBlockAdapter.kt
 
-class EpgProgramAdapter(private val onClick: (EpgDataOB) -> Unit) :
+class EpgProgramAdapter(private val onClick: (EpgDataOB) -> Unit, private var channelName: String) :
     ListAdapter<EpgDataOB, EpgProgramAdapter.ProgramViewHolder>(ProgramDiffCallback()) {
 
+    fun updateChannelName(newChannelName: String) {
+        this.channelName = newChannelName
+    }
     inner class ProgramViewHolder(private val binding: VgItemEpgProgramBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -52,8 +55,11 @@ class EpgProgramAdapter(private val onClick: (EpgDataOB) -> Unit) :
             // 3. Status
             binding.progressBar.visibility = if (item.isLiveShow) View.VISIBLE else View.INVISIBLE
             binding.ivReminder.visibility = if (item.isRemembered) View.VISIBLE else View.INVISIBLE
+            val minuten = widthPx / 5
 
-            updateProgress(item)
+            binding.relLayoutFullepgitem.setOnFocusChangeListener { _, hasFocus ->
+                Log.d("FOKUSSIERTES ITEM", "$channelName = ${item.name} ON INDEX: $bindingAdapterPosition")
+            }
         }
 
         private val EpgDataOB.isLiveShow: Boolean
@@ -115,8 +121,9 @@ class EpgProgramAdapter(private val onClick: (EpgDataOB) -> Unit) :
     ) {
         val show = getItem(position)
         holder.bind(show)
-        holder.itemView.tag = "${show.name} + ${show.sub_title}"
+        holder.itemView.tag = "${show.name} + ${show.sub_title} I: ${holder.bindingAdapterPosition}"
         holder.itemView.setTag(R.id.program_data_tag, show)
+
     }
 
     class ProgramDiffCallback : DiffUtil.ItemCallback<EpgDataOB>() {

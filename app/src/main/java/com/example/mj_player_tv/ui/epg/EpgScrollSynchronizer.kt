@@ -15,7 +15,7 @@ import java.lang.ref.WeakReference
 class EpgScrollSynchronizer {
 
     // Liste aller HorizontalGridViews (Programmzeilen) und der Timeline
-    private val horizontalViewsToSync = mutableSetOf<WeakReference<RecyclerView>>()
+    val horizontalViewsToSync = mutableSetOf<WeakReference<RecyclerView>>()
     // Die beiden vertikalen Views
     private var channelListView: RecyclerView? = null
     private var programGridView: VerticalGridView? = null
@@ -41,7 +41,19 @@ class EpgScrollSynchronizer {
 
     fun registerHorizontalView(view: RecyclerView) {
         horizontalViewsToSync.add(WeakReference(view))
-        view.addOnScrollListener(horizontalScrollListener)
+        Log.d("HGV_Key", "HGV REGISTER HASHCODE: ${view.hashCode()}")
+
+    }
+    fun unregisterHorizontalView(view: RecyclerView) {
+        // 1. Suche die WeakReference, die auf die übergebene View zeigt.
+        val refToRemove = horizontalViewsToSync.find { it.get() == view }
+
+        // 2. Entferne die gefundene WeakReference aus dem Set.
+        if (refToRemove != null) {
+            horizontalViewsToSync.remove(refToRemove)
+            // Optional: Entferne auch den ScrollListener, wenn er nicht mehr gebraucht wird
+            Log.d("HGV_Key", "HGV UNREGISTER HASHCODE: ${view.hashCode()}")
+        }
     }
 
     // --- Vertikale Synchronisation (Channel List <-> Program Grid) ---
@@ -69,72 +81,38 @@ class EpgScrollSynchronizer {
         }
     }
 
-    // In EpgScrollSynchronizer Klasse
     private var isSyncScrollingHorizontal = false
     private var syncScrollCounter = 0
-    private var syncScrollId = 0
-// private var suppressSyncForNextFocusChange = false // (Falls in Ihrer Klasse vorhanden)
-
+    private var syncScrollId = 0 //
 
     private val horizontalScrollListener = object : RecyclerView.OnScrollListener() {
         override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-            // 1. ZUERST: Rekursionsschutz und Ignorieren von Null-Bewegungen (dx=0)
-            if (isSyncScrollingHorizontal || dx == 0) {
-                if (isSyncScrollingHorizontal && dx != 0) {
-                    // Protokollierung der Rekursion, falls sie doch auftritt
-                    Log.d("EpgSync_RECURSION", "🚫 ABGEFANGEN: HGV ${recyclerView.hashCode()} (ID ${syncScrollId}) während Sync-Block ausgeführt. Zähler: ${syncScrollCounter}")
-                    syncScrollCounter++
-                }
-                return
-            }
-
-            // --- Optionale Fokus-Unterdrückung (falls benötigt) ---
-            // if (suppressSyncForNextFocusChange) {
-            //     suppressSyncForNextFocusChange = false
-            //     Log.d("EpgSync", "🚫 Auto-Scroll unterdrückt.")
-            //     return
-            // }
-
-            // --- Synchronisationslogik START ---
-
-            isSyncScrollingHorizontal = true // Starte den Sync-Block
-            syncScrollId++         // Starte eine neue Sync-ID
-            syncScrollCounter = 1  // Setze den Zähler zurück
-
-            val masterView = recyclerView
-
-            // 🔥 Hole den aktuellen ABSOLUTEN Scroll-Offset des Masters.
-            // Dies ist der stabile Zielwert für alle Slaves.
-            currentHorizontalScrollOffset += dx
+        // 1. ZUERST: Rekursionsschutz und Ignorieren von Null-Bewegungen (dx=0)
+            if (isSyncScrollingHorizontal || dx == 0) { // ... (Logik bleibt)
+                return } // 🔥 NEU: Prüfe, ob die Synchronisation unterdrückt werden soll (Focuswechsel)
+        if (suppressSyncForNextFocusChange) { // Scroll-Offset dennoch aktualisieren, damit die nächste Zeile korrekt initialisiert wird.
+        currentHorizontalScrollOffset += dx
+            suppressSyncForNextFocusChange = false
+            Log.d("EpgSync", "🚫 Auto-Scroll unterdrückt wegen Fokuswechsel. Offset: ${currentHorizontalScrollOffset}")
+            return
+        } // --- Synchronisationslogik START ---
+        isSyncScrollingHorizontal = true // Starte den Sync-Block
+        val masterView = recyclerView // 🔥 Hole den aktuellen ABSOLUTEN Scroll-Offset des Masters. // Dies ist der stabile Zielwert für alle Slaves.
+        currentHorizontalScrollOffset += dx
             val targetOffset = currentHorizontalScrollOffset
-
-            Log.d("EpgSync_START", "📍 MASTER: HGV ${masterView.hashCode()} (ID ${syncScrollId}) scrollt zu Ziel=$targetOffset (dx=$dx)")
-
-            // Synchronisiere alle anderen Views
-            for (ref in horizontalViewsToSync.toList()) {
-                val syncView = ref.get()
-
-                // Garbage Collection Check
-                if (syncView == null) {
-                    horizontalViewsToSync.remove(ref)
-                    continue
-                }
-
-                // Wichtig: Nur die Views scrollen, die NICHT der Master sind
-                if (syncView !== masterView) {
-
-                    // 🔥 Stabile Synchronisation mit scrollTo (absolute Position)
-                    syncView.scrollBy(dx, 0)
-
-                    // Protokolliere die gescrollte View
-                    Log.d("EpgSync_SYNCED", "   → Synced HGV ${syncView.hashCode()} zu $targetOffset (ID ${syncScrollId})")
-                }
-            }
-
-            isSyncScrollingHorizontal = false // Beende den Sync-Block
+            Log.d("EpgSync_START", "📍 MASTER: HGV ${masterView.hashCode()} (ID ${syncScrollId}) scrollt zu Ziel=$targetOffset (dx=$dx)") // Synchronisiere alle anderen Views
+        for (ref in horizontalViewsToSync.toList()) {
+            val syncView = ref.get() // Garbage Collection Check
+        if (syncView == null) {
+            horizontalViewsToSync.remove(ref)
+            continue } // Wichtig: Nur die Views scrollen, die NICHT der Master sind
+        if (syncView !== masterView) { // 🔥 Stabile Synchronisation mit scrollTo (absolute Position)
+        syncView.scrollBy(dx, 0) // Protokolliere die gescrollte View
+        Log.d("HORIZONTAL SCROLL OTHERS", " → Synced HGV ${syncView.hashCode()} um $dx zu $targetOffset") }
         }
-    }
-
+            isSyncScrollingHorizontal = false // Beende den Sync-Block } }
+        }
+        }
     fun getCurrentHorizontalScrollOffset(): Int {
         return currentHorizontalScrollOffset
     }
@@ -151,24 +129,40 @@ class EpgScrollSynchronizer {
         programGridView = null
     }
 
-    //Wendet den aktuellen horizontalen Synchronisations-Offset auf eine neue View an.
-    // Sollte im RecyclerView.onBindViewHolder der EPG-Row aufgerufen werden.
-//Wendet den aktuellen horizontalen Synchronisations-Offset auf eine neue View an.
+    // Speichert die Listener für jede HGV-Instanz
+    private val layoutListeners =
+        mutableMapOf<Int, ViewTreeObserver.OnGlobalLayoutListener>()
+    // Im EpgScrollSynchronizer
+
     fun setInitialHorizontalOffset(view: RecyclerView) {
         val targetOffset = getCurrentHorizontalScrollOffset()
-        if (targetOffset == 0) return
-
-        view.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
-            override fun onGlobalLayout() {
-                view.viewTreeObserver.removeOnGlobalLayoutListener(this)
-
-                // Jetzt ist das Layout wirklich bereit
+        if (targetOffset != 0) { // 1. Erstelle den Listener, der das Scrollen ausführt.
+        val layoutListener = object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() { // Den Listener sofort entfernen, damit er nur einmal ausführt.
+            view.viewTreeObserver.removeOnGlobalLayoutListener(this) // Prüfen, ob die View noch an das Fenster angehängt ist (zusätzliche Sicherheit)
+            if (!view.isAttachedToWindow) return
+                val finalOffset = getCurrentHorizontalScrollOffset()
                 isSyncScrollingHorizontal = true
-                view.scrollBy(targetOffset, 0)
+                view.scrollBy(finalOffset, 0)
                 isSyncScrollingHorizontal = false
-
-                Log.d("EpgSync_INIT", "✅ Initial scroll applied to ${view.hashCode()} → $targetOffset")
+                Log.d("HGV_INIT_SCROLL", "${view.hashCode()} = SCROLL TOTAL (Layout) = $finalOffset")
             }
-        })
+        } // 2. Füge den Listener hinzu. Er wartet auf den nächsten Layout-Pass.
+         view.viewTreeObserver.addOnGlobalLayoutListener(layoutListener) // Speichern des Listeners mit dem Hashcode der View als Schlüssel
+         layoutListeners[view.hashCode()] = layoutListener } else { isSyncScrollingHorizontal = false
+         }
+    }
+
+
+    // Füge diese Methode hinzu/ändere sie:
+    fun cancelInitialScroll(view: RecyclerView) {
+        val listener = layoutListeners.remove(view.hashCode())
+        listener?.let {
+            // Entfernen des Listeners, wenn er noch aktiv war
+            if (view.viewTreeObserver.isAlive) {
+                view.viewTreeObserver.removeOnGlobalLayoutListener(it)
+                Log.d("HGV_Key", "HGV ${view.hashCode()} Layout-Listener abgebrochen.")
+            }
+        }
     }
 }
