@@ -112,8 +112,8 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
         // 1. Vertikale Synchronisation einrichten
         synchronizer.setupVerticalSync(binding.channelListView, binding.programGridView)
         binding.timelineHeaderView.tag = "TIMELINE"
-        // 2. Timeline zur horizontalen Synchronisation registrieren
         synchronizer.registerHorizontalView(binding.timelineHeaderView)
+        // 2. Timeline zur horizontalen Synchronisation registrieren
         binding.programGridView.synchronizer = synchronizer
     }
 

@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.VerticalGridView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlin.math.abs
 
@@ -19,8 +20,8 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
 ) : VerticalGridView(context, attrs, defStyleAttr) {
 
     var synchronizer: EpgScrollSynchronizer? = null
+
     init {
-        smoothScrollSpeedFactor = 2f
         setOnKeyInterceptListener { event ->
             if (event.action == KeyEvent.ACTION_DOWN) {
                 val focused = focusedChild ?: return@setOnKeyInterceptListener false
@@ -94,10 +95,6 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
             // Der Fokus wird auf das "beste sichtbare" Item (candidate) gesetzt,
             // und danach scrollt die Row weiter, damit der Benutzer das "ideale" Item sieht.
 
-            // Verwenden Sie eine der Scroll-Methoden der HorizontalGridView, um das View
-            // mit dem besten X-Alignment zu zentrieren:
-            targetHgv.setSelectedPositionSmooth(targetPosition) // Oder eine ähnliche Methode
-
             // 2. Setzen Sie dann den Fokus auf das gefundene (sichtbare) View
             targetHgv.isScrollEnabled = false
             targetHgv.descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
@@ -108,6 +105,7 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
             // 3. WICHTIG: Setzen Sie den Fokus direkt auf das gefundene View, NICHT auf die Row!
             return candidate // Das gefundene Kind zurückgeben, um den Fokus zu setzen.
         }
+
         Log.d("VGV FIND FOCUS", "${targetHgv.hashCode()} ⚠️ Kein sichtbarer Kandidat gefunden, nutze Default-Fokus.")
         return super.focusSearch(focused, direction)
     }

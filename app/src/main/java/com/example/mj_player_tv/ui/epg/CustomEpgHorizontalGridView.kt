@@ -1,6 +1,8 @@
 package com.example.mj_player_tv.ui.epg
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.view.KeyEvent
@@ -18,18 +20,21 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : HorizontalGridView(context, attrs, defStyleAttr) {
 
-    val synchronizer: EpgScrollSynchronizer
-        get() {
-            return EpgScrollSynchronizer()
-        }
-
     init {
-        // Leanback Einstellungen
-        windowAlignment = WINDOW_ALIGN_BOTH_EDGE
-        itemAlignmentOffsetPercent = ITEM_ALIGN_OFFSET_PERCENT_DISABLED
+        // Leanback Alignment abschalten → verhindert das automatische Nachrücken
+        windowAlignment = BaseGridView.WINDOW_ALIGN_BOTH_EDGE
+        windowAlignmentOffset = 0
+        windowAlignmentOffsetPercent = BaseGridView.WINDOW_ALIGN_OFFSET_PERCENT_DISABLED
+        setItemAlignmentOffset(0)
+        setItemAlignmentOffsetPercent(BaseGridView.ITEM_ALIGN_OFFSET_PERCENT_DISABLED)
     }
 
-    var focusedRecycler: Int = -1
+    override fun onScrolled(dx: Int, dy: Int) {
+        // Optional: Debug-Ausgabe
+        Log.d("CustomEpgHGridView", "${this.hashCode()} = SCROLL = $dx")
+
+        super.onScrolled(dx, dy)
+    }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         event ?: return super.dispatchKeyEvent(event)
@@ -37,9 +42,8 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
         if (event.action == KeyEvent.ACTION_DOWN) {
             when (event.keyCode) {
                 KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    focusedRecycler = this.hashCode()
                     focusNextItem(View.FOCUS_RIGHT)
-                    return true // wir übernehmen die Navigation
+                    return true
                 }
                 KeyEvent.KEYCODE_DPAD_LEFT -> {
                     focusNextItem(View.FOCUS_LEFT)
@@ -49,6 +53,21 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
         }
 
         return super.dispatchKeyEvent(event)
+    }
+
+    override fun requestChildRectangleOnScreen(
+        child: View,
+        rect: Rect,
+        immediate: Boolean
+    ): Boolean {
+        // Geben Sie für alle Fokus-Anfragen (immediate = false) false zurück,
+        // um den automatischen Scroll zu verhindern.
+        if (!immediate) {
+            return false
+        }
+        // Für andere Fälle (z.B. manuelle Anfragen mit immediate=true)
+        // könnten wir das Standardverhalten beibehalten oder ebenfalls unterdrücken.
+        return super.requestChildRectangleOnScreen(child, rect, true)
     }
 
     fun focusNextItem(direction: Int) {
@@ -72,41 +91,37 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
         } else {
             true // Item noch nicht gebunden → scrollen
         }
-
         if (needScroll) {
-            // Scroll zum Item per Adapter-Position
-            scrollToPosition(nextPos)
+            nextView?.let {
+                if (direction == View.FOCUS_RIGHT) {
+                    // 2. 🔥 Scroll-Distanz berechnen, um das Element zu zentrieren
+                    val viewWidth = width // Breite der HorizontalGridView
+                    val viewCenter =
+                        scrollX + (viewWidth / 2) // Aktueller Mittelpunkt des sichtbaren Bereichs
 
-            // Nach dem Layout: Fokus setzen und andere HGVs synchron scrollen
-            post {
-                val updatedNextView = findViewHolderForAdapterPosition(nextPos)?.itemView
-                updatedNextView?.requestFocus()
+                    val nextViewWidth = nextView.width
+                    val nextViewLeft = nextView.left
+
+// Mittelpunkt des Item-Views (relativ zum Content-Anfang der HGV)
+                    val itemCenter = nextViewLeft + (nextViewWidth / 2)
+
+// Der benötigte Scroll-Betrag (dx) ist die Distanz vom aktuellen Viewport-Zentrum
+// zum gewünschten Item-Zentrum.
+                    val dx = itemCenter - viewCenter
+                    scrollBy(dx, 0)
+
+                    post {
+                        nextView.requestFocus()
+                    }
+                } else {
+                    scrollToPosition(nextPos)
+                    post {
+                        nextView.requestFocus()
+                    }
+                }
             }
         } else {
-            // Vollständig sichtbar → nur Fokus setzen
             nextView?.requestFocus()
         }
-    }
-
-    private fun scrollToViewIfNeeded(view: View?) {
-        view ?: return
-        val itemStart = view.left
-        val itemEnd = view.right
-        val viewStart = scrollX
-        val viewEnd = scrollX + width
-
-        val dx = when {
-            itemStart < viewStart -> itemStart - viewStart
-            itemEnd > viewEnd -> itemEnd - viewEnd
-            else -> 0
-        }
-        if (dx != 0) smoothScrollBy(dx, 0)
-    }
-
-    override fun onScrolled(dx: Int, dy: Int) {
-        // Optional: Debug-Ausgabe
-        Log.d("CustomEpgHGridView", "${this.hashCode()} = SCROLL = $dx")
-
-        super.onScrolled(dx, dy)
     }
 }
