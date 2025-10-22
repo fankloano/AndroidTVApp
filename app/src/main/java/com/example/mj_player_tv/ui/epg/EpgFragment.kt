@@ -1,7 +1,9 @@
 package com.example.mj_player_tv.ui.epg
 
+import android.content.res.Resources
 import android.os.Bundle
 import android.os.Looper
+import android.text.format.DateUtils.HOUR_IN_MILLIS
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.databinding.FragmentEpgBinding
+import com.example.mj_player_tv.ui.epg.util.EpgUtil
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
 import com.example.mj_player_tv.viewmodel.StalkerViewModel
@@ -31,19 +34,19 @@ import kotlinx.coroutines.withContext
 import org.joda.time.DateTime
 import java.util.logging.Handler
 
-class EpgFragment : Fragment(R.layout.fragment_epg) {
+class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
 
     private var _binding: FragmentEpgBinding? = null
     private val binding get() = _binding!!
 
-    // Helferklasse für die Scroll-Synchronisation
-    private val synchronizer = EpgScrollSynchronizer()
 
     // Adapter-Instanzen
     private lateinit var timeLineAdapter: EpgTimeLineAdapter
     private lateinit var channelAdapter: EpgChannelAdapter
-    private lateinit var programRowAdapter: EpgRowAdapter
 
+    private val epgManager = EpgManager()
+
+    private var disableScrollSyncUntilOffset: Int? = null
     private val tvGuideViewModel: TvGuideViewModel by activityViewModels {
         TvGuideViewModelFactory(
             requireActivity().application
@@ -61,8 +64,9 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.epgGridView.initialize(epgManager)
         setupAdapters()
-        setupSynchronizer()
+        setupComponents()
 
         tvGuideViewModel.loadChannelsForCategory.observe(viewLifecycleOwner) { tvCategory ->
             if (tvCategory != null) {
@@ -73,69 +77,37 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
 
         tvGuideViewModel.focusToTvGuideRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
-                focusToTvGuide()
                 tvGuideViewModel.clearFocusOnTvGuide()
             }
         }
+
+        binding.timelineHeaderView.addOnScrollListener(onTimeLineScrollListener)
     }
 
+    private val onTimeLineScrollListener = object : RecyclerView.OnScrollListener() {
+        override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+            val timeRow = binding.timelineHeaderView
+            if (disableScrollSyncUntilOffset != null) {
+                if (timeRow.currentScrollOffset == disableScrollSyncUntilOffset) {
+                    disableScrollSyncUntilOffset = null
+                } else {
+                    return
+                }
+            }
+            onHorizontalScrolled(dx)
+        }
+    }
 
     // --- Setup Methoden ---
 
     private fun setupAdapters() {
         // 1. Initialisiere Adapter
         timeLineAdapter = EpgTimeLineAdapter()
+        binding.timelineHeaderView.adapter = timeLineAdapter
         // Verwende den korrekten ChannelPositions Typ
-        channelAdapter = EpgChannelAdapter()
-        programRowAdapter = EpgRowAdapter(
-            onProgramClick = { programData ->
-                // Handle Klick
-            },
-            synchronizer = synchronizer // ⬅️ NEU: Synchronizer übergeben
-        )
-
-        // 2. Verbinde Adapter
-        binding.channelListView.apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-            adapter = channelAdapter
-        }
-        binding.programGridView.apply {
-            adapter = programRowAdapter
-        }
-        binding.timelineHeaderView.apply {
-            layoutManager = LinearLayoutManager(context, RecyclerView.HORIZONTAL, false)
-            adapter = timeLineAdapter
-        }
+        channelAdapter = EpgChannelAdapter(epgManager)
+        binding.epgGridView.adapter = channelAdapter
     }
-
-    private fun setupSynchronizer() {
-        // 1. Vertikale Synchronisation einrichten
-        synchronizer.setupVerticalSync(binding.channelListView, binding.programGridView)
-        binding.timelineHeaderView.tag = "TIMELINE"
-        synchronizer.registerHorizontalView(binding.timelineHeaderView)
-        // 2. Timeline zur horizontalen Synchronisation registrieren
-        binding.programGridView.synchronizer = synchronizer
-    }
-
-    // --- Fokus & Time Indicator Logik ---
-
-
-
-    private fun focusToTvGuide() {
-        // Beispiel: fokussiere erste Zeile, erste Sendung
-        binding.programGridView.scrollToPosition(0)
-        binding.programGridView.post {
-            binding.programGridView.requestFocus()
-
-            // Optional: Fokus auf erstes ProgramItem in der Zeile
-            val rowHolder = binding.programGridView.findViewHolderForAdapterPosition(0)
-                    as? EpgRowAdapter.RowViewHolder
-            rowHolder?.horizontalGridView?.post {
-                rowHolder.horizontalGridView.getChildAt(0)?.requestFocus()
-            }
-        }
-    }
-
 
     // ---- Lade Channels & Epg Daten ---
 
@@ -144,22 +116,60 @@ class EpgFragment : Fragment(R.layout.fragment_epg) {
     private fun getChannelsForTvCategory(accountTvCategoryId: Long) {
         channelLoadJob?.cancel()
         channelAdapter.submitList(null)
-        programRowAdapter.submitList(emptyList())
         channelLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val channelsWithEpg = tvGuideViewModel.getChannelsForCategory(accountTvCategoryId)
-            val channelPositions = channelsWithEpg.map { it.tvChannelPosition }
-            withContext(Dispatchers.Main) {
-                channelAdapter.submitList(channelPositions)
-                programRowAdapter.submitList(channelsWithEpg)
+            epgManager.setData(channelsWithEpg, binding.timelineHeaderView)
+            channelAdapter.submitList(channelsWithEpg)
+        }
+        val startMs = tvGuideViewModel.getTimelineStartMs(DateTime.now())
+// Rufe deine neue update-Methode auf
+        timeLineAdapter.updateStartTime(startMs)
+        val endMs = startMs + getInitialEndTime()
+        epgManager.updateInitialTimeRange(startMs, endMs)
+    }
+
+    private fun getInitialEndTime(): Long {
+        val displayWidth = Resources.getSystem().displayMetrics.widthPixels
+        val gridWidth =
+            (displayWidth - 180)
+        return gridWidth * HOUR_IN_MILLIS / 300
+    }
+
+    override fun onTimeRangeUpdated() {
+        val scrollOffset =
+            (300 * epgManager.getShiftedTime() / HOUR_IN_MILLIS).toInt()
+
+        // 1️⃣ Timeline scrollen
+        binding.timelineHeaderView.scrollTo(scrollOffset, true)
+    }
+
+    override fun onSchedulesUpdated() {
+        TODO("Not yet implemented")
+    }
+
+
+    private fun onHorizontalScrolled(dx: Int) {
+        if (dx == 0) {
+            return
+        }
+
+        var i = 0
+
+        binding.epgGridView.let { grid ->
+            val n = grid.childCount
+            while (i < n) {
+                grid.getChildAt(i).findViewById<View>(R.id.rv_channel_programs).scrollBy(dx, 0)
+                ++i
             }
         }
-        val timeMarks = tvGuideViewModel.getCurrentTimeMarks(DateTime.now())
-        timeLineAdapter.submitList(timeMarks)
+    }
+
+    private fun setupComponents() {
+        epgManager.listeners.add(this)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        synchronizer.release()
         _binding = null
     }
 }

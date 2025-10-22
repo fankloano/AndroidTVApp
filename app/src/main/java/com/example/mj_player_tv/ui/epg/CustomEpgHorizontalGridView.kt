@@ -13,115 +13,93 @@ import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.OnChildViewHolderSelectedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mj_player_tv.database.entity.ChannelPositions
+import com.example.mj_player_tv.database.help.TvChannelWithEpg
+import java.util.concurrent.TimeUnit
 
 class CustomEpgHorizontalGridView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : HorizontalGridView(context, attrs, defStyleAttr) {
+) : CustomEpgTimeLineGridView(context, attrs, defStyleAttr) {
 
-    init {
-        // Leanback Alignment abschalten → verhindert das automatische Nachrücken
-        windowAlignment = BaseGridView.WINDOW_ALIGN_BOTH_EDGE
-        windowAlignmentOffset = 0
-        windowAlignmentOffsetPercent = BaseGridView.WINDOW_ALIGN_OFFSET_PERCENT_DISABLED
-        setItemAlignmentOffset(0)
-        setItemAlignmentOffsetPercent(BaseGridView.ITEM_ALIGN_OFFSET_PERCENT_DISABLED)
+    var thischannel: TvChannelWithEpg? = null
+
+    private lateinit var epgManager: EpgManager
+    fun setChannel(channelToSet: TvChannelWithEpg) {
+        thischannel = channelToSet
     }
 
-    override fun onScrolled(dx: Int, dy: Int) {
-        // Optional: Debug-Ausgabe
-        Log.d("CustomEpgHGridView", "${this.hashCode()} = SCROLL = $dx")
-
-        super.onScrolled(dx, dy)
+    fun setEpgManager(thisEpgManager: EpgManager) {
+        epgManager = thisEpgManager
     }
+
+    fun focusNextProgram(forward: Boolean) {
+        val layoutManager = layoutManager as LinearLayoutManager
+        val currentView = findFocus() as? EpgProgramItemView ?: return
+        val programs = thischannel?.epgList ?: return
+
+        val currentIndex = programs.indexOf(currentView.programData)
+        if (currentIndex == -1) return
+
+        val nextIndexRaw = currentIndex + if (forward) 1 else -1
+        if (nextIndexRaw !in 0..programs.lastIndex) return
+        val nextIndex = nextIndexRaw
+
+        val nextProgram = programs[nextIndex]
+
+        // Prüfen, ob das nächste Program sichtbar ist
+        val nextView = (0 until layoutManager.childCount)
+            .map { layoutManager.getChildAt(it) as? EpgProgramItemView }
+            .firstOrNull { it?.programData == nextProgram }
+
+        if (nextView != null && nextView.isFullyVisible(this)) {
+            nextView.requestFocus()
+        } else {
+            // Berechne Scroll-Offset in Millis → Pixel
+            val timeToScroll = nextProgram.startTimestamp * 1000 - epgManager.getVisibleTimeStart()
+            val maxScroll = TimeUnit.MINUTES.toMillis(60) // max 30 Minuten pro KeyEvent
+            val scrollMillis = timeToScroll.coerceIn(-maxScroll, maxScroll)
+
+            Log.d("SCROLLE HORIZONTAL","NICHT SICHTBAR: $scrollMillis $currentIndex $nextIndex")
+            scrollByTime(scrollMillis)
+
+            post {
+                nextView?.requestFocus()
+            }
+        }
+    }
+
+
+    private fun scrollByTime(timeToScroll: Long) {
+            epgManager.shiftTime(timeToScroll)
+    }
+
+    fun View.getVisibleWidthInParent(parent: RecyclerView): Int {
+        val parentRect = Rect()
+        parent.getHitRect(parentRect)
+        val visibleRect = Rect()
+        this.getLocalVisibleRect(visibleRect)
+        return visibleRect.width().coerceAtMost(this.width)
+    }
+
+    fun View.isFullyVisible(parent: RecyclerView): Boolean =
+        getVisibleWidthInParent(parent) == this.width
+
+    fun View.isPartiallyVisible(parent: RecyclerView): Boolean =
+        getVisibleWidthInParent(parent) in 1 until this.width
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        event ?: return super.dispatchKeyEvent(event)
-
-        if (event.action == KeyEvent.ACTION_DOWN) {
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    focusNextItem(View.FOCUS_RIGHT)
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    focusNextItem(View.FOCUS_LEFT)
-                    return true
-                }
+        if (event?.action == KeyEvent.ACTION_DOWN) {
+            val keyCode = event.keyCode
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                focusNextProgram(forward = true)
+                return true
+            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                focusNextProgram(forward = false)
+                return true
             }
         }
-
         return super.dispatchKeyEvent(event)
-    }
-
-    override fun requestChildRectangleOnScreen(
-        child: View,
-        rect: Rect,
-        immediate: Boolean
-    ): Boolean {
-        // Geben Sie für alle Fokus-Anfragen (immediate = false) false zurück,
-        // um den automatischen Scroll zu verhindern.
-        if (!immediate) {
-            return false
-        }
-        // Für andere Fälle (z.B. manuelle Anfragen mit immediate=true)
-        // könnten wir das Standardverhalten beibehalten oder ebenfalls unterdrücken.
-        return super.requestChildRectangleOnScreen(child, rect, true)
-    }
-
-    fun focusNextItem(direction: Int) {
-        val focused = focusedChild ?: return
-        val currentPos = getChildAdapterPosition(focused)
-        if (currentPos == RecyclerView.NO_POSITION) return
-
-        val nextPos = currentPos + if (direction == View.FOCUS_RIGHT) 1 else -1
-        if (nextPos !in 0 until (adapter?.itemCount ?: 0)) return
-
-        // Prüfen, ob das Item aktuell sichtbar ist
-        val nextView = findViewHolderForAdapterPosition(nextPos)?.itemView
-        val needScroll = if (nextView != null) {
-            val itemStart = nextView.left
-            val itemEnd = nextView.right
-            val viewStart = scrollX
-            val viewEnd = scrollX + width
-
-            // Scroll nötig, wenn Item teilweise oder gar nicht sichtbar
-            itemStart < viewStart || itemEnd > viewEnd
-        } else {
-            true // Item noch nicht gebunden → scrollen
-        }
-        if (needScroll) {
-            nextView?.let {
-                if (direction == View.FOCUS_RIGHT) {
-                    // 2. 🔥 Scroll-Distanz berechnen, um das Element zu zentrieren
-                    val viewWidth = width // Breite der HorizontalGridView
-                    val viewCenter =
-                        scrollX + (viewWidth / 2) // Aktueller Mittelpunkt des sichtbaren Bereichs
-
-                    val nextViewWidth = nextView.width
-                    val nextViewLeft = nextView.left
-
-// Mittelpunkt des Item-Views (relativ zum Content-Anfang der HGV)
-                    val itemCenter = nextViewLeft + (nextViewWidth / 2)
-
-// Der benötigte Scroll-Betrag (dx) ist die Distanz vom aktuellen Viewport-Zentrum
-// zum gewünschten Item-Zentrum.
-                    val dx = itemCenter - viewCenter
-                    scrollBy(dx, 0)
-
-                    post {
-                        nextView.requestFocus()
-                    }
-                } else {
-                    scrollToPosition(nextPos)
-                    post {
-                        nextView.requestFocus()
-                    }
-                }
-            }
-        } else {
-            nextView?.requestFocus()
-        }
     }
 }

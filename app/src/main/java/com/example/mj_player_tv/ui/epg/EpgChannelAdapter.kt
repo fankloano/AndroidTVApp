@@ -7,25 +7,20 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
-import com.example.mj_player_tv.database.entity.ChannelPositions
+import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.VgItemEpgTvchannelBinding
+import com.example.mj_player_tv.databinding.VgItemEpgRowBinding
 
-// ChannelAdapter.kt
+class EpgChannelAdapter(
+    private val epgManager: EpgManager
+) : ListAdapter<TvChannelWithEpg, EpgChannelAdapter.ViewHolder>(ChannelDiffCallback()) {
 
-class EpgChannelAdapter : ListAdapter<ChannelPositions, EpgChannelAdapter.ChannelViewHolder>(ChannelDiffCallback()) {
+    class ViewHolder(val binding: VgItemEpgRowBinding) : RecyclerView.ViewHolder(binding.root) {
+        var programAdapter: EpgProgramAdapter? = null // Wiederverwendung
 
-    class ChannelViewHolder(private val binding: VgItemEpgTvchannelBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-
-        init {
-            // **KRITISCH:** Verhindere, dass der Kanalname/Logo den Fokus erhält.
-            binding.root.isFocusable = false
-            binding.root.isFocusableInTouchMode = false
-
-        }
-
-        fun bind(item: ChannelPositions) {
-            val tvChannel = item.tvchannel.target
+        fun bind(item: TvChannelWithEpg) {
+            val channelPosition = item.tvChannelPosition
+            val tvChannel = channelPosition.tvchannel.target
             val epgLogo = tvChannel.epgLogo
             val playlistLogo = tvChannel.logo
             val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
@@ -54,26 +49,43 @@ class EpgChannelAdapter : ListAdapter<ChannelPositions, EpgChannelAdapter.Channe
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ChannelViewHolder {
-        val binding = VgItemEpgTvchannelBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
-        return ChannelViewHolder(binding)
-    }
-
-    override fun onBindViewHolder(holder: ChannelViewHolder, position: Int) {
-        holder.bind(getItem(position))
-    }
-
-    class ChannelDiffCallback : DiffUtil.ItemCallback<ChannelPositions>() {
-        override fun areItemsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions): Boolean {
-            // Prüfung über die ID, da dies das eindeutige Merkmal ist
-            return oldItem.catAndChannelAccount == newItem.catAndChannelAccount
+    class ChannelDiffCallback : DiffUtil.ItemCallback<TvChannelWithEpg>() {
+        override fun areItemsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg): Boolean {
+            return oldItem.id == newItem.id
         }
 
-        override fun areContentsTheSame(oldItem: ChannelPositions, newItem: ChannelPositions): Boolean {
-            // Prüfung, ob sich die sichtbaren Inhalte geändert haben
+        override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg): Boolean {
             return oldItem == newItem
         }
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val binding = VgItemEpgRowBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val channel = getItem(position)
+        holder.bind(channel)
+            // Erstelle oder wiederverwende ProgramItemAdapter
+        if (holder.programAdapter == null) {
+            holder.programAdapter = EpgProgramAdapter(epgManager, channel.tvChannelPosition.tvchannel.target.showingName)
+            holder.binding.rvChannelPrograms.adapter = holder.programAdapter
+        }
+
+            // Aktualisiere Programme
+        val programs = epgManager.getProgramsForChannel(
+            channel.id
+        )
+        holder.programAdapter?.submitList(programs)
+        holder.binding.rvChannelPrograms.setChannel(channel)
+        holder.binding.rvChannelPrograms.setEpgManager(epgManager)
+            // Synchronisiere Scroll-Position (wie Egeniq's resetScroll)
+        holder.binding.rvChannelPrograms.scrollTo(epgManager.getTimeLineRowScrollOffset(), 0)
+
+    }
+
+    fun updateChannels(newChannels: List<TvChannelWithEpg>) {
+        submitList(newChannels)
     }
 }

@@ -97,6 +97,19 @@ class TvGuideViewModel(application: Application) : AndroidViewModel(application)
         _hideMenuAndAccountsRequest.value = null
     }
 
+    // Diese Funktion gibt jetzt nur noch EINE Zahl zurück
+    fun getTimelineStartMs(now: DateTime): Long {
+        // Aktuelle Zeit abrunden auf die letzte volle Stunde
+        val startTime = now
+            .withMinuteOfHour(0)
+            .withSecondOfMinute(0)
+            .withMillisOfSecond(0)
+
+        // EpgUtils.timeLineStartTime = startTime.minusMinutes(15) // Das kannst du später für die Scroll-Position brauchen
+
+        return startTime.millis // Gib den Long-Wert zurück
+    }
+
     fun getCurrentTimeMarks(now: DateTime): List<TimeLineData> {
         val timeStepMinutes = 30
         val stepWidthPx = timeStepMinutes * EpgUtils.minuteToPixel
