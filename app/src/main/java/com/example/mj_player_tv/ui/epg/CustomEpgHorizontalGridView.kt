@@ -7,15 +7,11 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
-import androidx.leanback.widget.BaseGridView
-import androidx.leanback.widget.GridLayoutManager
-import androidx.leanback.widget.HorizontalGridView
-import androidx.leanback.widget.OnChildViewHolderSelectedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import java.util.concurrent.TimeUnit
+import kotlin.math.max
 
 class CustomEpgHorizontalGridView @JvmOverloads constructor(
     context: Context,
@@ -69,7 +65,6 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
             }
         }
     }
-
 
     private fun scrollByTime(timeToScroll: Long) {
             epgManager.shiftTime(timeToScroll)

@@ -17,6 +17,7 @@ import com.example.mj_player_tv.ui.epg.util.EpgUtil
 class EpgProgramAdapter(private val epgManager: EpgManager, private var channelName: String) :
     ListAdapter<EpgDataOB, EpgProgramAdapter.ProgramViewHolder>(ProgramDiffCallback()) {
 
+
     fun updateChannelName(newChannelName: String) {
         this.channelName = newChannelName
     }
@@ -26,14 +27,9 @@ class EpgProgramAdapter(private val epgManager: EpgManager, private var channelN
         private var epgProgramItemView: EpgProgramItemView? = null
 
         fun bind(item: EpgDataOB) {
-
             epgProgramItemView = itemView as EpgProgramItemView
-            epgProgramItemView?.bind(item)
+            epgProgramItemView?.bind(item, epgManager.getVisibleTimeStart())
         }
-
-        private val EpgDataOB.isLiveShow: Boolean
-            get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
-
     }
 
 

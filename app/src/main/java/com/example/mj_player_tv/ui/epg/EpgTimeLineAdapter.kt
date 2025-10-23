@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.help.TimeLineData
 import com.example.mj_player_tv.databinding.VgItemEpgTimelineBinding
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 // TimeAdapter.kt
 
@@ -17,7 +18,11 @@ class EpgTimeLineAdapter : RecyclerView.Adapter<EpgTimeLineAdapter.TimeViewHolde
     // 2. Speichere nur die Startzeit, nicht die ganze Liste
     private var startUtcMs: Long = 0L
     private val timeStepMinutes = 30
-    private val stepWidthPx = timeStepMinutes * EpgUtils.minuteToPixel
+
+    val widthPerHour = 300
+
+    val pixelPerMinute = widthPerHour.toFloat() / 60f
+    val stepWidthPx = (timeStepMinutes * pixelPerMinute).roundToInt()
 
     // 3. Der ViewHolder bleibt gleich (fast, siehe Schritt 2)
     class TimeViewHolder(private val binding: VgItemEpgTimelineBinding) :

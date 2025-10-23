@@ -38,7 +38,7 @@ class EpgProgramItemView @JvmOverloads constructor(
     }
 
     /** Daten an View binden */
-    fun bind(epg: EpgDataOB) {
+    fun bind(epg: EpgDataOB, timelineStart: Long) {
         programData = epg
         titleView.text = epg.name
         subTitleView.text = epg.sub_title
@@ -48,8 +48,22 @@ class EpgProgramItemView @JvmOverloads constructor(
 
         Log.d("CALCULATE EPG ITEMVIEW","${epg.name} = $calculateWidth")
         // Breite anhand der Programmdauer setzen
+        val startTime = if (epg.startTimestamp * 1000 < timelineStart) timelineStart else epg.startTimestamp * 1000
         layoutParams = layoutParams.apply {
-            width = EpgUtil.convertMillisToPixel(epg.startTimestamp * 1000, epg.stopTimestamp * 1000)
+            width = EpgUtil.convertMillisToPixel(startTime, epg.stopTimestamp * 1000)
+        }
+        if (epg.isLiveShow) {
+            val now = System.currentTimeMillis()
+            val start = epg.startTimestamp * 1000
+            val stop = epg.stopTimestamp * 1000
+            progressBar.visibility = VISIBLE
+            progressBar.progress = ((now - start) / (stop - start).toFloat() * 100).toInt()
+        } else {
+            progressBar.visibility = INVISIBLE
         }
     }
+
+    private val EpgDataOB.isLiveShow: Boolean
+        get() = startTimestamp < System.currentTimeMillis() / 1000 && stopTimestamp > System.currentTimeMillis() / 1000
+
 }

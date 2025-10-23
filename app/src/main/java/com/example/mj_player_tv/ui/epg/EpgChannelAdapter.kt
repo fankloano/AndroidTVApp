@@ -7,9 +7,11 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
+import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
 import com.example.mj_player_tv.databinding.VgItemEpgTvchannelBinding
 import com.example.mj_player_tv.databinding.VgItemEpgRowBinding
+import com.example.mj_player_tv.ui.tvguide.EpgItemDecoration
 
 class EpgChannelAdapter(
     private val epgManager: EpgManager
@@ -71,6 +73,9 @@ class EpgChannelAdapter(
         if (holder.programAdapter == null) {
             holder.programAdapter = EpgProgramAdapter(epgManager, channel.tvChannelPosition.tvchannel.target.showingName)
             holder.binding.rvChannelPrograms.adapter = holder.programAdapter
+            holder.binding.rvChannelPrograms.addItemDecoration(
+                EpgItemDecoration(color = holder.binding.rvChannelPrograms.context.getColor(R.color.background_dark))
+            )
         }
 
             // Aktualisiere Programme
@@ -83,9 +88,5 @@ class EpgChannelAdapter(
             // Synchronisiere Scroll-Position (wie Egeniq's resetScroll)
         holder.binding.rvChannelPrograms.scrollTo(epgManager.getTimeLineRowScrollOffset(), 0)
 
-    }
-
-    fun updateChannels(newChannels: List<TvChannelWithEpg>) {
-        submitList(newChannels)
     }
 }

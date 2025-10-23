@@ -15,6 +15,7 @@ import com.example.mj_player_tv.R
 import com.example.mj_player_tv.databinding.FragmentHomeBinding
 import com.example.mj_player_tv.databinding.FragmentTvBinding
 import com.example.mj_player_tv.databinding.FragmentTvChannelsBinding
+import com.example.mj_player_tv.ui.TvPlayerAndShowDetails
 import com.example.mj_player_tv.utils.Resource
 import com.example.mj_player_tv.viewmodel.HelpViewModel
 import com.example.mj_player_tv.viewmodel.HelpViewModelFactory
@@ -93,10 +94,14 @@ class TvFragment : Fragment(R.layout.fragment_tv) {
         transaction.replace(R.id.container_accountwithcategories, AccountTvCategoriesFragment())
         transaction.addToBackStack(null)
         transaction.commit()
+        setPlayerAndShowDetailsFragment()
     }
 
     private fun setPlayerAndShowDetailsFragment() {
-
+        val transaction = childFragmentManager.beginTransaction()
+        transaction.replace(R.id.container_playerwithshowdetails, TvPlayerAndShowDetails())
+        transaction.addToBackStack(null)
+        transaction.commit()
     }
 
     private fun setEpgFragment() {

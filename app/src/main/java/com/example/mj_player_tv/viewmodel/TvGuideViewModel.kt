@@ -53,6 +53,17 @@ class TvGuideViewModel(application: Application) : AndroidViewModel(application)
         _changePlayingChannel.value = null
     }
 
+    private val _showProgramDetailsRequest = MutableLiveData<EpgDataOB?>()
+    val showProgramDetailsRequest: LiveData<EpgDataOB?> = _showProgramDetailsRequest
+
+    fun requestProgramDetails(epgDataOB: EpgDataOB) {
+        _showProgramDetailsRequest.value = epgDataOB
+    }
+
+    fun clearProgramDetailsRequest() {
+        _showProgramDetailsRequest.value = null
+    }
+
     private val _loadChannelsForCategory = MutableLiveData<TvCategoryOB?>()
     val loadChannelsForCategory: LiveData<TvCategoryOB?> = _loadChannelsForCategory
 
@@ -108,38 +119,6 @@ class TvGuideViewModel(application: Application) : AndroidViewModel(application)
         // EpgUtils.timeLineStartTime = startTime.minusMinutes(15) // Das kannst du später für die Scroll-Position brauchen
 
         return startTime.millis // Gib den Long-Wert zurück
-    }
-
-    fun getCurrentTimeMarks(now: DateTime): List<TimeLineData> {
-        val timeStepMinutes = 30
-        val stepWidthPx = timeStepMinutes * EpgUtils.minuteToPixel
-
-        // Aktuelle Zeit abrunden auf die letzte volle Stunde
-        var currentTime = now
-            .withMinuteOfHour(0)
-            .withSecondOfMinute(0)
-            .withMillisOfSecond(0)
-
-
-        val endTime = currentTime.plusHours(12)
-        val hours = mutableListOf<TimeLineData>()
-        var hourIndex = 0
-        EpgUtils.timeLineStartTime = currentTime.minusMinutes(15)
-        EpgUtils.timeLineEndTime = endTime
-        while (currentTime <= endTime) {
-            hours.add(
-                TimeLineData(
-                    timeId = currentTime,
-                    time = currentTime.toString("HH:mm"),
-                    width = stepWidthPx,
-                    gravity = Gravity.CENTER,
-                    textSizeSp = if (hourIndex % 2 == 0) 13f else 11f
-                )
-            )
-            currentTime = currentTime.plusMinutes(timeStepMinutes)
-            hourIndex++
-        }
-        return hours
     }
 
     private val _channelsWithEpg = MutableStateFlow<List<TvChannelWithEpg>>(emptyList())

@@ -4,7 +4,7 @@
     android:id="@+id/ll_time_line_parent"
     android:layout_width="wrap_content"
     android:layout_height="40dp"
-    android:gravity="center"
+    android:gravity="start|center_vertical"
     android:orientation="vertical"
     android:background="?attr/backgroundDarkDark">
 

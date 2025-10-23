@@ -56,8 +56,8 @@ class EpgManager {
     }
 
 
-    fun getVisibleTimeStart(): Long = startUtcMillis
-    fun getVisibleTimeEnd(): Long = endUtcMillis
+    fun getVisibleTimeStart(): Long = fromUtcMillis
+    fun getVisibleTimeEnd(): Long = toUtcMillis
 
     internal fun getShiftedTime(): Long {
         return fromUtcMillis - startUtcMillis

@@ -17,6 +17,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
+import com.example.mj_player_tv.database.entity.ChannelPositions
+import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.databinding.FragmentEpgBinding
 import com.example.mj_player_tv.ui.epg.util.EpgUtil
 import com.example.mj_player_tv.viewmodel.HelpViewModel
@@ -82,6 +84,20 @@ class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
         }
 
         binding.timelineHeaderView.addOnScrollListener(onTimeLineScrollListener)
+        binding.epgGridView.scheduleSelectionListener = object : CustomEpgVerticalGridView.ScheduleSelectionListener {
+            override fun onSelectionChanged(schedule: EpgDataOB) {
+                tvGuideViewModel.requestProgramDetails(schedule)
+            }
+
+            override fun onChannelSelected(channel: ChannelPositions) {
+                TODO("Not yet implemented")
+            }
+
+            override fun onChannelClicked(channel: ChannelPositions) {
+                TODO("Not yet implemented")
+            }
+
+        }
     }
 
     private val onTimeLineScrollListener = object : RecyclerView.OnScrollListener() {

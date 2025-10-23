@@ -6,12 +6,7 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
-import android.view.ViewTreeObserver
-import androidx.leanback.widget.HorizontalGridView
 import androidx.leanback.widget.VerticalGridView
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.entity.ChannelPositions
 import com.example.mj_player_tv.database.entity.EpgDataOB
@@ -35,6 +30,8 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
          */
         fun onRequestChildFocus(oldFocus: View?, newFocus: View?)
     }
+
+    private var selectedProgramView: EpgProgramItemView? = null
 
     private val programManagerListener = object : EpgManager.Listener {
 
@@ -81,6 +78,7 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
     }
 
 
+
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         if (event?.action == KeyEvent.ACTION_DOWN) {
             val keyCode = event.keyCode
@@ -101,5 +99,4 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
         super.onDetachedFromWindow()
         programGuideManager.listeners.remove(programManagerListener)
     }
-
 }
