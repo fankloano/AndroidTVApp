@@ -50,7 +50,7 @@ class EpgProgramItemView @JvmOverloads constructor(
         // Breite anhand der Programmdauer setzen
         val startTime = if (epg.startTimestamp * 1000 < timelineStart) timelineStart else epg.startTimestamp * 1000
         layoutParams = layoutParams.apply {
-            width = EpgUtil.convertMillisToPixel(startTime, epg.stopTimestamp * 1000)
+            width = EpgUtil.convertMillisToPixel(epg.startTimestamp * 1000, epg.stopTimestamp * 1000)
         }
         if (epg.isLiveShow) {
             val now = System.currentTimeMillis()

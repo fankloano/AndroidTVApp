@@ -10,14 +10,23 @@ import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
+import com.example.mj_player_tv.ui.epg.util.EpgUtil
+import org.joda.time.DateTime
 import java.util.concurrent.TimeUnit
 import kotlin.math.max
+import kotlin.math.min
 
 class CustomEpgHorizontalGridView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : CustomEpgTimeLineGridView(context, attrs, defStyleAttr) {
+
+
+    companion object {
+        private val ONE_HOUR_MILLIS = TimeUnit.HOURS.toMillis(1)
+        private val HALF_HOUR_MILLIS = ONE_HOUR_MILLIS / 2
+    }
 
     var thischannel: TvChannelWithEpg? = null
 
@@ -30,46 +39,145 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
         epgManager = thisEpgManager
     }
 
-    fun focusNextProgram(forward: Boolean) {
-        val layoutManager = layoutManager as LinearLayoutManager
-        val currentView = findFocus() as? EpgProgramItemView ?: return
-        val programs = thischannel?.epgList ?: return
+    // Call this API after RTL is resolved. (i.e. View is measured.)
+    private fun isDirectionStart(direction: Int): Boolean {
+        return if (layoutDirection == LAYOUT_DIRECTION_LTR)
+            direction == FOCUS_LEFT
+        else
+            direction == FOCUS_RIGHT
+    }
 
-        val currentIndex = programs.indexOf(currentView.programData)
-        if (currentIndex == -1) return
+    // Call this API after RTL is resolved. (i.e. View is measured.)
+    private fun isDirectionEnd(direction: Int): Boolean {
+        return if (layoutDirection == LAYOUT_DIRECTION_LTR)
+            direction == FOCUS_RIGHT
+        else
+            direction == FOCUS_LEFT
+    }
 
-        val nextIndexRaw = currentIndex + if (forward) 1 else -1
-        if (nextIndexRaw !in 0..programs.lastIndex) return
-        val nextIndex = nextIndexRaw
+    override fun focusSearch(focused: View, direction: Int): View? {
+        val focusedProgram = (focused as? EpgProgramItemView)?.programData
+            ?: return super.focusSearch(focused, direction)
 
-        val nextProgram = programs[nextIndex]
+        val fromMillis = epgManager.getVisibleTimeStart()
+        val toMillis = epgManager.getVisibleTimeEnd() // musst du evtl. noch ergänzen
 
-        // Prüfen, ob das nächste Program sichtbar ist
-        val nextView = (0 until layoutManager.childCount)
-            .map { layoutManager.getChildAt(it) as? EpgProgramItemView }
-            .firstOrNull { it?.programData == nextProgram }
+        // Nach links scrollen, wenn Programm vor sichtbarem Bereich beginnt
+        if (isDirectionStart(direction) || direction == FOCUS_BACKWARD) {
+            if (focusedProgram.startTimestamp * 1000 < fromMillis) {
+                Log.d("SCROLLE HORIZONTAL FOKUS SEARCH","BEGINNT VOR: ${focusedProgram.name}")
 
-        if (nextView != null && nextView.isFullyVisible(this)) {
-            nextView.requestFocus()
-        } else {
-            // Berechne Scroll-Offset in Millis → Pixel
-            val timeToScroll = nextProgram.startTimestamp * 1000 - epgManager.getVisibleTimeStart()
-            val maxScroll = TimeUnit.MINUTES.toMillis(60) // max 30 Minuten pro KeyEvent
-            val scrollMillis = timeToScroll.coerceIn(-maxScroll, maxScroll)
+                scrollByTime(
+                    max(-ONE_HOUR_MILLIS, focusedProgram.startTimestamp * 1000 - fromMillis)
+                )
+                return focused
+            }
+            Log.d("SCROLLE HORIZONTAL FOKUS SEARCH","BEGINNT NICHT VOR: ${focusedProgram.name}")
+        }
 
-            Log.d("SCROLLE HORIZONTAL","NICHT SICHTBAR: $scrollMillis $currentIndex $nextIndex")
-            scrollByTime(scrollMillis)
-
-            post {
-                nextView?.requestFocus()
+        // Nach rechts scrollen, wenn Programm über sichtbaren Bereich hinausgeht
+        if (isDirectionEnd(direction) || direction == FOCUS_FORWARD) {
+            if (focusedProgram.stopTimestamp * 1000 > toMillis) {
+                scrollByTime(
+                    ONE_HOUR_MILLIS
+                )
+                return focused
             }
         }
+
+        val target = super.focusSearch(focused, direction)
+        if (target !is EpgProgramItemView) {
+            Log.d("SCROLLE HORIZONTAL FOKUS SEARCH","NEUES ist kein Programm")
+
+            return target
+        }
+        if (target.programData != null && target.programData!!.startTimestamp * 1000 < fromMillis) {
+            val timeToScroll = (target.programData!!.startTimestamp * 1000 - fromMillis)
+            Log.d("SCROLLEN MUSST DU", "SCROLL UM $timeToScroll")
+            scrollByTime(timeToScroll)
+        }
+
+        val targetProgram = target.programData ?: return target
+
+        // Zielprogramm liegt außerhalb: scrollen
+        if (isDirectionStart(direction) || direction == FOCUS_BACKWARD) {
+            if (targetProgram.startTimestamp * 1000 < fromMillis && targetProgram.stopTimestamp * 1000 < fromMillis + HALF_HOUR_MILLIS) {
+                Log.d("SCROLLE HORIZONTAL FOKUS SEARCH","NEUES BEGINNT VOR: ${targetProgram.name}")
+
+                scrollByTime(
+                    max(-ONE_HOUR_MILLIS, targetProgram.startTimestamp * 1000 - fromMillis)
+                )
+            }
+            Log.d("SCROLLE HORIZONTAL FOKUS SEARCH","NEUES BEGINNT NICHT VOR: ${targetProgram.name}")
+
+        } else if (isDirectionEnd(direction) || direction == FOCUS_FORWARD) {
+            if (targetProgram.startTimestamp * 1000 > toMillis + ONE_HOUR_MILLIS + HALF_HOUR_MILLIS) {
+                scrollByTime(
+                    min(TimeUnit.HOURS.toMillis(1), targetProgram.startTimestamp * 1000 - fromMillis)
+                )
+            }
+        }
+
+        return target
     }
+
 
     private fun scrollByTime(timeToScroll: Long) {
             epgManager.shiftTime(timeToScroll)
     }
 
+    /** Resets the scroll with the initial offset `currentScrollOffset`.  */
+    fun resetScroll(scrollOffset: Int) {
+        val channel = thischannel
+        val startTime =
+            EpgUtil.convertPixelToMillis(scrollOffset) + epgManager.getTimeLineStart()
+        val visiblestart = DateTime(epgManager.getVisibleTimeStart()).toString("HH:mm")
+        val sschtarttime = DateTime(startTime).toString("HH:mm")
+        val position = if (channel == null) {
+            -1
+        } else {
+            epgManager.getProgramIndexAtTime(channel.id, startTime)
+        }
+        if (position < 0) {
+            Log.d(
+                "NEU GEBUNDENE ZEEEILE",
+                "${channel?.tvChannelPosition?.tvchannel?.target?.showingName} = position -1"
+            )
+            layoutManager?.scrollToPosition(0)
+        } else if (channel?.id != null) {
+            val slug = channel.id
+            val entry = epgManager.getScheduleForChannelIdAndIndex(slug, position)
+            if (entry != null) {
+                if (entry.startTimestamp * 1000 == epgManager.getTimeLineStart()) {
+                    Log.d(
+                        "NEU GEBUNDENE ZEEEILE",
+                        "${channel.tvChannelPosition.tvchannel.target?.showingName} =RETURN "
+                    )
+                    return
+                } else {
+                    val offset = EpgUtil.convertMillisToPixel(
+                        epgManager.getVisibleTimeStart(),
+                        entry.startTimestamp * 1000
+                    ) - scrollOffset
+                    Log.d(
+                        "NEU GEBUNDENE ZEEEILE",
+                        "${channel.tvChannelPosition.tvchannel.target.showingName} = ${entry.name} SCROOOL: $offset EIGENTLICH: $scrollOffset STARTTIME: ${sschtarttime} VISIBLESTART: $visiblestart"
+                    )
+
+                    (layoutManager as LinearLayoutManager).scrollToPositionWithOffset(
+                        position,
+                        offset
+                    )
+                }
+            } else {
+                Log.d(
+                    "NEU GEBUNDENE ZEEEILE",
+                    "${channel.tvChannelPosition.tvchannel.target?.showingName} = kein entry"
+                )
+                layoutManager?.scrollToPosition(0)
+            }
+        }
+    }
     fun View.getVisibleWidthInParent(parent: RecyclerView): Int {
         val parentRect = Rect()
         parent.getHitRect(parentRect)
@@ -84,17 +192,4 @@ class CustomEpgHorizontalGridView @JvmOverloads constructor(
     fun View.isPartiallyVisible(parent: RecyclerView): Boolean =
         getVisibleWidthInParent(parent) in 1 until this.width
 
-    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-        if (event?.action == KeyEvent.ACTION_DOWN) {
-            val keyCode = event.keyCode
-            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
-                focusNextProgram(forward = true)
-                return true
-            } else if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
-                focusNextProgram(forward = false)
-                return true
-            }
-        }
-        return super.dispatchKeyEvent(event)
-    }
 }

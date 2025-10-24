@@ -299,18 +299,18 @@ class TvGuideViewModel(application: Application) : AndroidViewModel(application)
                 .withMinuteOfHour(0)
                 .withSecondOfMinute(0)
                 .withMillisOfSecond(0)
-                .minusMinutes(30)
+                .minusMinutes(1)
             // 2. Ziehe 30 Minuten ab, um den neuen Startzeitpunkt zu erhalten
 
             val startTimeSec = startTime.millis / 1000
             // 3. Berechne das Ende der Abfrage, 12.5 Stunden später
-            val twelveHalfHoursLaterSec = startTime.plusHours(13).millis / 1000
+            val twentyfourHalfHoursLaterSec = startTime.plusHours(24).millis / 1000
 
             epgCache = HashMap(
                 epgDataBox.query(
                     EpgDataOB_.epgSourceId.oneOf(epgSourceIds)
                         .and(EpgDataOB_.stopTimestamp.greater(startTimeSec))
-                        .and(EpgDataOB_.startTimestamp.less(twelveHalfHoursLaterSec))
+                        .and(EpgDataOB_.startTimestamp.less(twentyfourHalfHoursLaterSec))
                 ).build().find()
                     .groupBy { it.epgChId ?: "" }
                     .mapValues { entry ->

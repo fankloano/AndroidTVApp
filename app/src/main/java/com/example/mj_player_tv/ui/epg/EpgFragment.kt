@@ -4,6 +4,7 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.os.Looper
 import android.text.format.DateUtils.HOUR_IN_MILLIS
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -79,6 +80,7 @@ class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
 
         tvGuideViewModel.focusToTvGuideRequest.observe(viewLifecycleOwner) { request ->
             if (request != null) {
+                binding.epgGridView.requestFocus()
                 tvGuideViewModel.clearFocusOnTvGuide()
             }
         }
@@ -131,11 +133,13 @@ class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
 
     private fun getChannelsForTvCategory(accountTvCategoryId: Long) {
         channelLoadJob?.cancel()
-        channelAdapter.submitList(null)
+        channelAdapter.setChannels(emptyList())
         channelLoadJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.IO) {
             val channelsWithEpg = tvGuideViewModel.getChannelsForCategory(accountTvCategoryId)
             epgManager.setData(channelsWithEpg, binding.timelineHeaderView)
-            channelAdapter.submitList(channelsWithEpg)
+            withContext(Dispatchers.Main) {
+                channelAdapter.setChannels(channelsWithEpg)
+            }
         }
         val startMs = tvGuideViewModel.getTimelineStartMs(DateTime.now())
 // Rufe deine neue update-Methode auf
@@ -154,6 +158,7 @@ class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
     override fun onTimeRangeUpdated() {
         val scrollOffset =
             (300 * epgManager.getShiftedTime() / HOUR_IN_MILLIS).toInt()
+        Log.d("SCROLLE HORIZONTAL","SCROLLE TIMELINE - offset: $scrollOffset")
 
         // 1️⃣ Timeline scrollen
         binding.timelineHeaderView.scrollTo(scrollOffset, true)

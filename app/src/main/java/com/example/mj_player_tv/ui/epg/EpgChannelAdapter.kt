@@ -3,61 +3,68 @@ package com.example.mj_player_tv.ui.epg
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.doOnPreDraw
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
-import com.example.mj_player_tv.databinding.VgItemEpgTvchannelBinding
 import com.example.mj_player_tv.databinding.VgItemEpgRowBinding
 import com.example.mj_player_tv.ui.tvguide.EpgItemDecoration
 
 class EpgChannelAdapter(
     private val epgManager: EpgManager
-) : ListAdapter<TvChannelWithEpg, EpgChannelAdapter.ViewHolder>(ChannelDiffCallback()) {
+) : RecyclerView.Adapter<EpgChannelAdapter.ViewHolder>() {
 
-    class ViewHolder(val binding: VgItemEpgRowBinding) : RecyclerView.ViewHolder(binding.root) {
-        var programAdapter: EpgProgramAdapter? = null // Wiederverwendung
+    private val channels = mutableListOf<TvChannelWithEpg>()
 
-        fun bind(item: TvChannelWithEpg) {
-            val channelPosition = item.tvChannelPosition
-            val tvChannel = channelPosition.tvchannel.target
-            val epgLogo = tvChannel.epgLogo
-            val playlistLogo = tvChannel.logo
-            val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
-            binding.tvChannelname.text = tvChannel.showingName
-
-            if (tvChannel.account.target!!.useEpgLogos) {
-                if (epgLogo.isNotEmpty() && (linkedEpgChannel?.isExternalEpg == true || tvChannel.alwaysUsesExternalEpg)) {
-                    binding.ivChannelLogo.visibility = View.VISIBLE
-                    binding.ivChannelLogo.load(epgLogo)
-                } else {
-                    if (playlistLogo.isNotEmpty()) {
-                        binding.ivChannelLogo.visibility = View.VISIBLE
-                        binding.ivChannelLogo.load(playlistLogo)
-                    } else {
-                        binding.ivChannelLogo.visibility = View.INVISIBLE
-                    }
-                }
-            } else {
-                if (playlistLogo.isNotEmpty()) {
-                    binding.ivChannelLogo.visibility = View.VISIBLE
-                    binding.ivChannelLogo.load(playlistLogo)
-                } else {
-                    binding.ivChannelLogo.visibility = View.INVISIBLE
-                }
-            }
-        }
+    fun setChannels(newChannels: List<TvChannelWithEpg>) {
+        channels.clear()
+        channels.addAll(newChannels)
+        notifyDataSetChanged()
     }
 
-    class ChannelDiffCallback : DiffUtil.ItemCallback<TvChannelWithEpg>() {
-        override fun areItemsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg): Boolean {
-            return oldItem.id == newItem.id
-        }
+    inner class ViewHolder(val binding: VgItemEpgRowBinding) : RecyclerView.ViewHolder(binding.root) {
+        var programAdapter: EpgProgramAdapter? = null
 
-        override fun areContentsTheSame(oldItem: TvChannelWithEpg, newItem: TvChannelWithEpg): Boolean {
-            return oldItem == newItem
+        fun bind(channel: TvChannelWithEpg) {
+            val tvChannel = channel.tvChannelPosition.tvchannel.target
+            binding.tvChannelname.text = tvChannel.showingName
+
+            // Logo setzen
+            val logo = if (tvChannel.account.target!!.useEpgLogos && tvChannel.epgLogo.isNotEmpty()) {
+                tvChannel.epgLogo
+            } else {
+                tvChannel.logo
+            }
+
+            if (logo.isNotEmpty()) {
+                binding.ivChannelLogo.visibility = View.VISIBLE
+                binding.ivChannelLogo.load(logo)
+            } else {
+                binding.ivChannelLogo.visibility = View.INVISIBLE
+            }
+
+            // Adapter erstellen, falls null
+            if (programAdapter == null) {
+                programAdapter = EpgProgramAdapter(epgManager, tvChannel.showingName)
+                binding.rvChannelPrograms.adapter = programAdapter
+                binding.rvChannelPrograms.addItemDecoration(
+                    EpgItemDecoration(binding.rvChannelPrograms.context.getColor(R.color.background_dark))
+                )
+            }
+
+            // Programme synchron setzen
+            val programs = epgManager.getProgramsForChannel(channel.id)
+            programAdapter?.setPrograms(programs)
+
+            // Channel + EpgManager setzen
+            binding.rvChannelPrograms.setChannel(channel)
+            binding.rvChannelPrograms.setEpgManager(epgManager)
+            binding.rvChannelPrograms.post {
+                binding.rvChannelPrograms.resetScroll(epgManager.getTimeLineRowScrollOffset())
+            }
         }
     }
 
@@ -67,26 +74,9 @@ class EpgChannelAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val channel = getItem(position)
+        val channel = channels[position]
         holder.bind(channel)
-            // Erstelle oder wiederverwende ProgramItemAdapter
-        if (holder.programAdapter == null) {
-            holder.programAdapter = EpgProgramAdapter(epgManager, channel.tvChannelPosition.tvchannel.target.showingName)
-            holder.binding.rvChannelPrograms.adapter = holder.programAdapter
-            holder.binding.rvChannelPrograms.addItemDecoration(
-                EpgItemDecoration(color = holder.binding.rvChannelPrograms.context.getColor(R.color.background_dark))
-            )
-        }
-
-            // Aktualisiere Programme
-        val programs = epgManager.getProgramsForChannel(
-            channel.id
-        )
-        holder.programAdapter?.submitList(programs)
-        holder.binding.rvChannelPrograms.setChannel(channel)
-        holder.binding.rvChannelPrograms.setEpgManager(epgManager)
-            // Synchronisiere Scroll-Position (wie Egeniq's resetScroll)
-        holder.binding.rvChannelPrograms.scrollTo(epgManager.getTimeLineRowScrollOffset(), 0)
-
     }
+
+    override fun getItemCount(): Int = channels.size
 }

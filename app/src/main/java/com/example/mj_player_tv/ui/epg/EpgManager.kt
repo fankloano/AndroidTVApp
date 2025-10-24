@@ -4,6 +4,7 @@ package com.example.mj_player_tv.ui.epg
 import android.util.Log
 import com.example.mj_player_tv.database.entity.EpgDataOB
 import com.example.mj_player_tv.database.help.TvChannelWithEpg
+import com.google.type.DateTime
 import java.util.concurrent.TimeUnit
 
 class EpgManager {
@@ -23,18 +24,13 @@ class EpgManager {
 
     internal fun updateInitialTimeRange(startUtcMillis: Long, endUtcMillis: Long) {
         this.startUtcMillis = startUtcMillis
-        if (endUtcMillis > this.endUtcMillis) {
-            this.endUtcMillis = endUtcMillis + 12 * 60 * 60 * 1000L
-        }
+        this.endUtcMillis = endUtcMillis + TimeUnit.HOURS.toMillis(24)
         setTimeRange(startUtcMillis, endUtcMillis)
-        Log.d("EPGMANAGER ZEITEN", "BEIM FRAGMENT ÖFFNEN -> START: $startUtcMillis END: $endUtcMillis")
     }
 
     internal fun shiftTime(timeMillisToScroll: Long): Boolean {
         var newFromUtcMillis = this.fromUtcMillis + timeMillisToScroll
         var newToUtcMillis = this.toUtcMillis + timeMillisToScroll
-
-        Log.d("EPGMANAGER ZEITEN", "SHIFT TIME -> START: $newFromUtcMillis END: $newToUtcMillis")
 
         var didOverOrUnderScroll = false
         if (newFromUtcMillis < startUtcMillis) {
@@ -49,13 +45,13 @@ class EpgManager {
             newFromUtcMillis = endUtcMillis - difference
             didOverOrUnderScroll = true
         }
-        Log.d("EPGMANAGER ZEITEN", "SHIFT TIME 2 -> START: $newFromUtcMillis END: $newToUtcMillis")
 
         setTimeRange(newFromUtcMillis, newToUtcMillis)
         return !didOverOrUnderScroll
     }
 
 
+    fun getTimeLineStart(): Long = startUtcMillis
     fun getVisibleTimeStart(): Long = fromUtcMillis
     fun getVisibleTimeEnd(): Long = toUtcMillis
 
@@ -73,11 +69,27 @@ class EpgManager {
     }
 
     fun getProgramsForChannel(id: Long) : List<EpgDataOB> {
-        val startTime = getVisibleTimeStart()
-        val endTime = getVisibleTimeEnd()
+        val startTime = startUtcMillis
+        val endTime = endUtcMillis
         return channelsWithEpg.find { it.id == id }?.epgList?.filter {
             it.stopTimestamp * 1000 > startTime && it.startTimestamp < endTime
         } ?: emptyList()
+    }
+
+    /** Returns the program index of the program at `time` or -1 if not found.  */
+    internal fun getProgramIndexAtTime(channelId: Long, time: Long): Int {
+        val channel = channelsWithEpg.firstOrNull { it.id == channelId }
+            return channel?.epgList?.indexOfFirst { epgData ->
+            epgData.startTimestamp * 1000 <= time && time < epgData.stopTimestamp * 1000
+        } ?: -1
+    }
+
+    internal fun getScheduleForChannelIdAndIndex(
+        channelId: Long,
+        index: Int
+    ): EpgDataOB? {
+        val channel = channelsWithEpg.firstOrNull { it.id == channelId }
+        return channel?.epgList[index]
     }
 
     fun getTimeLineRowScrollOffset(): Int {
@@ -85,11 +97,12 @@ class EpgManager {
     }
 
     private fun setTimeRange(fromUtcMillis: Long, toUtcMillis: Long) {
-        Log.d("EPGMANAGER ZEITEN", "SET TIME RANGE ALT -> START: ${this.fromUtcMillis} END: ${this.toUtcMillis}")
-
-        Log.d("EPGMANAGER ZEITEN", "SET TIME RANGE NEU -> START: $fromUtcMillis END: $toUtcMillis")
 
         if (this.fromUtcMillis != fromUtcMillis || this.toUtcMillis != toUtcMillis) {
+            val fromtime = org.joda.time.DateTime(fromUtcMillis).toString("HH:mm")
+            val toTime = org.joda.time.DateTime(toUtcMillis).toString("HH:mm")
+            Log.d("SCROLLE HORIZONTAL","settimerange VON $fromtime BIS $toTime")
+
             this.fromUtcMillis = fromUtcMillis
             this.toUtcMillis = toUtcMillis
             notifyTimeRangeUpdated()
@@ -99,6 +112,8 @@ class EpgManager {
     }
 
     private fun notifyTimeRangeUpdated() {
+        Log.d("SCROLLE HORIZONTAL","settimerange NEU: ${this.fromUtcMillis} BIS ${this.toUtcMillis}")
+
         for (listener in listeners) {
             listener.onTimeRangeUpdated()
         }

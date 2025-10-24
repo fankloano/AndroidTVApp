@@ -1,6 +1,7 @@
 package com.example.mj_player_tv.ui.epg.util
 
 import android.graphics.Rect
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewParent
@@ -12,15 +13,7 @@ import java.util.concurrent.TimeUnit
 import androidx.core.view.isEmpty
 
 object EpgUtil {
-    private var WIDTH_PER_HOUR = 0
-
-    /**
-     * Sets the width in pixels that corresponds to an hour in program guide. Assume that this is
-     * called from main thread only, so, no synchronization.
-     */
-    fun setWidthPerHour(widthPerHour: Int) {
-        WIDTH_PER_HOUR = 300
-    }
+    private var WIDTH_PER_HOUR = 300
 
 
     @JvmStatic
@@ -30,7 +23,7 @@ object EpgUtil {
 
     @JvmStatic
     fun convertMillisToPixel(startMillis: Long, endMillis: Long): Int {
-        // Convert to pixels first to avoid accumulation of rounding errors.
+
         return convertMillisToPixel(endMillis) - convertMillisToPixel(startMillis)
     }
 

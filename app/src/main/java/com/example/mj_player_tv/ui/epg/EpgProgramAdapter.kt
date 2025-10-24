@@ -14,13 +14,19 @@ import com.example.mj_player_tv.ui.epg.util.EpgUtil
 
 // ProgramBlockAdapter.kt
 
-class EpgProgramAdapter(private val epgManager: EpgManager, private var channelName: String) :
-    ListAdapter<EpgDataOB, EpgProgramAdapter.ProgramViewHolder>(ProgramDiffCallback()) {
+class EpgProgramAdapter(
+    private val epgManager: EpgManager,
+    private var channelName: String
+) : RecyclerView.Adapter<EpgProgramAdapter.ProgramViewHolder>() {
 
+    private val programs = mutableListOf<EpgDataOB>()
 
-    fun updateChannelName(newChannelName: String) {
-        this.channelName = newChannelName
+    fun setPrograms(newPrograms: List<EpgDataOB>) {
+        programs.clear()
+        programs.addAll(newPrograms)
+        notifyDataSetChanged() // synchron
     }
+
     inner class ProgramViewHolder(private val binding: VgItemEpgProgramBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -28,40 +34,19 @@ class EpgProgramAdapter(private val epgManager: EpgManager, private var channelN
 
         fun bind(item: EpgDataOB) {
             epgProgramItemView = itemView as EpgProgramItemView
-            epgProgramItemView?.bind(item, epgManager.getVisibleTimeStart())
+            epgProgramItemView?.bind(item, epgManager.getTimeLineStart())
         }
     }
 
-
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): ProgramViewHolder {
-        val binding = VgItemEpgProgramBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
-        val viewHolder = ProgramViewHolder(binding)
-        return viewHolder
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProgramViewHolder {
+        val binding = VgItemEpgProgramBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ProgramViewHolder(binding)
     }
 
-    override fun onBindViewHolder(
-        holder: ProgramViewHolder,
-        position: Int,
-    ) {
-        val show = getItem(position)
-        holder.bind(show)
-        holder.itemView.tag = "${show.name} + ${show.sub_title} I: ${holder.bindingAdapterPosition}"
-        holder.itemView.setTag(R.id.program_data_tag, show)
-
+    override fun onBindViewHolder(holder: ProgramViewHolder, position: Int) {
+        val item = programs[position]
+        holder.bind(item)
     }
 
-    class ProgramDiffCallback : DiffUtil.ItemCallback<EpgDataOB>() {
-        override fun areItemsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean =
-            oldItem.idByAccountData == newItem.idByAccountData
-
-        override fun areContentsTheSame(oldItem: EpgDataOB, newItem: EpgDataOB): Boolean =
-            oldItem == newItem
-    }
+    override fun getItemCount(): Int = programs.size
 }
