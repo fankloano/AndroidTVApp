@@ -31,19 +31,31 @@ class EpgChannelAdapter(
         fun bind(channel: TvChannelWithEpg) {
             val tvChannel = channel.tvChannelPosition.tvchannel.target
             binding.tvChannelname.text = tvChannel.showingName
-
+            val account = tvChannel.account.target
+            val playlistEpgActive = account.usePlaylistEpg
+            val linkedEpgChannel = tvChannel.linkedEpgChannel?.target
+            val image = tvChannel.logo
+            val epgLogo = linkedEpgChannel?.icon?.firstOrNull()
             // Logo setzen
-            val logo = if (tvChannel.account.target!!.useEpgLogos && tvChannel.epgLogo.isNotEmpty()) {
-                tvChannel.epgLogo
+            if (account.useEpgLogos) {
+                if (!epgLogo.isNullOrEmpty() && (linkedEpgChannel.isExternalEpg || tvChannel.alwaysUsesExternalEpg)) {
+                    binding.ivChannelLogo.visibility = View.VISIBLE
+                    binding.ivChannelLogo.load(epgLogo)
+                } else {
+                    if (image.isNotEmpty()) {
+                        binding.ivChannelLogo.visibility = View.VISIBLE
+                        binding.ivChannelLogo.load(image)
+                    } else {
+                        binding.ivChannelLogo.visibility = View.INVISIBLE
+                    }
+                }
             } else {
-                tvChannel.logo
-            }
-
-            if (logo.isNotEmpty()) {
-                binding.ivChannelLogo.visibility = View.VISIBLE
-                binding.ivChannelLogo.load(logo)
-            } else {
-                binding.ivChannelLogo.visibility = View.INVISIBLE
+                if (image.isNotEmpty()) {
+                    binding.ivChannelLogo.visibility = View.VISIBLE
+                    binding.ivChannelLogo.load(image)
+                } else {
+                    binding.ivChannelLogo.visibility = View.INVISIBLE
+                }
             }
 
             // Adapter erstellen, falls null
@@ -63,7 +75,8 @@ class EpgChannelAdapter(
             binding.rvChannelPrograms.setChannel(channel)
             binding.rvChannelPrograms.setEpgManager(epgManager)
             binding.rvChannelPrograms.post {
-                binding.rvChannelPrograms.resetScroll(epgManager.getTimeLineRowScrollOffset())
+                binding.rvChannelPrograms.resetScroll()
+
             }
         }
     }

@@ -156,9 +156,11 @@ class EpgFragment : Fragment(R.layout.fragment_epg), EpgManager.Listener {
     }
 
     override fun onTimeRangeUpdated() {
+        Log.d("EPG_SCROLL_DEBUG","TIMELINE DATEN: ${EpgUtil.WIDTH_PER_HOUR} | ${epgManager.getShiftedTime()} | $HOUR_IN_MILLIS")
+
         val scrollOffset =
-            (300 * epgManager.getShiftedTime() / HOUR_IN_MILLIS).toInt()
-        Log.d("SCROLLE HORIZONTAL","SCROLLE TIMELINE - offset: $scrollOffset")
+            (EpgUtil.WIDTH_PER_HOUR * epgManager.getShiftedTime() / HOUR_IN_MILLIS).toInt()
+        Log.d("EPG_SCROLL_DEBUG", "AKTION TIMELINE: Scrolle um $scrollOffset")
 
         // 1️⃣ Timeline scrollen
         binding.timelineHeaderView.scrollTo(scrollOffset, true)

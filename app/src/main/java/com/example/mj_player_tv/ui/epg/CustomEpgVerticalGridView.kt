@@ -6,6 +6,8 @@ import android.util.AttributeSet
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewTreeObserver
+import android.widget.Toast
 import androidx.leanback.widget.VerticalGridView
 import com.example.mj_player_tv.R
 import com.example.mj_player_tv.database.entity.ChannelPositions
@@ -49,6 +51,10 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
         fun onChannelClicked(channel: ChannelPositions)
     }
 
+    init {
+        setItemViewCacheSize(0)
+    }
+
     var tvChannelsWithEpg: List<TvChannelWithEpg>? = null
 
     private lateinit var programGuideManager: EpgManager
@@ -60,11 +66,20 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
         programGuideManager = epgManager
         programGuideManager.listeners.add(programManagerListener)
     }
+
+    private val globalFocusChangeListener =
+        ViewTreeObserver.OnGlobalFocusChangeListener { _, newFocus ->
+            if (newFocus is EpgProgramItemView) {
+                Toast.makeText(this.context, "${newFocus.programData?.name}", Toast.LENGTH_SHORT).show()
+            }
+
+        }
+
     private fun getNextRowProgram(direction: Int): View? {
         val focusedProgram = findFocus() as? EpgProgramItemView ?: return null
         val horizontalRow = focusedProgram.parent as? CustomEpgHorizontalGridView ?: return null
 
-// finde das ConstraintLayout, das das horizontale RecyclerView enthält
+        // Finde das Layout, das das horizontale RecyclerView enthält
         val parentRow = horizontalRow.parent as? View ?: return null
 
         val rowIndex = (0 until childCount).firstOrNull { getChildAt(it) == parentRow } ?: return null
@@ -74,29 +89,47 @@ class CustomEpgVerticalGridView @JvmOverloads constructor(
         val nextRowLayout = getChildAt(nextIndex) ?: return null
         val nextHorizontalRow = nextRowLayout.findViewById<CustomEpgHorizontalGridView>(R.id.rv_channel_programs)
             ?: return null
-        return EpgUtil.findMatchingProgramView(focusedProgram.programData ?: return null, nextHorizontalRow)
-    }
 
+        // ⬇️ Nur Programme im sichtbaren Bereich durchsuchen
+        return EpgUtil.findVisibleMatchingProgramView(
+            focusedProgram.programData ?: return null,
+            nextHorizontalRow
+        )
+    }
 
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
         if (event?.action == KeyEvent.ACTION_DOWN) {
-            val keyCode = event.keyCode
-            if (keyCode == KeyEvent.KEYCODE_CHANNEL_UP || keyCode == KeyEvent.KEYCODE_DPAD_UP) {
-                getNextRowProgram(FOCUS_UP)?.requestFocus()
+            val direction = when (event.keyCode) {
+                KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_DPAD_UP -> FOCUS_UP
+                KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_DPAD_DOWN -> FOCUS_DOWN
+                else -> return super.dispatchKeyEvent(event)
+            }
+
+            val nextProgram = getNextRowProgram(direction)
+            if (nextProgram != null) {
+                nextProgram.post {
+                    if (nextProgram.isShown) { // ✅ Nur sichtbare Views
+                        nextProgram.requestFocus()
+                    } else {
+                        Log.w("EPG_FOCUS", "Überspringe unsichtbaren Fokus – ${nextProgram}")
+                    }
+                }
                 return true
-            } else if (keyCode == KeyEvent.KEYCODE_CHANNEL_DOWN || keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
-                getNextRowProgram(FOCUS_DOWN)?.requestFocus()
-                return true
-            } else {
-                false
             }
         }
         return super.dispatchKeyEvent(event)
     }
 
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        viewTreeObserver.addOnGlobalFocusChangeListener(globalFocusChangeListener)
+    }
+
     override fun onDetachedFromWindow() {
         super.onDetachedFromWindow()
+        viewTreeObserver.removeOnGlobalFocusChangeListener(globalFocusChangeListener)
         programGuideManager.listeners.remove(programManagerListener)
     }
 }

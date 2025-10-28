@@ -11,10 +11,11 @@ import com.example.mj_player_tv.ui.epg.CustomEpgVerticalGridView
 import com.example.mj_player_tv.ui.epg.EpgProgramItemView
 import java.util.concurrent.TimeUnit
 import androidx.core.view.isEmpty
+import androidx.recyclerview.widget.LinearLayoutManager
 
 object EpgUtil {
-    private var WIDTH_PER_HOUR = 300
-
+    @JvmStatic
+    var WIDTH_PER_HOUR = 300 // Dies ist die zentrale Stelle
 
     @JvmStatic
     fun convertMillisToPixel(millis: Long): Int {
@@ -59,31 +60,60 @@ object EpgUtil {
      * @param nextRow Die Zeile, in der gesucht werden soll
      * @return Das passende EpgProgramItemView oder null, falls keines passt
      */
-    fun findMatchingProgramView(
+    fun findVisibleMatchingProgramView(
         currentProgram: EpgDataOB,
         nextRow: CustomEpgHorizontalGridView
     ): EpgProgramItemView? {
 
         if (nextRow.isEmpty()) return null
 
+        val layoutManager = nextRow.layoutManager as? LinearLayoutManager ?: return null
+
+        val firstVisible = layoutManager.findFirstVisibleItemPosition()
+        val lastVisible = layoutManager.findLastVisibleItemPosition()
+
+        val visibleChildren = (firstVisible..lastVisible)
+            .mapNotNull { index ->
+                nextRow.layoutManager?.findViewByPosition(index) as? EpgProgramItemView
+            }
+
+        if (visibleChildren.isEmpty()) return null
+
+        // Berechne Zielzeit: Mitte des aktuell fokussierten Programms
         val targetTime = (currentProgram.startTimestamp + currentProgram.stopTimestamp) / 2
         var bestMatchView: EpgProgramItemView? = null
         var smallestTimeDiff = Long.MAX_VALUE
 
-        for (i in 0 until nextRow.childCount) {
-            val child = nextRow.getChildAt(i)
-            if (child is EpgProgramItemView) {
-                val program = child.programData ?: continue
-                val programMid = (program.startTimestamp + program.stopTimestamp) / 2
-                val diff = kotlin.math.abs(programMid - targetTime)
+        val nextChannel = nextRow.thischannel?.tvChannelPosition?.tvchannel?.target?.showingName
+        Log.d(
+            "FOCUS_MATCH_DEBUG",
+            "---- CHANNEL: $nextChannel | Target: ${currentProgram.name} @ $targetTime ----"
+        )
 
-                if (diff < smallestTimeDiff) {
-                    smallestTimeDiff = diff
-                    bestMatchView = child
-                }
+        // ⬇️ Nur sichtbare Programme vergleichen
+        for (child in visibleChildren) {
+            val program = child.programData ?: continue
+            val programMid = (program.startTimestamp + program.stopTimestamp) / 2
+            val diff = kotlin.math.abs(programMid - targetTime)
+
+            Log.d(
+                "FOCUS_MATCH_DEBUG",
+                "Candidate: ${program.name} | Start=${program.startTimestamp}, Stop=${program.stopTimestamp}, Mid=$programMid | Diff=$diff"
+            )
+
+            if (diff < smallestTimeDiff) {
+                smallestTimeDiff = diff
+                bestMatchView = child
+                Log.d("FOCUS_MATCH_DEBUG", "→ NEW BEST MATCH: ${program.name} (Diff=$diff)")
             }
         }
 
+        Log.d(
+            "FOCUS_MATCH_DEBUG",
+            "==> FINAL MATCH for $nextChannel: ${bestMatchView?.programData?.name} (Diff=$smallestTimeDiff)\n"
+        )
+
         return bestMatchView
     }
+
 }

@@ -24,7 +24,10 @@ class EpgManager {
 
     internal fun updateInitialTimeRange(startUtcMillis: Long, endUtcMillis: Long) {
         this.startUtcMillis = startUtcMillis
-        this.endUtcMillis = endUtcMillis + TimeUnit.HOURS.toMillis(24)
+        this.endUtcMillis = startUtcMillis + TimeUnit.HOURS.toMillis(24)
+        val start = org.joda.time.DateTime(this.startUtcMillis).toString("HH:mm")
+        val end = org.joda.time.DateTime(this.endUtcMillis).toString("HH:mm")
+        Log.d("EPG_SCROLL_DEBUG", "START TIMELINEZEITEN: $start BIS $end")
         setTimeRange(startUtcMillis, endUtcMillis)
     }
 
@@ -52,6 +55,8 @@ class EpgManager {
 
 
     fun getTimeLineStart(): Long = startUtcMillis
+
+    fun getTimeLineEnd(): Long = endUtcMillis
     fun getVisibleTimeStart(): Long = fromUtcMillis
     fun getVisibleTimeEnd(): Long = toUtcMillis
 
@@ -65,6 +70,14 @@ class EpgManager {
 
     fun setData(tvchannelsAndEpg: List<TvChannelWithEpg>, timeLineRow: EpgTimeLineRow) {
         channelsWithEpg = tvchannelsAndEpg.toMutableList()
+        channelsWithEpg.filter { it.tvChannelPosition.tvchannel.target.showingName.contains("ARD-ALPHA") }.forEach { channel ->
+            val channelname = channel.tvChannelPosition.tvchannel.target.showingName
+            channel.epgList.forEachIndexed { index, oB ->
+                val start = org.joda.time.DateTime(oB.startTimestamp * 1000).toString("HH:mm")
+                val end = org.joda.time.DateTime(oB.stopTimestamp * 1000).toString("HH:mm")
+                Log.d("LOG THE EPGDATA", "$channelname = $index -> ${oB.name} START: $start END: $end")
+            }
+        }
         timeLine = timeLineRow
     }
 
@@ -84,7 +97,15 @@ class EpgManager {
         } ?: -1
     }
 
-    internal fun getScheduleForChannelIdAndIndex(
+    fun getProgramAtTime(channelId: Long, time: Long): Pair<EpgDataOB?, Int> {
+        val channel = channelsWithEpg.firstOrNull { it.id == channelId }
+        val epgData =  channel?.epgList?.firstOrNull { epgDataOB ->
+            epgDataOB.startTimestamp * 1000 <= time && time < epgDataOB.stopTimestamp * 1000
+        }
+        val index = channel?.epgList?.indexOf(epgData) ?: 0
+        return Pair(epgData, index)
+    }
+     internal fun getScheduleForChannelIdAndIndex(
         channelId: Long,
         index: Int
     ): EpgDataOB? {
@@ -96,12 +117,14 @@ class EpgManager {
         return timeLine?.currentScrollOffset ?: 0
     }
 
+    fun getFirstProgramForChannel(channelId: Long): EpgDataOB? {
+        val channel = channelsWithEpg.firstOrNull { it.id == channelId }
+        return channel?.epgList[0]
+    }
+
     private fun setTimeRange(fromUtcMillis: Long, toUtcMillis: Long) {
 
         if (this.fromUtcMillis != fromUtcMillis || this.toUtcMillis != toUtcMillis) {
-            val fromtime = org.joda.time.DateTime(fromUtcMillis).toString("HH:mm")
-            val toTime = org.joda.time.DateTime(toUtcMillis).toString("HH:mm")
-            Log.d("SCROLLE HORIZONTAL","settimerange VON $fromtime BIS $toTime")
 
             this.fromUtcMillis = fromUtcMillis
             this.toUtcMillis = toUtcMillis
@@ -112,7 +135,9 @@ class EpgManager {
     }
 
     private fun notifyTimeRangeUpdated() {
-        Log.d("SCROLLE HORIZONTAL","settimerange NEU: ${this.fromUtcMillis} BIS ${this.toUtcMillis}")
+        val fromtime = org.joda.time.DateTime(fromUtcMillis).toString("HH:mm")
+        val toTime = org.joda.time.DateTime(toUtcMillis).toString("HH:mm")
+        Log.d("EPG_SCROLL_DEBUG","SET NEW TIME RANGE: VON $fromtime BIS $toTime")
 
         for (listener in listeners) {
             listener.onTimeRangeUpdated()
